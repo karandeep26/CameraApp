@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:id="@+id/slide_panel"
+    tools:context="com.example.stpl.cameraapp.Activity.MainActivity">
+
+<android.support.v4.widget.NestedScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    android:fillViewport="true">
+
+    <RelativeLayout
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+
+
+        <FrameLayout
+        android:id="@+id/frame_layout"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+    </FrameLayout>
+        <TextView
+            android:layout_alignTop="@+id/frame_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textSize="14sp"
+            android:id="@+id/timer" />
+
+        <ImageButton
+            android:layout_marginLeft="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_videocam_white_36dp"
+            android:layout_alignBottom="@+id/frame_layout"
+            android:layout_marginBottom="20dp"
+            android:id="@+id/record_video" />
+
+        <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_photo_camera_white_36dp"
+        android:layout_alignBottom="@+id/frame_layout"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20dp"
+        android:id="@+id/capture" />
+    </RelativeLayout>
+</android.support.v4.widget.NestedScrollView>
+
+
+    <android.support.v4.widget.NestedScrollView
+        android:id="@+id/design_bottom_sheet"
+        android:background="#fff"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="android.support.design.widget.BottomSheetBehavior"
+        app:behavior_peekHeight="20dp"
+        >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:layout_height="wrap_content">
+            <Button
+                android:layout_marginTop="10dp"
+                android:text="pictures"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="25dp"
+                android:layout_marginStart="80dp"
+                android:id="@+id/pictures" />
+            <Button
+                android:layout_marginTop="10dp"
+                android:text="videos"
+                android:layout_toEndOf="@+id/pictures"
+                android:layout_toRightOf="@+id/pictures"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/videos" />
+
+            <com.example.stpl.cameraapp.CustomViews.ExpandableHeightGridView
+                android:layout_below="@+id/videos"
+                android:id="@+id/image_grid_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:horizontalSpacing="1dp"
+                android:isScrollContainer="false"
+                android:numColumns="3"
+                android:stretchMode="columnWidth"
+                android:verticalSpacing="1dp" />
+            <com.example.stpl.cameraapp.CustomViews.ExpandableHeightGridView
+                android:layout_below="@+id/videos"
+                android:visibility="gone"
+                android:id="@+id/video_grid_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:horizontalSpacing="1dp"
+                android:isScrollContainer="false"
+                android:numColumns="3"
+                android:stretchMode="columnWidth"
+                android:verticalSpacing="1dp" />
+
+
+
+        </RelativeLayout>
+    </android.support.v4.widget.NestedScrollView>
+
+
+</android.support.design.widget.CoordinatorLayout>
