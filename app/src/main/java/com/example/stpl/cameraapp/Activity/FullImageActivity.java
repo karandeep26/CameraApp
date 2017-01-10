@@ -5,10 +5,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.text.LoginFilter;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
@@ -16,12 +15,9 @@ import android.widget.ImageView;
 
 import com.example.stpl.cameraapp.R;
 import com.kinvey.android.Client;
-import com.kinvey.android.callback.KinveyPingCallback;
 import com.kinvey.android.callback.KinveyUserCallback;
-import com.kinvey.java.Query;
 import com.kinvey.java.User;
 import com.kinvey.java.core.DownloaderProgressListener;
-import com.kinvey.java.core.KinveyCancellableCallback;
 import com.kinvey.java.core.MediaHttpDownloader;
 import com.kinvey.java.core.MediaHttpUploader;
 import com.kinvey.java.core.UploaderProgressListener;
@@ -29,20 +25,18 @@ import com.kinvey.java.model.FileMetaData;
 import com.kinvey.java.model.KinveyMetaData;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class FullImageActivity extends AppCompatActivity implements View.OnClickListener {
+    static String APPKEY = "kid_BJH4mr6me";
+    static String APPSECRET = "bf1e29b625dc4537819d284c6a73869b";
     ImageView imageview;
     FileMetaData fileMetaData = new FileMetaData();
     String fileName;
     Client kinveyClient;
     Bitmap bitmap;
     ImageButton upload, download;
-    static String APPKEY = "kid_BJH4mr6me";
-    static String APPSECRET = "bf1e29b625dc4537819d284c6a73869b";
     Matrix matrix;
 
     File mediaStorageDir = new File(
@@ -156,8 +150,7 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
 
                         @Override
                         public void onFailure(Throwable throwable) {
-                            Log.d("filemetadata", fileMetaData.toString());
-                            Log.d("failure download", "true");
+
                         }
                     });
 
@@ -167,21 +160,6 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
                 }
 
 
-        }
-    }
-
-    class BitmapDecode extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            bitmap = BitmapFactory.decodeFile(mediaStorageDir + "/" + fileName);
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            imageview.setImageBitmap(bitmap);
         }
     }
 
@@ -204,5 +182,20 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
+
+    class BitmapDecode extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            bitmap = BitmapFactory.decodeFile(mediaStorageDir + "/" + fileName);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            imageview.setImageBitmap(bitmap);
+        }
     }
 }

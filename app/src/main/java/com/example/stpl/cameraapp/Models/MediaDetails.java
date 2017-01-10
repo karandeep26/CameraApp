@@ -2,18 +2,17 @@ package com.example.stpl.cameraapp.Models;
 
 import android.graphics.Bitmap;
 
-/**
- * Created by stpl on 12/15/2016.
- */
 
-public class ImageDetails {
+public class MediaDetails {
     private Bitmap image;
     private String filePath;
+    private String mediaType;
     private boolean isChecked=false;
 
-    public ImageDetails(Bitmap image, String filePath) {
+    public MediaDetails(Bitmap image, String filePath, String type) {
         this.image = image;
         this.filePath = filePath;
+        mediaType = type;
     }
 
     public Bitmap getImage() {
@@ -29,5 +28,9 @@ public class ImageDetails {
     }
     public void toggleChecked(){
         isChecked=!isChecked;
+    }
+
+    public String getMediaType() {
+        return mediaType;
     }
 }

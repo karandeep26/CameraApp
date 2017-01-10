@@ -36,8 +36,6 @@ public class GestureDetector extends android.view.GestureDetector.SimpleOnGestur
                 }
 
 
-
-
             }
 
 
