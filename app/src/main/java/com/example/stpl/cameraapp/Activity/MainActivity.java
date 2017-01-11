@@ -10,7 +10,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ThumbnailUtils;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
@@ -20,9 +19,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -40,7 +37,6 @@ import com.example.stpl.cameraapp.Models.MediaDetails;
 import com.example.stpl.cameraapp.OnPictureTaken;
 import com.example.stpl.cameraapp.Preview;
 import com.example.stpl.cameraapp.R;
-import com.example.stpl.cameraapp.ReadFromDb;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +46,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func0;
+import rx.schedulers.Schedulers;
+
+import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, OnPictureTaken, AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
     final int MULTIPLE_PERMISSIONS = 123;
@@ -68,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ExpandableHeightGridView imageGridView;
     private ExpandableHeightGridView videoGridView;
     private ImageButton videoCapture;
-    private ArrayList<String> permissionNeeded;
     private ArrayList<String> permissionList;
     private BottomSheetBehavior bottomSheetBehavior;
     private Button pictures, video;
@@ -78,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private BottomSheetBehavior.BottomSheetCallback bottomSheetCallback;
     private HashMap<Integer, MediaDetails> selectedItems = new HashMap<>();
     private HashMap<Integer, View> tickView = new HashMap<>();
+    Subscription subscription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -164,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void askPermissions() {
-        permissionNeeded = new ArrayList<>();
+        ArrayList<String> permissionNeeded = new ArrayList<>();
         permissionList = new ArrayList<>();
         if (!addPermission(permissionList, Manifest.permission.CAMERA))
             permissionNeeded.add("camera");
@@ -181,13 +187,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 for (int i = 1; i < permissionNeeded.size(); i++)
                     message = message + ", " + permissionNeeded.get(i);
                 showMessageOKCancel(message,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                ActivityCompat.requestPermissions(MainActivity.this, permissionList.toArray(new String[permissionList.size()]),
-                                        MULTIPLE_PERMISSIONS);
-                            }
-                        });
+                        (dialog, which) -> ActivityCompat.requestPermissions(MainActivity.this, permissionList.toArray(new String[permissionList.size()]),
+                                MULTIPLE_PERMISSIONS));
                 return;
             }
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MULTIPLE_PERMISSIONS);
@@ -221,80 +222,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         preview = new Preview(this, this);
         preview.setWillNotDraw(false);
         frameLayout.addView(preview);
-        pictures.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                imageGridView.getLayoutParams().height = height - pictures.getHeight() - (int) convertDpToPixel(((float) 20));
-            }
-        });
-        video.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                videoGridView.getLayoutParams().height = height - video.getHeight() - (int) convertDpToPixel(((float) 20));
-            }
-        });
+        pictures.getViewTreeObserver().addOnGlobalLayoutListener(() -> imageGridView.getLayoutParams().height = height - pictures.getHeight() - (int) convertDpToPixel(((float) 20)));
+        video.getViewTreeObserver().addOnGlobalLayoutListener(() -> videoGridView.getLayoutParams().height = height - video.getHeight() - (int) convertDpToPixel(((float) 20)));
         imageGestureDetector = new GestureDetectorCompat(this, new GestureDetector(imageGridView, bottomSheetBehavior));
         videoGestureDetector = new GestureDetectorCompat(this, new GestureDetector(videoGridView, bottomSheetBehavior));
-        videoGridView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                v.getParent().requestDisallowInterceptTouchEvent(true);
-                if (videoGridView.getFirstVisiblePosition() == 0)
-                    videoGestureDetector.onTouchEvent(event);
-                return false;
-            }
+        videoGridView.setOnTouchListener((v, event) -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            if (videoGridView.getFirstVisiblePosition() == 0)
+                videoGestureDetector.onTouchEvent(event);
+            return false;
         });
-        videoGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                MediaDetails mediaDetails = (MediaDetails) parent.getItemAtPosition(position);
-                Intent intent = new Intent(MainActivity.this, PlayVideoActivity.class);
-                intent.putExtra("fileName", mediaDetails.getFilePath());
-                startActivity(intent);
-            }
+        videoGridView.setOnItemClickListener((parent, view, position, id) -> {
+            MediaDetails mediaDetails = (MediaDetails) parent.getItemAtPosition(position);
+            Intent intent = new Intent(MainActivity.this, PlayVideoActivity.class);
+            intent.putExtra("fileName", mediaDetails.getFilePath());
+            startActivity(intent);
         });
 
-        imageGridView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                v.getParent().requestDisallowInterceptTouchEvent(true);
-                if (imageGridView.getFirstVisiblePosition() == 0)
-                    imageGestureDetector.onTouchEvent(event);
-
-                return false;
-            }
+        imageGridView.setOnTouchListener((v, event) -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            if (imageGridView.getFirstVisiblePosition() == 0)
+                imageGestureDetector.onTouchEvent(event);
+            return false;
         });
         imageGridView.setExpanded(false);
         imageGridView.setAdapter(imageGridViewAdapter);
         imageGridView.setOnItemClickListener(this);
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
-        new ReadFromDb(this).execute();
-    }
 
-    public void getFromSdcard() throws IOException {
-        File mediaStorageDir = new File(
-                Environment
-                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                "MyCameraApp");
-        File file = new File(mediaStorageDir.getPath());
-
-        if (file.isDirectory()) {
-            File[] listFile = file.listFiles();
-            for (File aListFile : listFile) {
-                String path = aListFile.getAbsolutePath();
-                String newFileName = path.substring(path.lastIndexOf("/") + 1);
-
-                if (aListFile.getAbsolutePath().contains("jpg")) {
-                    Matrix matrix = new Matrix();
-                    matrix.postRotate(270);
-                    Bitmap image = BitmapFactory.decodeFile(aListFile.getAbsolutePath());
-                    imageDetails.add(new MediaDetails(ThumbnailUtils.extractThumbnail(image, 500, 500), newFileName, "image"));
-                } else if (aListFile.getAbsolutePath().contains("mp4"))
-                    videoDetails.add(new MediaDetails(ThumbnailUtils.createVideoThumbnail(aListFile.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND), newFileName, "video"));
-
-            }
-        }
-
+        subscription=getFromSdCard().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).
+                subscribe(mediaDetails -> imageGridViewAdapter.add(mediaDetails),
+                        throwable -> Log.d("debug", throwable.getMessage()),
+                        () -> Log.d("debug", "completed"));
     }
 
     @Override
@@ -303,10 +262,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        preview.releaseCamera();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
+
 
     @Override
     protected void onResume() {
@@ -351,7 +307,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else {
                 intent = new Intent(MainActivity.this, PlayVideoActivity.class);
             }
-            intent.putExtra("fileName", details.getFilePath());
+            intent.putExtra("position", position);
+            intent.putParcelableArrayListExtra("model", imageDetails);
             startActivity(intent);
         }
     }
@@ -372,9 +329,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initVariables() {
-        for (MediaDetails mediaDetail : imageDetails) {
-            mediaDetail.getMediaType().equals("image");
-        }
         imageGridViewAdapter = new ImageGridViewAdapter(this, imageDetails);
         imageGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE);
         videoGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
@@ -383,7 +337,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
-                    Log.d("state changed ", "called");
                     bottomSheet.requestLayout();
                     bottomSheet.invalidate();
                     imageGridView.smoothScrollToPosition(0);
@@ -417,9 +370,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onBackPressed() {
         if (selectedItems.size() > 0) {
-            Log.d("Size of selected item", selectedItems.size() + "");
-            Log.d("Size of ticked item", tickView.size() + "");
-            for (Integer key : selectedItems.keySet()) {
+           for (Integer key : selectedItems.keySet()) {
                 selectedItems.get(key).toggleChecked();
                 tickView.get(key).findViewById(R.id.tick).setVisibility(View.GONE);
             }
@@ -431,9 +382,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         } else if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        } else
+        } else{
             finish();
+            Log.d("debug","finish");
+        }
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(!subscription.isUnsubscribed()){
+            subscription.unsubscribe();
+        }
+        if(preview.getCamera()!=null)
+            preview.releaseCamera();
+    }
+
     private void recordVideo() {
         if (!recording) {
             recording = true;
@@ -444,16 +408,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
+                    runOnUiThread(() -> {
+                        time.setText(String.valueOf(minutes) + ":" + String.valueOf(seconds));
+                        seconds += 1;
+                        if (seconds == 0) {
                             time.setText(String.valueOf(minutes) + ":" + String.valueOf(seconds));
-                            seconds += 1;
-                            if (seconds == 0) {
-                                time.setText(String.valueOf(minutes) + ":" + String.valueOf(seconds));
-                                seconds = 60;
-                                minutes = minutes + 1;
-                            }
+                            seconds = 60;
+                            minutes = minutes + 1;
                         }
                     });
 
@@ -486,6 +447,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         selectedItems.put(position, image);
         tickView.put(position, view);
         return true;
+    }
+
+    private Observable<MediaDetails> getFromSdCard() {
+        return Observable.create(new Observable.OnSubscribe<MediaDetails>() {
+            @Override
+            public void call(Subscriber<? super MediaDetails> subscriber) {
+                File file = new File(mediaStorageDir.getPath());
+                Matrix matrix = new Matrix();
+                matrix.postRotate(270);
+                if (file.isDirectory()) {
+                    File[] listFile = file.listFiles();
+                    for (File aListFile : listFile) {
+                        String path = aListFile.getAbsolutePath();
+                        String newFileName = path.substring(path.lastIndexOf("/") + 1);
+                        if (aListFile.getAbsolutePath().contains("jpg")) {
+                            Bitmap image = BitmapFactory.decodeFile(aListFile.getAbsolutePath());
+                            imageDetails.add(new MediaDetails(ThumbnailUtils.extractThumbnail(image, 500, 500), newFileName, "image"));
+                            subscriber.onNext(new MediaDetails(ThumbnailUtils.extractThumbnail(image, 500, 500), newFileName, "image"));
+                        } else if (aListFile.getAbsolutePath().contains("mp4"))
+                            videoDetails.add(new MediaDetails(ThumbnailUtils.createVideoThumbnail(aListFile.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND), newFileName, "video"));
+                    }
+                    if (!subscriber.isUnsubscribed()) {
+                        subscriber.onCompleted();
+                    }
+                }
+            }
+        });
     }
 }
 
