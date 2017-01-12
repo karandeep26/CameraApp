@@ -1,42 +1,41 @@
-package com.example.stpl.cameraapp.Activity;
+package com.example.stpl.cameraapp.activity;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
-import com.example.stpl.cameraapp.Adapters.CustomPagerAdapter;
-import com.example.stpl.cameraapp.Models.MediaDetails;
-import com.example.stpl.cameraapp.Network.KinveyClient;
+import com.example.stpl.cameraapp.LoginInterface;
 import com.example.stpl.cameraapp.R;
-import com.example.stpl.cameraapp.loginInterface;
-import com.kinvey.android.Client;
-import com.kinvey.java.core.DownloaderProgressListener;
-import com.kinvey.java.core.MediaHttpDownloader;
-import com.kinvey.java.core.MediaHttpUploader;
-import com.kinvey.java.core.UploaderProgressListener;
-import com.kinvey.java.model.FileMetaData;
-import com.kinvey.java.model.KinveyMetaData;
+import com.example.stpl.cameraapp.Utils;
+import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
+import com.example.stpl.cameraapp.models.MediaDetails;
+import com.example.stpl.cameraapp.network.FirebaseService;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
-import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
-
-public class FullImageActivity extends AppCompatActivity implements View.OnClickListener,loginInterface {
+public class FullImageActivity extends AppCompatActivity implements View.OnClickListener, LoginInterface {
     int position;
     ViewPager mViewPager;
     ArrayList<MediaDetails> mediaDetails;
-    KinveyClient mClient;
+    FirebaseAuth firebaseAuth;
+    RelativeLayout topPanel;
+    int visibility;
+    ImageButton upload;
+    StorageReference storageReference;
+    StorageReference uploadReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,13 +44,40 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         setContentView(R.layout.activity_full_image);
         bindViews();
         Intent intent = getIntent();
-        mClient=new KinveyClient(this,this);
         position = intent.getIntExtra("position",-1);
         mediaDetails=intent.getParcelableArrayListExtra("model");
         mViewPager.setOffscreenPageLimit(3);
-        mViewPager.setAdapter(new CustomPagerAdapter(this,mediaDetails));
+        mViewPager.setAdapter(new CustomViewPagerAdapter(this, mediaDetails));
         mViewPager.setCurrentItem(position);
-        mClient.login();
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        visibility = View.INVISIBLE;
+        firebaseAuth = FirebaseService.getInstance().getmAuth();
+        FirebaseService.getInstance().setmLoginInterface(this);
+        FirebaseService.getInstance().setAuthListener();
+        StorageReference storageRef = FirebaseStorage.getInstance().getReferenceFromUrl("gs://selfie-geek.appspot.com");
+        uploadReference = storageRef.child("upload.jpg");
+
+        if (!MainActivity.isSignedIn) {
+            firebaseAuth.signInAnonymously().addOnCompleteListener(FirebaseService.getInstance());
+
+        }
+
+    }
+
+    public void toggleTopPanelVisibility() {
+        if (visibility == View.VISIBLE) {
+            topPanel.setVisibility(View.INVISIBLE);
+            visibility = View.INVISIBLE;
+        } else {
+            topPanel.setVisibility(View.VISIBLE);
+            visibility = View.VISIBLE;
+        }
+
     }
 
     @Override
@@ -74,77 +100,27 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     public void onClick(View v) {
-//        switch (v.getId()) {
-//            case R.id.imageButton://UPLOAD
-//                try {
-//                    File file = new File(mediaStorageDir + "/" + fileName);
-//                    fileMetaData.setFileName(fileName);
-//                    fileMetaData.setPublic(true);
-//                    KinveyMetaData.AccessControlList accessControlList = new KinveyMetaData.AccessControlList();
-//                    accessControlList.setGloballyReadable(true);
-//                    accessControlList.setGloballyWriteable(true);
-//                    fileMetaData.setAcl(accessControlList);
-//                    fileMetaData.setId(fileName);
-//                    kinveyClient.file().upload(fileMetaData, file, new UploaderProgressListener() {
-//                        @Override
-//                        public void progressChanged(MediaHttpUploader mediaHttpUploader) throws IOException {
-//                            Log.d("progress ", "changed");
-//                        }
-//
-//                        @Override
-//                        public void onSuccess(FileMetaData fileMetaData) {
-//                            Log.d("Success", "true");
-//                        }
-//
-//                        @Override
-//                        public void onFailure(Throwable throwable) {
-//                            Log.d("Failure", "true");
-//                        }
-//                    });
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//                break;
-//            case R.id.imageButton2://DOWNLOAD
-//                try {
-//                    mediaStorageDir = new File(
-//                            Environment
-//                                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-//                            "MyCameraApp");
-//                    final File file = new File(mediaStorageDir.getPath() + File.separator + "123456" + ".jpg");
-//                    Log.d("file created", file.createNewFile() + "");
-//                    final FileOutputStream fileOutputStream = new FileOutputStream(file);
-//                    fileMetaData = new FileMetaData();
-//                    fileMetaData.setFileName(fileName);
-//                    fileMetaData.setId(fileName);
-//                    kinveyClient.file().download(fileMetaData, fileOutputStream, new DownloaderProgressListener() {
-//                        @Override
-//                        public void progressChanged(MediaHttpDownloader mediaHttpDownloader) throws IOException {
-//                            Log.d("download progress", "true");
-//                        }
-//                        @Override
-//                        public void onSuccess(Void aVoid) {
-//                            Log.d("success download", file.length() + "");
-//                            upload.setImageBitmap(BitmapFactory.decodeFile(file.getAbsolutePath()));
-//                        }
-//
-//                        @Override
-//                        public void onFailure(Throwable throwable) {
-//
-//                        }
-//                    });
-//
-//
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//
-//
-//        }
+        switch (v.getId()) {
+            case R.id.upload:
+                try {
+                    InputStream inputStream = new FileInputStream(new File(Utils.mediaStorageDir + "/" + mediaDetails.
+                            get(mViewPager.getCurrentItem()).getFilePath()));
+                    UploadTask uploadTask = uploadReference.putStream(inputStream);
+                    uploadTask.addOnSuccessListener(taskSnapshot -> Log.d("file uploaded", "true")).
+                            addOnFailureListener(e -> Log.e("error", e.getMessage())).
+                            addOnProgressListener(taskSnapshot -> Log.d("bytes", taskSnapshot.getBytesTransferred() / 1024 + ""));
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+        }
+
     }
 
     private void bindViews() {
         mViewPager= (ViewPager) findViewById(R.id.pager);
+        topPanel = (RelativeLayout) findViewById(R.id.topPanel);
+        upload = (ImageButton) findViewById(R.id.upload);
+        upload.setOnClickListener(this);
 
     }
 
@@ -162,11 +138,12 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     public void onSuccess() {
+        Log.d("success", "true");
 
     }
 
     @Override
     public void onFailure() {
-
+        Log.d("onFailure", "true");
     }
 }

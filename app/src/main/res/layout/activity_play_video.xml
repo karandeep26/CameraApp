@@ -5,10 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
 
-    tools:context="com.example.stpl.cameraapp.Activity.PlayVideoActivity">
+    tools:context="com.example.stpl.cameraapp.activity.PlayVideoActivity">
 
-    <com.example.stpl.cameraapp.CustomViews.CustomVideoView
+    <com.example.stpl.cameraapp.customViews.CustomVideoView
+        android:id="@+id/videoView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/videoView" />
+        android:layout_height="match_parent" />
 </RelativeLayout>

@@ -1,4 +1,4 @@
-package com.example.stpl.cameraapp.Models;
+package com.example.stpl.cameraapp.models;
 
 import android.graphics.Bitmap;
 import android.os.Parcel;
@@ -6,6 +6,17 @@ import android.os.Parcelable;
 
 
 public class MediaDetails implements Parcelable {
+    public static final Creator<MediaDetails> CREATOR = new Creator<MediaDetails>() {
+        @Override
+        public MediaDetails createFromParcel(Parcel in) {
+            return new MediaDetails(in);
+        }
+
+        @Override
+        public MediaDetails[] newArray(int size) {
+            return new MediaDetails[size];
+        }
+    };
    transient private Bitmap image;
     private String filePath;
     private String mediaType;
@@ -21,18 +32,6 @@ public class MediaDetails implements Parcelable {
         filePath = in.readString();
 
     }
-
-    public static final Creator<MediaDetails> CREATOR = new Creator<MediaDetails>() {
-        @Override
-        public MediaDetails createFromParcel(Parcel in) {
-            return new MediaDetails(in);
-        }
-
-        @Override
-        public MediaDetails[] newArray(int size) {
-            return new MediaDetails[size];
-        }
-    };
 
     public Bitmap getImage() {
         return image;

@@ -1,4 +1,4 @@
-package com.example.stpl.cameraapp.CustomViews;
+package com.example.stpl.cameraapp.customViews;
 
 import android.content.Context;
 import android.util.AttributeSet;

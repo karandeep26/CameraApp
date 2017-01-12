@@ -1,13 +1,13 @@
-package com.example.stpl.cameraapp.Activity;
+package com.example.stpl.cameraapp.activity;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.DisplayMetrics;
 
-import com.example.stpl.cameraapp.CustomViews.CustomVideoView;
 import com.example.stpl.cameraapp.R;
+import com.example.stpl.cameraapp.customViews.CustomVideoView;
 
 import java.io.File;
 
@@ -31,7 +31,6 @@ public class PlayVideoActivity extends AppCompatActivity {
 
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-
         videoView.start();
 
     }

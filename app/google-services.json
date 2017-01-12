@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "741344114891",
+    "firebase_url": "https://selfie-geek.firebaseio.com",
+    "project_id": "selfie-geek",
+    "storage_bucket": "selfie-geek.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:741344114891:android:e968dcf37fccaa3e",
+        "android_client_info": {
+          "package_name": "com.example.stpl.cameraapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "741344114891-gh47g6t36slkdheges0p193846tvb6h6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.stpl.cameraapp",
+            "certificate_hash": "713730C09DF7C993CE0E4C8525F5B238D0DCB049"
+          }
+        },
+        {
+          "client_id": "741344114891-rlc8m7bdfaegmojh3d8qe2uu87laqff1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuoViVIU1C0Ca5SHQlk7fUPj0HBucSFGA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "741344114891-rlc8m7bdfaegmojh3d8qe2uu87laqff1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
