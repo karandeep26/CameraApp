@@ -2,8 +2,8 @@ package com.example.stpl.cameraapp.adapters;
 
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
-import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -23,6 +23,7 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     private Context mContext;
     private LayoutInflater mLayoutInflater;
     private ArrayList<MediaDetails> mediaDetails;
+    private float downX, downY;
 
     public CustomViewPagerAdapter(Context mContext, ArrayList<MediaDetails> mediaDetails) {
         this.mediaDetails = mediaDetails;
@@ -52,10 +53,21 @@ public class CustomViewPagerAdapter extends PagerAdapter {
         Picasso.with(mContext).load(new File(mediaStorageDir + "/" + mediaDetails.get(position)
                 .getFilePath())).into(imageView);
         container.addView(itemView);
+
         imageView.setOnTouchListener((v, event) -> {
-            Log.d("on touch", "called");
-            ((FullImageActivity) mContext).toggleTopPanelVisibility();
-            return false;
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    downX = event.getX();
+                    downY = event.getY();
+                    break;
+                case MotionEvent.ACTION_UP:
+
+                    if (event.getY() == downY && event.getX() == downX) {
+                        ((FullImageActivity) mContext).toggleTopPanelVisibility();
+                    }
+                    break;
+            }
+            return true;
         });
         return itemView;
     }

@@ -17,7 +17,7 @@ public class MediaDetails implements Parcelable {
             return new MediaDetails[size];
         }
     };
-   transient private Bitmap image;
+    private Bitmap image;
     private String filePath;
     private String mediaType;
     private boolean isChecked=false;
@@ -59,8 +59,6 @@ public class MediaDetails implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-
         dest.writeString(filePath);
-
     }
 }

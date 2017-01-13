@@ -7,11 +7,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.RelativeLayout;
+import android.widget.LinearLayout;
 
 import com.example.stpl.cameraapp.LoginInterface;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
+import com.example.stpl.cameraapp.ZoomOutPageTransformer;
 import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.network.FirebaseService;
@@ -31,24 +32,26 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     ViewPager mViewPager;
     ArrayList<MediaDetails> mediaDetails;
     FirebaseAuth firebaseAuth;
-    RelativeLayout topPanel;
+    LinearLayout topPanel;
     int visibility;
     ImageButton upload;
     StorageReference storageReference;
     StorageReference uploadReference;
+    boolean isDragging=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         makeFullScreen();
         setContentView(R.layout.activity_full_image);
-        bindViews();
+        bindViews();/* make common*/
         Intent intent = getIntent();
         position = intent.getIntExtra("position",-1);
         mediaDetails=intent.getParcelableArrayListExtra("model");
         mViewPager.setOffscreenPageLimit(3);
         mViewPager.setAdapter(new CustomViewPagerAdapter(this, mediaDetails));
         mViewPager.setCurrentItem(position);
+        mViewPager.setPageTransformer(true,new ZoomOutPageTransformer());
 
     }
 
@@ -118,7 +121,7 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
 
     private void bindViews() {
         mViewPager= (ViewPager) findViewById(R.id.pager);
-        topPanel = (RelativeLayout) findViewById(R.id.topPanel);
+        topPanel = (LinearLayout) findViewById(R.id.topPanel);
         upload = (ImageButton) findViewById(R.id.upload);
         upload.setOnClickListener(this);
 
@@ -140,10 +143,13 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     public void onSuccess() {
         Log.d("success", "true");
 
+
     }
 
     @Override
     public void onFailure() {
         Log.d("onFailure", "true");
     }
+
+
 }

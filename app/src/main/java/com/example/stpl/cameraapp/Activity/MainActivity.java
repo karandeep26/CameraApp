@@ -32,7 +32,8 @@ import com.example.stpl.cameraapp.GestureDetector;
 import com.example.stpl.cameraapp.OnPictureTaken;
 import com.example.stpl.cameraapp.Preview;
 import com.example.stpl.cameraapp.R;
-import com.example.stpl.cameraapp.adapters.ImageGridViewAdapter;
+import com.example.stpl.cameraapp.Utils;
+import com.example.stpl.cameraapp.adapters.GridViewAdapter;
 import com.example.stpl.cameraapp.customViews.ExpandableHeightGridView;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.network.FirebaseService;
@@ -68,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FrameLayout frameLayout;
     private Preview preview;
     private ImageButton captureButton;
-    private ImageGridViewAdapter imageGridViewAdapter;
+    private GridViewAdapter gridViewAdapter;
     private ExpandableHeightGridView imageGridView;
     private ImageButton videoCapture;
     private ArrayList<String> permissionList;
@@ -78,21 +79,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<MediaDetails> imageDetails = new ArrayList<>();
     private ArrayList<MediaDetails> videoDetails = new ArrayList<>();
     private BottomSheetBehavior.BottomSheetCallback bottomSheetCallback;
-    private HashMap<Integer, MediaDetails> selectedItems = new HashMap<>();
+    private ArrayList<MediaDetails> selectedItems = new ArrayList<>();
     private HashMap<Integer, View> tickView = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        /**
+         * Set Window Flags to make app full screen
+         */
         makeFullScreen();
         bindViews();
+        /**
+         * Initialize GridViewAdapter
+         * Set GridView
+         * Set BottomSheetCallback
+         */
+        /**
+         * Initialize GridViewAdapter
+         * set GridView
+         */
         initVariables();
+        /**
+         * Set button on click listeners
+         */
         setClickListeners();
+        /**
+         * Calculate Screen Height
+         */
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         height = displayMetrics.heightPixels;
+        /**
+         * Request run time permissions
+         */
         askPermissions();
+        /**
+         * Initialize Firebase instance
+         */
         FirebaseService.getInstance().initializeFirebase();
         FirebaseService.getInstance().getmAuth().addAuthStateListener(firebaseAuth -> {
             FirebaseUser user = firebaseAuth.getCurrentUser();
@@ -104,38 +129,60 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            /**
+             * Take photo
+             */
             case R.id.capture:
                 preview.takePicture();
                 break;
+            /**
+             * Record Video
+             */
             case R.id.record_video:
                 recordVideo();
                 break;
+            /**
+             * Load Videos thumbnails in GridView
+             */
             case R.id.videos:
                 video.setSelected(true);
-                imageGridViewAdapter.setMediaDetails(videoDetails);
-                imageGridViewAdapter.notifyDataSetChanged();
+                gridViewAdapter.setMediaDetails(videoDetails);
+                gridViewAdapter.notifyDataSetChanged();
                 if (pictures.isSelected()) {
                     pictures.setSelected(false);
                 }
                 break;
             case R.id.pictures:
-                imageGridViewAdapter.setMediaDetails(imageDetails);
+                gridViewAdapter.setMediaDetails(imageDetails);
                 pictures.setSelected(true);
                 if (video.isSelected()) {
                     video.setSelected(false);
                 }
                 break;
             case R.id.upload:
-                upload.setSelected(true);
-                if (delete.isSelected()) {
-                    delete.setSelected(false);
-                }
+
                 break;
             case R.id.delete:
-                delete.setSelected(true);
-                if (upload.isSelected()) {
-                    upload.setSelected(false);
+                File deleteFile;
+                gridViewAdapter.getCount();
+                for (MediaDetails mediaDetails : selectedItems) {
+//                    MediaDetails mediaDetails=gridViewAdapter.getItem(key);
+                    deleteFile = new File(Utils.mediaStorageDir + "/" + mediaDetails.getFilePath());
+                    Boolean fileDeleted = deleteFile.delete();
+                    if (fileDeleted) {
+                        if (mediaDetails.getMediaType().equals("image")) {
+                            imageDetails.remove(mediaDetails);
+                        } else {
+                            videoDetails.remove(mediaDetails);
+                        }
+                        gridViewAdapter.notifyDataSetChanged();
+                    }
                 }
+                imageGridView.requestLayout();
+                imageGridView.clearChoices();
+                selectedItems.clear();
+                gridViewButton.setVisibility(View.VISIBLE);
+                menu.setVisibility(View.GONE);
                 break;
         }
     }
@@ -148,11 +195,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         matrix.postRotate(270);
         if (!fileName.contains("IMG")) {
             imageDetails.add(new MediaDetails(ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND), newFileName, "video"));
-            imageGridViewAdapter.add(new MediaDetails(ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND), newFileName, "video"));
+            gridViewAdapter.add(new MediaDetails(ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND), newFileName, "video"));
         } else {
             Bitmap image = BitmapFactory.decodeFile(file.getAbsolutePath());
             imageDetails.add(new MediaDetails(ThumbnailUtils.extractThumbnail(image, 500, 500), newFileName, "image"));
-            imageGridViewAdapter.add(new MediaDetails(ThumbnailUtils.extractThumbnail(image, 500, 500), newFileName, "image"));
+            gridViewAdapter.add(new MediaDetails(ThumbnailUtils.extractThumbnail(image, 500, 500), newFileName, "image"));
             findViewById(R.id.design_bottom_sheet).requestLayout();
         }
 
@@ -240,8 +287,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void setUpScreen() {
+        pictures.setSelected(true);
         preview = new Preview(this, this);
-        preview.setWillNotDraw(false);
+        preview.setWillNotDraw(false);/* to overlay capture button*/
         frameLayout.addView(preview);
         gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> imageGridView.
                 getLayoutParams().height = height - gridViewButton.getHeight());
@@ -252,13 +300,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 imageGestureDetector.onTouchEvent(event);
             return false;
         });
+
         imageGridView.setExpanded(false);
-        imageGridView.setAdapter(imageGridViewAdapter);
+        imageGridView.setAdapter(gridViewAdapter);
         imageGridView.setOnItemClickListener(this);
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
 
-        subscription=getFromSdCard().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).
-                subscribe(mediaDetails -> imageGridViewAdapter.add(mediaDetails),
+        subscription = getFromSdCard().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).
+                subscribe(mediaDetails -> gridViewAdapter.add(mediaDetails),
                         throwable -> Log.d("debug", throwable.getMessage()),
                         () -> Log.d("debug", "completed"));
     }
@@ -268,7 +317,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onPause();
 //        preview.releaseCamera();
     }
-
 
 
     @Override
@@ -288,17 +336,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         MediaDetails details = (MediaDetails) parent.getItemAtPosition(position);
-        Log.d("item position", position + "");
         ImageView tick = (ImageView) view.findViewById(R.id.tick);
         if (selectedItems.size() > 0) {
             details.toggleChecked();
             if (details.isChecked()) {
-                selectedItems.put(position, details);
+                selectedItems.add(details);
                 tick.setVisibility(View.VISIBLE);
                 tickView.put(position, view);
             } else {
-                selectedItems.remove(position);
                 tick.setVisibility(View.INVISIBLE);
+                selectedItems.remove(details);
                 tickView.remove(position);
                 if (selectedItems.size() == 0) {
                     imageGridView.requestLayout();
@@ -338,9 +385,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initVariables() {
-        imageGridViewAdapter = new ImageGridViewAdapter(this, imageDetails);
+        gridViewAdapter = new GridViewAdapter(this, imageDetails);
         imageGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE);
         imageGridView.setOnItemLongClickListener(this);
+
         bottomSheetCallback = new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
@@ -380,8 +428,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onBackPressed() {
         if (selectedItems.size() > 0) {
-           for (Integer key : selectedItems.keySet()) {
-                selectedItems.get(key).toggleChecked();
+            for (MediaDetails mediaDetails : selectedItems) {
+                mediaDetails.toggleChecked();
+            }
+
+            selectedItems.forEach(MediaDetails::toggleChecked);
+            for (Integer key : tickView.keySet()) {
                 tickView.get(key).findViewById(R.id.tick).setVisibility(View.GONE);
             }
             imageGridView.requestLayout();
@@ -392,19 +444,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         } else if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        } else{
+        } else {
             finish();
-            Log.d("debug","finish");
+            Log.d("debug", "finish");
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(!subscription.isUnsubscribed()){
+        if (!subscription.isUnsubscribed()) {
             subscription.unsubscribe();
         }
-        if(preview.getCamera()!=null)
+        if (preview.getCamera() != null)
             preview.releaseCamera();
     }
 
@@ -441,7 +493,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         MediaDetails image = (MediaDetails) parent.getItemAtPosition(position);
@@ -450,7 +501,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         menu.setVisibility(View.VISIBLE);
         gridViewButton.setVisibility(View.INVISIBLE);
         tick.setVisibility(View.VISIBLE);
-        selectedItems.put(position, image);
+        selectedItems.add(image);
         tickView.put(position, view);
         return true;
     }
