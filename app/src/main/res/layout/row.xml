@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="top|right"
         android:background="@drawable/circle"
-        android:src="@drawable/ic_done_white_24dp"
+        android:src="@drawable/ic_done_white_18dp"
         android:visibility="visible" />
 
     <ImageView
