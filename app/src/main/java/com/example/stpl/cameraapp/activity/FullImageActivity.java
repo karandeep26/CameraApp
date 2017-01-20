@@ -14,6 +14,7 @@ import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.ZoomOutPageTransformer;
 import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
+import com.example.stpl.cameraapp.main.MainActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -28,7 +29,8 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-public class FullImageActivity extends AppCompatActivity implements View.OnClickListener, OnCompleteListener {
+public class FullImageActivity extends AppCompatActivity implements View.OnClickListener,
+        OnCompleteListener {
     int position;
     ViewPager mViewPager;
     ArrayList<MediaDetails> mediaDetails;
