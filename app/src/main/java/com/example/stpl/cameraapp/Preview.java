@@ -2,7 +2,6 @@ package com.example.stpl.cameraapp;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -32,16 +31,16 @@ import static android.content.ContentValues.TAG;
  */
 
 public class Preview extends SurfaceView implements SurfaceHolder.Callback {
-    private SurfaceHolder surfaceHolder;
-    private Camera camera;
-    Context activity;
-    OnPictureTaken pictureTaken;
     static boolean surfaceCreated = false;
     static String fileName;
+    Context activity;
+    OnPictureTaken pictureTaken;
+    MediaRecorder mediaRecorder;
+    private SurfaceHolder surfaceHolder;
+    private Camera camera;
     private List<Camera.Size> mSupportedPreviewSizes;
     private Camera.Size mPreviewSize;
     private int camId;
-    MediaRecorder mediaRecorder;
 
 
     public Preview(Context context, OnPictureTaken pictureTaken) {
@@ -54,6 +53,27 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
         camera = openFrontFacingCameraGingerbread();
         mSupportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
 
+    }
+
+    private static File getOutputMediaFile() {
+        File mediaStorageDir = new File(
+                Environment
+                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                "MyCameraApp");
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                Log.d("MyCameraApp", "failed to create directory");
+                return null;
+            }
+        }
+        // Create a media file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
+                .format(new Date());
+        fileName = mediaStorageDir.getPath() + File.separator + "IMG_" + timeStamp + ".jpg";
+
+        File mediaFile;
+        mediaFile = new File(fileName);
+        return mediaFile;
     }
 
     @Override
@@ -118,27 +138,6 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
         return cam;
     }
 
-    private static File getOutputMediaFile() {
-        File mediaStorageDir = new File(
-                Environment
-                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                "MyCameraApp");
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
-                Log.d("MyCameraApp", "failed to create directory");
-                return null;
-            }
-        }
-        // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
-                .format(new Date());
-        fileName = mediaStorageDir.getPath() + File.separator + "IMG_" + timeStamp + ".jpg";
-
-        File mediaFile;
-        mediaFile = new File(fileName);
-        return mediaFile;
-    }
-
     private void initRecorder() {
         camera.unlock();
         mediaRecorder = new MediaRecorder();
@@ -178,7 +177,8 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
                     Bitmap image = BitmapFactory.decodeByteArray(data, 0, data.length);
                     Matrix matrix = new Matrix();
                     matrix.postRotate(270);
-                    Bitmap rotatedImage = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
+                    Bitmap rotatedImage = Bitmap.createBitmap(image, 0, 0, image.getWidth(),
+                            image.getHeight(), matrix, true);
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                     rotatedImage.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
                     fos.write(outputStream.toByteArray());

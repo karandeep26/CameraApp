@@ -1,5 +1,7 @@
 package com.example.stpl.cameraapp.main;
 
+import com.example.stpl.cameraapp.models.MediaDetails;
+
 import java.util.ArrayList;
 
 /**
@@ -11,6 +13,8 @@ public interface MainView {
 
     void permissionNotAvailable(ArrayList<String> permissionNeeded, ArrayList<String>
             permissionList);
+
+    void itemAdd(MediaDetails mediaDetails);
 
 
 }

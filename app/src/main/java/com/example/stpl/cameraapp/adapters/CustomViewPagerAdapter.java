@@ -28,7 +28,8 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     public CustomViewPagerAdapter(Context mContext, ArrayList<MediaDetails> mediaDetails) {
         this.mediaDetails = mediaDetails;
         this.mContext = mContext;
-        this.mLayoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.mLayoutInflater = (LayoutInflater) mContext.getSystemService(Context
+                .LAYOUT_INFLATER_SERVICE);
     }
 
     @Override

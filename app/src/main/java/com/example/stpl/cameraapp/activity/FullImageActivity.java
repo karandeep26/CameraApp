@@ -2,7 +2,6 @@ package com.example.stpl.cameraapp.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -16,8 +15,6 @@ import com.example.stpl.cameraapp.ZoomOutPageTransformer;
 import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
 import com.example.stpl.cameraapp.main.MainActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -29,8 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-public class FullImageActivity extends AppCompatActivity implements View.OnClickListener,
-        OnCompleteListener {
+public class FullImageActivity extends AppCompatActivity implements View.OnClickListener {
     int position;
     ViewPager mViewPager;
     ArrayList<MediaDetails> mediaDetails;
@@ -40,7 +36,7 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     ImageButton upload;
     StorageReference storageReference;
     StorageReference uploadReference;
-    boolean isDragging=false;
+    boolean isDragging = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,12 +45,12 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         setContentView(R.layout.activity_full_image);
         bindViews();/* make common*/
         Intent intent = getIntent();
-        position = intent.getIntExtra("position",-1);
-        mediaDetails=intent.getParcelableArrayListExtra("model");
+        position = intent.getIntExtra("position", -1);
+        mediaDetails = intent.getParcelableArrayListExtra("model");
         mViewPager.setOffscreenPageLimit(3);
         mViewPager.setAdapter(new CustomViewPagerAdapter(this, mediaDetails));
         mViewPager.setCurrentItem(position);
-        mViewPager.setPageTransformer(true,new ZoomOutPageTransformer());
+        mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
 
     }
 
@@ -64,7 +60,8 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         visibility = View.INVISIBLE;
         firebaseAuth = FirebaseAuth.getInstance();
 
-        StorageReference storageRef = FirebaseStorage.getInstance().getReferenceFromUrl("gs://selfie-geek.appspot.com");
+        StorageReference storageRef = FirebaseStorage.getInstance().getReferenceFromUrl
+                ("gs://selfie-geek.appspot.com");
         uploadReference = storageRef.child("upload.jpg");
 
         if (!MainActivity.isSignedIn) {
@@ -110,12 +107,14 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         switch (v.getId()) {
             case R.id.upload:
                 try {
-                    InputStream inputStream = new FileInputStream(new File(Utils.mediaStorageDir + "/" + mediaDetails.
+                    InputStream inputStream = new FileInputStream(new File(Utils.mediaStorageDir
+                            + "/" + mediaDetails.
                             get(mViewPager.getCurrentItem()).getFilePath()));
                     UploadTask uploadTask = uploadReference.putStream(inputStream);
                     uploadTask.addOnSuccessListener(taskSnapshot -> Log.d("file uploaded", "true")).
                             addOnFailureListener(e -> Log.e("error", e.getMessage())).
-                            addOnProgressListener(taskSnapshot -> Log.d("bytes", taskSnapshot.getBytesTransferred() / 1024 + ""));
+                            addOnProgressListener(taskSnapshot -> Log.d("bytes", taskSnapshot
+                                    .getBytesTransferred() / 1024 + ""));
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -124,7 +123,7 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void bindViews() {
-        mViewPager= (ViewPager) findViewById(R.id.pager);
+        mViewPager = (ViewPager) findViewById(R.id.pager);
         topPanel = (LinearLayout) findViewById(R.id.topPanel);
         upload = (ImageButton) findViewById(R.id.upload);
         upload.setOnClickListener(this);
@@ -143,8 +142,4 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     }
 
 
-    @Override
-    public void onComplete(@NonNull Task task) {
-
-    }
 }

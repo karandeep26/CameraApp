@@ -21,13 +21,13 @@ public class PlayVideoActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play_video);
-        Intent intent=getIntent();
-        CustomVideoView videoView= (CustomVideoView) findViewById(R.id.videoView);
-        String fileName=intent.getStringExtra("fileName");
-        android.widget.MediaController mediaController=new android.widget.MediaController(this);
+        Intent intent = getIntent();
+        CustomVideoView videoView = (CustomVideoView) findViewById(R.id.videoView);
+        String fileName = intent.getStringExtra("fileName");
+        android.widget.MediaController mediaController = new android.widget.MediaController(this);
         mediaController.setAnchorView(videoView);
         videoView.setMediaController(mediaController);
-        videoView.setVideoPath((mediaStorageDir+"/"+fileName));
+        videoView.setVideoPath((mediaStorageDir + "/" + fileName));
 
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);

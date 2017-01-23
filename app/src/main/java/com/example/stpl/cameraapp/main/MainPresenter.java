@@ -6,4 +6,9 @@ package com.example.stpl.cameraapp.main;
 
 interface MainPresenter {
     void checkForPermissions();
+
+    void fetchFromSdCard();
+
+    void onDestroy();
+
 }

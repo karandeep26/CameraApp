@@ -2,6 +2,7 @@
   <dictionary name="stpl">
     <words>
       <w>firebase</w>
+      <w>interactor</w>
       <w>kinvey</w>
     </words>
   </dictionary>

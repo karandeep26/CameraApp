@@ -20,7 +20,7 @@ public class MediaDetails implements Parcelable {
     private Bitmap image;
     private String filePath;
     private String mediaType;
-    private boolean isChecked=false;
+    private boolean isChecked = false;
 
     public MediaDetails(Bitmap image, String filePath, String type) {
         this.image = image;
@@ -44,8 +44,9 @@ public class MediaDetails implements Parcelable {
     public boolean isChecked() {
         return isChecked;
     }
-    public void toggleChecked(){
-        isChecked=!isChecked;
+
+    public void toggleChecked() {
+        isChecked = !isChecked;
     }
 
     public String getMediaType() {
