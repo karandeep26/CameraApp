@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
+import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.ZoomOutPageTransformer;
 import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
