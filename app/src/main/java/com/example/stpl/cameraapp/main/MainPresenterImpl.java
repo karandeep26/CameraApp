@@ -6,12 +6,17 @@ import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import com.example.stpl.cameraapp.models.MediaDetails;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
+import rx.subscriptions.CompositeSubscription;
 
 /**
  * Created by stpl on 1/20/2017.
@@ -20,13 +25,18 @@ import rx.schedulers.Schedulers;
 class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedListener {
     private Context mContext;
     private MainView mainView;
+    private MainView.FileDeletedListener fileDeletedListener;
     private SdCardInteractor sdCardInteractor;
-    private Subscription subscription;
+    private CompositeSubscription compositeSubscription;
+    private int minutes = 0;
+
 
     MainPresenterImpl(MainView mainView, SdCardInteractor sdCardInteractor) {
         this.mainView = mainView;
         mContext = (Context) mainView;
         this.sdCardInteractor = sdCardInteractor;
+        compositeSubscription = new CompositeSubscription();
+        fileDeletedListener = (MainView.FileDeletedListener) mainView;
     }
 
     @Override
@@ -52,19 +62,55 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
 
     @Override
     public void fetchFromSdCard() {
+        Subscription subscription;
         subscription = sdCardInteractor.getFromSdCard().subscribeOn(Schedulers.io()).
                 observeOn(AndroidSchedulers.mainThread()).
                 subscribe(mediaDetails -> mainView.itemAdd(mediaDetails),
                         throwable -> Log.d("debug", throwable.getMessage()),
                         () -> Log.d("debug", "completed"));
+        compositeSubscription.add(subscription);
+    }
+
+    @Override
+    public void deleteFromSdCard(ArrayList<MediaDetails> mediaDetails) {
+        for (MediaDetails details : mediaDetails) {
+            boolean isDelectationSuccessful;
+            isDelectationSuccessful = sdCardInteractor.deleteFromSdCard(details);
+            if (isDelectationSuccessful) {
+                fileDeletedListener.onFileDeleted(details);
+            } else {
+                fileDeletedListener.onErrorOccurred();
+            }
+        }
     }
 
     @Override
     public void onDestroy() {
-        if (subscription != null && !subscription.isUnsubscribed()) {
-            subscription.unsubscribe();
+        if (compositeSubscription != null && !compositeSubscription.isUnsubscribed()) {
+            compositeSubscription.unsubscribe();
         }
     }
+
+    @Override
+    public Subscription startTimer() {
+
+        Subscription timerSubscription = Observable.zip(Observable.range(0, 60),
+                Observable.interval(1, TimeUnit.SECONDS), (integer, aLong) -> integer).repeat()
+                .observeOn(AndroidSchedulers.mainThread()).subscribe(seconds -> {
+                    if (seconds > 9) {
+                        mainView.setTimerValue(minutes + ": 0" + seconds);
+                    } else {
+                        mainView.setTimerValue(minutes + ":" + seconds);
+                    }
+                    if (seconds == 59) {
+                        minutes++;
+                    }
+                });
+        compositeSubscription.add(timerSubscription);
+        return timerSubscription;
+    }
+
+
 
     private boolean addPermission(List<String> permissionsList, String permission) {
         if (ActivityCompat.checkSelfPermission(mContext, permission) != PackageManager

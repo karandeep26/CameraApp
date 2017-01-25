@@ -11,6 +11,8 @@ import rx.Observable;
 public interface SdCardInteractor {
     Observable<MediaDetails> getFromSdCard();
 
+    boolean deleteFromSdCard(MediaDetails mediaDetails);
+
     interface OnFinishedListener {
         void onFinished();
     }

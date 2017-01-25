@@ -8,13 +8,22 @@ import java.util.ArrayList;
  * Created by stpl on 1/19/2017.
  */
 
-public interface MainView {
+interface MainView {
     void permissionAvailable();
 
     void permissionNotAvailable(ArrayList<String> permissionNeeded, ArrayList<String>
             permissionList);
 
     void itemAdd(MediaDetails mediaDetails);
+
+    void setTimerValue(String timer);
+
+    interface FileDeletedListener {
+        void onFileDeleted(MediaDetails mediaDetails);
+
+        void onErrorOccurred();
+    }
+
 
 
 }

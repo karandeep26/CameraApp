@@ -17,7 +17,6 @@ import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
@@ -32,7 +31,6 @@ import com.example.stpl.cameraapp.GestureDetector;
 import com.example.stpl.cameraapp.OnPictureTaken;
 import com.example.stpl.cameraapp.Preview;
 import com.example.stpl.cameraapp.R;
-import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.activity.FullImageActivity;
 import com.example.stpl.cameraapp.activity.PlayVideoActivity;
 import com.example.stpl.cameraapp.adapters.GridViewAdapter;
@@ -43,28 +41,20 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
-import java.util.concurrent.TimeUnit;
 
-import rx.Observable;
 import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        OnPictureTaken, AdapterView.OnItemClickListener,
+        OnPictureTaken, AdapterView.OnItemClickListener, MainView.FileDeletedListener,
         AdapterView.OnItemLongClickListener, MainView {
     public static boolean isSignedIn;
     final int MULTIPLE_PERMISSIONS = 123;
-    public int seconds = 0;
-    public int minutes = 0;
     boolean recording = false;
     TextView time;
-    Timer timer;
     GestureDetectorCompat imageGestureDetector;
     int height;
     Subscription subscription;
     MainPresenter mainPresenter;
-    Observable<Integer> timeInterval;
     private FrameLayout frameLayout;
     private Preview preview;
     private ImageButton captureButton;
@@ -173,20 +163,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Delete pictures/videos from the phone
              */
             case R.id.delete:
-                File deleteFile;
-                gridViewAdapter.getCount();
-                for (MediaDetails mediaDetails : selectedItems) {
-                    deleteFile = new File(Utils.mediaStorageDir + "/" + mediaDetails.getFilePath());
-                    Boolean fileDeleted = deleteFile.delete();
-                    if (fileDeleted) {
-                        if (mediaDetails.getMediaType().equals("image")) {
-                            imageDetails.remove(mediaDetails);
-                        } else {
-                            videoDetails.remove(mediaDetails);
-                        }
-                        gridViewAdapter.notifyDataSetChanged();
-                    }
-                }
+                mainPresenter.deleteFromSdCard(selectedItems);
                 /**
                  * Restore GridView from the selection mode
                  */
@@ -211,21 +188,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String newFileName = fileName.substring(fileName.lastIndexOf("/") + 1);
         Matrix matrix = new Matrix();
         matrix.postRotate(270);
+        MediaDetails mediaDetails;
         if (!fileName.contains("IMG")) {
-            imageDetails.add(new MediaDetails(ThumbnailUtils.createVideoThumbnail(file
+            mediaDetails = new MediaDetails(ThumbnailUtils.createVideoThumbnail(file
                     .getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND), newFileName,
-                    "video"));
-            gridViewAdapter.add(new MediaDetails(ThumbnailUtils.createVideoThumbnail(file
-                    .getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND), newFileName,
-                    "video"));
+                    "video");
+            videoDetails.add(mediaDetails);
         } else {
             Bitmap image = BitmapFactory.decodeFile(file.getAbsolutePath());
-            imageDetails.add(new MediaDetails(ThumbnailUtils.extractThumbnail(image, 500, 500),
-                    newFileName, "image"));
-            gridViewAdapter.add(new MediaDetails(ThumbnailUtils.extractThumbnail(image, 500, 500)
-                    , newFileName, "image"));
-            findViewById(R.id.design_bottom_sheet).requestLayout();
+            mediaDetails = new MediaDetails(ThumbnailUtils.extractThumbnail(image, 500, 500),
+                    newFileName, "image");
+            imageDetails.add(mediaDetails);
         }
+        findViewById(R.id.design_bottom_sheet).requestLayout();
+        gridViewAdapter.add(mediaDetails);
+
 
     }
 
@@ -233,18 +210,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         switch (requestCode) {
-            case MULTIPLE_PERMISSIONS: {
-                {
+            case MULTIPLE_PERMISSIONS:
                     Map<String, Integer> perms = new HashMap<>();
-                    // Initial
+
                     perms.put(Manifest.permission.CAMERA, PackageManager.PERMISSION_GRANTED);
                     perms.put(Manifest.permission.READ_EXTERNAL_STORAGE, PackageManager
                             .PERMISSION_GRANTED);
                     perms.put(Manifest.permission.WRITE_EXTERNAL_STORAGE, PackageManager
                             .PERMISSION_GRANTED);
-                    // Fill with results
+
                     for (int i = 0; i < permissions.length; i++)
                         perms.put(permissions[i], grantResults[i]);
+
                     if (perms.get(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
                             && perms.get(Manifest.permission.READ_EXTERNAL_STORAGE) ==
                             PackageManager.PERMISSION_GRANTED
@@ -262,8 +239,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 .LENGTH_SHORT)
                                 .show();
                     }
-                }
-            }
+
             break;
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -279,39 +255,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .show();
     }
 
-    /**
-     * Loads the camera and thumbnails from the sdCard.
-     * Hack for nested scrollView and gridView using GestureDetector
-     */
-    private void setUpScreen() {
-        pictures.setSelected(true);
-        preview = new Preview(this, this);
-        /**
-         * To overlay capture button
-         */
-        preview.setWillNotDraw(false);
-        frameLayout.addView(preview);
-        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> imageGridView.
-                getLayoutParams().height = height - gridViewButton.getHeight());
-        imageGestureDetector = new GestureDetectorCompat(this,
-                new GestureDetector(imageGridView, bottomSheetBehavior));
-        /**
-         * If first item of GridView is Visible,Disable GridView Scrolling.
-         * If first item is not visible,continue with nested scroll view scrolling
-         */
-        imageGridView.setOnTouchListener((v, event) -> {
-            v.getParent().requestDisallowInterceptTouchEvent(true);
-            if (imageGridView.getFirstVisiblePosition() == 0)
-                imageGestureDetector.onTouchEvent(event);
-            return false;
-        });
-
-        imageGridView.setExpanded(false);
-        imageGridView.setAdapter(gridViewAdapter);
-        imageGridView.setOnItemClickListener(this);
-        bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
-        mainPresenter.fetchFromSdCard();
-    }
 
     @Override
     protected void onPause() {
@@ -444,7 +387,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mediaDetails.toggleChecked();
             }
 
-            selectedItems.forEach(MediaDetails::toggleChecked);
             for (Integer key : tickView.keySet()) {
                 tickView.get(key).findViewById(R.id.tick).setVisibility(View.GONE);
             }
@@ -459,7 +401,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
         /**
-         * If bottom sheet is open,hide it
+         * If bottom sheet is open,hide it.
          */
         else if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
@@ -469,7 +411,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          */
         else {
             finish();
-            Log.d("debug", "finish");
         }
     }
 
@@ -490,21 +431,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void recordVideo() {
         if (!recording) {
             recording = true;
-            minutes = 0;
             time.setVisibility(View.VISIBLE);
             preview.recordVideo();
-            subscription = Observable.zip(Observable.range(0, 60),
-                    Observable.interval(1, TimeUnit.SECONDS), (integer, aLong) -> integer).repeat()
-                    .observeOn(AndroidSchedulers.mainThread()).subscribe(seconds -> {
-                        if (seconds <= 9) {
-                            time.setText(minutes + ": 0" + seconds);
-                        } else {
-                            time.setText(minutes + ":" + seconds);
-                        }
-                        if (seconds == 59) {
-                            minutes++;
-                        }
-                    });
+            subscription = mainPresenter.startTimer();
         } else {
             time.setVisibility(View.GONE);
             preview.stopVideo();
@@ -529,10 +458,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return true;
     }
 
+    /**
+     * Loads the camera and thumbnails from the sdCard.
+     * Hack for nested scrollView and gridView using GestureDetector
+     */
     @Override
     public void permissionAvailable() {
-        setUpScreen();
+        pictures.setSelected(true);
+        preview = new Preview(this, this);
+        /**
+         * To overlay capture button
+         */
+        preview.setWillNotDraw(false);
+        frameLayout.addView(preview);
+        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> imageGridView.
+                getLayoutParams().height = height - gridViewButton.getHeight());
+        imageGestureDetector = new GestureDetectorCompat(this,
+                new GestureDetector(imageGridView, bottomSheetBehavior));
+        /**
+         * If first item of GridView is Visible,Disable GridView Scrolling top to bottom.
+         * If first item is not visible,continue with nested scroll view scrolling
+         */
+        imageGridView.setOnTouchListener((v, event) -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            if (imageGridView.getFirstVisiblePosition() == 0)
+                imageGestureDetector.onTouchEvent(event);
+            return false;
+        });
 
+
+        imageGridView.setExpanded(false);
+        imageGridView.setAdapter(gridViewAdapter);
+        imageGridView.setOnItemClickListener(this);
+        bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
+        mainPresenter.fetchFromSdCard();
     }
 
     @Override
@@ -550,6 +509,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void itemAdd(MediaDetails mediaDetails) {
         gridViewAdapter.add(mediaDetails);
+    }
+
+    @Override
+    public void setTimerValue(String timer) {
+        time.setText(timer);
+    }
+
+    @Override
+    public void onFileDeleted(MediaDetails mediaDetails) {
+        if (mediaDetails.getMediaType().equals("image")) {
+            imageDetails.remove(mediaDetails);
+        } else {
+            videoDetails.remove(mediaDetails);
+        }
+        gridViewAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onErrorOccurred() {
+
     }
 }
 

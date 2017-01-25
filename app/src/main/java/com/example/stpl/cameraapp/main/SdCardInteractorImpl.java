@@ -6,6 +6,7 @@ import android.graphics.Matrix;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
 
+import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.models.MediaDetails;
 
 import java.io.File;
@@ -45,14 +46,18 @@ public class SdCardInteractorImpl implements SdCardInteractor {
                         String newFileName = path.substring(path.lastIndexOf("/") + 1);
                         if (aListFile.getAbsolutePath().contains("jpg")) {
                             Bitmap image = BitmapFactory.decodeFile(aListFile.getAbsolutePath());
-                            imageDetails.add(new MediaDetails(ThumbnailUtils.extractThumbnail
-                                    (image, 500, 500), newFileName, "image"));
-                            subscriber.onNext(new MediaDetails(ThumbnailUtils.extractThumbnail
-                                    (image, 500, 500), newFileName, "image"));
-                        } else if (aListFile.getAbsolutePath().contains("mp4"))
-                            videoDetails.add(new MediaDetails(ThumbnailUtils.createVideoThumbnail
+                            MediaDetails mediaDetails = new MediaDetails(ThumbnailUtils
+                                    .extractThumbnail
+                                    (image, 500, 500), newFileName, "image");
+                            imageDetails.add(mediaDetails);
+                            subscriber.onNext(mediaDetails);
+                        } else if (aListFile.getAbsolutePath().contains("mp4")) {
+                            MediaDetails mediaDetails = new MediaDetails(ThumbnailUtils
+                                    .createVideoThumbnail
                                     (aListFile.getAbsolutePath(), MediaStore.Video.Thumbnails
-                                            .MINI_KIND), newFileName, "video"));
+                                            .MINI_KIND), newFileName, "video");
+                            videoDetails.add(mediaDetails);
+                        }
                     }
                     if (!subscriber.isUnsubscribed()) {
                         subscriber.onCompleted();
@@ -60,6 +65,13 @@ public class SdCardInteractorImpl implements SdCardInteractor {
                 }
             }
         });
+    }
+
+    @Override
+    public boolean deleteFromSdCard(MediaDetails mediaDetails) {
+        File deleteFile = new File(Utils.mediaStorageDir + "/" + mediaDetails.getFilePath());
+        return deleteFile.delete();
+
     }
 }
 

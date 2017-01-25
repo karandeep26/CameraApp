@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_full_image"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:animateLayoutChanges="true"
-    android:background="#000"
-    tools:context="com.example.stpl.cameraapp.activity.FullImageActivity">
+                xmlns:tools="http://schemas.android.com/tools"
+                android:id="@+id/activity_full_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:animateLayoutChanges="true"
+                android:background="#000"
+                tools:context="com.example.stpl.cameraapp.activity.FullImageActivity">
 
 
     <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/pager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+                                       android:id="@+id/pager"
+                                       android:layout_width="match_parent"
+                                       android:layout_height="match_parent"/>
 
     <LinearLayout
         android:id="@+id/topPanel"
@@ -28,7 +28,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="?android:attr/selectableItemBackground"
-            android:src="@drawable/cloud_upload_selector" />
+            android:src="@drawable/cloud_upload_selector"/>
 
         <ImageButton
             android:id="@+id/save"
@@ -36,7 +36,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="?android:attr/selectableItemBackground"
-            android:src="@drawable/save_from_cloud_selector" />
+            android:src="@drawable/save_from_cloud_selector"/>
 
         <ImageButton
 
@@ -45,7 +45,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="?android:attr/selectableItemBackground"
-            android:src="@drawable/delete_button_selector" />
+            android:src="@drawable/delete_button_selector"/>
 
     </LinearLayout>
 

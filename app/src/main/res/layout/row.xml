@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content">
 
     <ImageView
         android:id="@+id/image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
-        android:src="@mipmap/ic_launcher" />
+        android:src="@mipmap/ic_launcher"/>
 
     <ImageView
         android:id="@+id/tick"
@@ -18,14 +18,14 @@
         android:layout_gravity="top|right"
         android:background="@drawable/circle"
         android:src="@drawable/ic_done_white_24dp"
-        android:visibility="visible" />
+        android:visibility="visible"/>
 
     <ImageView
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
-        android:src="@drawable/ic_cloud_off_white_24dp" />
+        android:src="@drawable/ic_cloud_off_white_24dp"/>
 </FrameLayout>
 
 
