@@ -43,7 +43,7 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         super.onCreate(savedInstanceState);
         makeFullScreen();
         setContentView(R.layout.activity_full_image);
-        bindViews();/* make common*/
+        bindViews();
         Intent intent = getIntent();
         position = intent.getIntExtra("position", -1);
         mediaDetails = intent.getParcelableArrayListExtra("model");

@@ -17,6 +17,7 @@ import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
@@ -36,6 +37,7 @@ import com.example.stpl.cameraapp.activity.PlayVideoActivity;
 import com.example.stpl.cameraapp.adapters.GridViewAdapter;
 import com.example.stpl.cameraapp.customViews.ExpandableHeightGridView;
 import com.example.stpl.cameraapp.models.MediaDetails;
+import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -70,12 +72,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<MediaDetails> selectedItems = new ArrayList<>();
     private HashMap<Integer, View> tickView = new HashMap<>();
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainPresenter = new MainPresenterImpl(this, new SdCardInteractorImpl(imageDetails,
                 videoDetails));
+
 
         /**
          * Set Window Flags to make app full screen
@@ -114,6 +118,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            FirebaseUser user = firebaseAuth.getCurrentUser();
 //            isSignedIn = user != null;
 //        });
+        if (preview != null) {
+            preview.getSubject().subscribe(s -> {
+                Log.d("file name", s);
+            });
+        }
 
     }
 
@@ -176,6 +185,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+
     /**
      * Callback from the preview class to load the thumbnail of a fresh Video/picture
      * capture
@@ -205,6 +215,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
@@ -417,8 +428,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (preview != null && preview.getCamera() != null)
+        if (preview != null && preview.getCamera() != null) {
             preview.releaseCamera();
+        }
         if (mainPresenter != null) {
             mainPresenter.onDestroy();
             mainPresenter = null;
@@ -492,14 +504,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imageGridView.setOnItemClickListener(this);
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
         mainPresenter.fetchFromSdCard();
+
     }
 
     @Override
     public void permissionNotAvailable(ArrayList<String> permissionNeeded,
                                        ArrayList<String> permissionList) {
         String message = "You need to grant access to " + permissionNeeded.get(0);
-        for (int i = 1; i < permissionNeeded.size(); i++)
-            message = message + ", " + permissionNeeded.get(i);
+        for (String permission : permissionNeeded) {
+            message = message + ", " + permission;
+        }
         showMessageOKCancel(message,
                 (dialog, which) -> ActivityCompat.requestPermissions(this, permissionList.toArray
                                 (new String[permissionList.size()]),

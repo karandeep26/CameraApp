@@ -7,6 +7,7 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.example.stpl.cameraapp.models.MediaDetails;
+import com.example.stpl.cameraapp.models.SdCardInteractor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,8 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
     private SdCardInteractor sdCardInteractor;
     private CompositeSubscription compositeSubscription;
     private int minutes = 0;
+    Subscription subscription;
+
 
 
     MainPresenterImpl(MainView mainView, SdCardInteractor sdCardInteractor) {
@@ -62,21 +65,25 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
 
     @Override
     public void fetchFromSdCard() {
-        Subscription subscription;
         subscription = sdCardInteractor.getFromSdCard().subscribeOn(Schedulers.io()).
                 observeOn(AndroidSchedulers.mainThread()).
                 subscribe(mediaDetails -> mainView.itemAdd(mediaDetails),
                         throwable -> Log.d("debug", throwable.getMessage()),
-                        () -> Log.d("debug", "completed"));
+                        () -> {
+                            Log.d("debug", "completed");
+                            Log.d("subscription ", subscription.isUnsubscribed() + "");
+                            subscription.unsubscribe();
+
+                        });
         compositeSubscription.add(subscription);
     }
 
     @Override
     public void deleteFromSdCard(ArrayList<MediaDetails> mediaDetails) {
         for (MediaDetails details : mediaDetails) {
-            boolean isDelectationSuccessful;
-            isDelectationSuccessful = sdCardInteractor.deleteFromSdCard(details);
-            if (isDelectationSuccessful) {
+            boolean isDeletionSuccessful;
+            isDeletionSuccessful = sdCardInteractor.deleteFromSdCard(details);
+            if (isDeletionSuccessful) {
                 fileDeletedListener.onFileDeleted(details);
             } else {
                 fileDeletedListener.onErrorOccurred();
@@ -89,6 +96,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
         if (compositeSubscription != null && !compositeSubscription.isUnsubscribed()) {
             compositeSubscription.unsubscribe();
         }
+        sdCardInteractor = null;
     }
 
     @Override

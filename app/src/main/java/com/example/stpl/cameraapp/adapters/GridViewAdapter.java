@@ -17,13 +17,11 @@ import java.util.ArrayList;
 
 
 public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
-    private Context context;
     private ArrayList<MediaDetails> mediaDetails;
     private LayoutInflater inflater;
 
     public GridViewAdapter(Context context, ArrayList<MediaDetails> mediaDetails) {
         super(context, 0);
-        this.context = context;
         this.mediaDetails = mediaDetails;
         inflater = ((Activity) context).getLayoutInflater();
     }

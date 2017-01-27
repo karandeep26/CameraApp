@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import rx.Observable;
+import rx.subjects.PublishSubject;
+
 import static android.content.ContentValues.TAG;
 
 /**
@@ -32,7 +35,7 @@ import static android.content.ContentValues.TAG;
 
 public class Preview extends SurfaceView implements SurfaceHolder.Callback {
     static boolean surfaceCreated = false;
-    static String fileName;
+    String fileName;
     Context activity;
     OnPictureTaken pictureTaken;
     MediaRecorder mediaRecorder;
@@ -41,6 +44,15 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
     private List<Camera.Size> mSupportedPreviewSizes;
     private Camera.Size mPreviewSize;
     private int camId;
+    PublishSubject<String> subject = PublishSubject.create();
+
+    public Observable<String> getSubject() {
+        return subject;
+    }
+
+    public void setFileName(String fileName) {
+        subject.onNext(fileName);
+    }
 
 
     public Preview(Context context, OnPictureTaken pictureTaken) {
@@ -55,7 +67,7 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
 
     }
 
-    private static File getOutputMediaFile() {
+    private File getOutputMediaFile() {
         File mediaStorageDir = new File(
                 Environment
                         .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
@@ -184,6 +196,7 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
                     fos.write(outputStream.toByteArray());
                     fos.close();
                 }
+                setFileName(fileName);
                 pictureTaken.pictureTaken(fileName);
                 camera1.stopPreview();
                 TimerTask task = new TimerTask() {
