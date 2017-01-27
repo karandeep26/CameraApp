@@ -9,7 +9,6 @@ import android.provider.MediaStore;
 import com.example.stpl.cameraapp.Utils;
 
 import java.io.File;
-import java.util.ArrayList;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -21,48 +20,47 @@ import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
  */
 
 public class SdCardInteractorImpl implements SdCardInteractor {
-    private ArrayList<MediaDetails> imageDetails, videoDetails;
-
-    public SdCardInteractorImpl(ArrayList<MediaDetails> imageDetails, ArrayList<MediaDetails>
-            videoDetails) {
-        this.imageDetails = imageDetails;
-        this.videoDetails = videoDetails;
-    }
-
     @Override
     public Observable<MediaDetails> getFromSdCard() {
 
         return Observable.create(new Observable.OnSubscribe<MediaDetails>() {
             @Override
             public void call(Subscriber<? super MediaDetails> subscriber) {
+                MediaDetails mediaDetails = null;
                 File file = new File(mediaStorageDir.getPath());
                 Matrix matrix = new Matrix();
                 matrix.postRotate(270);
                 if (file.isDirectory()) {
-                    File[] listFile = file.listFiles();
+                    File[] listFile = file.listFiles(pathname -> {
+                        return pathname.getAbsolutePath().contains("jpg");
+                    });
                     for (File aListFile : listFile) {
                         String path = aListFile.getAbsolutePath();
                         String newFileName = path.substring(path.lastIndexOf("/") + 1);
-                        BitmapFactory.Options options = new BitmapFactory.Options();
-
-                        if (aListFile.getAbsolutePath().contains("jpg")) {
-//                            Bitmap image = BitmapFactory.decodeFile(aListFile.getAbsolutePath()
-// ,options);
-                            Bitmap image = Utils.decodeSampledBitmapFromResource
-                                    (aListFile.getAbsolutePath(), 500, 500);
-                            MediaDetails mediaDetails = new MediaDetails(ThumbnailUtils
-                                    .extractThumbnail
-                                    (image, 500, 500), newFileName, "image");
-                            imageDetails.add(mediaDetails);
-                            subscriber.onNext(mediaDetails);
-                        } else if (aListFile.getAbsolutePath().contains("mp4")) {
-                            MediaDetails mediaDetails = new MediaDetails(ThumbnailUtils
-                                    .createVideoThumbnail
-                                    (aListFile.getAbsolutePath(), MediaStore.Video.Thumbnails
-                                            .FULL_SCREEN_KIND), newFileName, "video");
-                            videoDetails.add(mediaDetails);
-                        }
+                        Bitmap image = Utils.decodeSampledBitmapFromFile
+                                (aListFile.getAbsolutePath(), 500, 500);
+                        mediaDetails = new MediaDetails(ThumbnailUtils
+                                .extractThumbnail
+                                        (image, 500, 500), newFileName, "image");
+                        subscriber.onNext(mediaDetails);
                     }
+                    listFile = file.listFiles(pathname -> {
+                        return pathname.getAbsolutePath().contains("mp4");
+                    });
+                    for (File aListFile : listFile) {
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.outWidth = 500;
+                        options.outHeight = 500;
+                        String path = aListFile.getAbsolutePath();
+                        String newFileName = path.substring(path.lastIndexOf("/") + 1);
+                        mediaDetails = new MediaDetails(ThumbnailUtils
+                                .createVideoThumbnail
+                                        (aListFile.getAbsolutePath(), MediaStore.Video.Thumbnails
+                                                .MINI_KIND), newFileName, "video");
+                        subscriber.onNext(mediaDetails);
+                    }
+
+
                     if (!subscriber.isUnsubscribed()) {
                         subscriber.onCompleted();
                     }

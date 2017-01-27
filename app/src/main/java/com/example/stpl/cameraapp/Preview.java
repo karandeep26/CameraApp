@@ -191,10 +191,12 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
                     matrix.postRotate(270);
                     Bitmap rotatedImage = Bitmap.createBitmap(image, 0, 0, image.getWidth(),
                             image.getHeight(), matrix, true);
+
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                     rotatedImage.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
                     fos.write(outputStream.toByteArray());
                     fos.close();
+
                 }
                 setFileName(fileName);
                 pictureTaken.pictureTaken(fileName);

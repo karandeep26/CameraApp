@@ -44,7 +44,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import rx.Observable;
+import rx.Subscriber;
 import rx.Subscription;
+
+import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
         OnPictureTaken, AdapterView.OnItemClickListener, MainView.FileDeletedListener,
@@ -77,8 +81,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mainPresenter = new MainPresenterImpl(this, new SdCardInteractorImpl(imageDetails,
-                videoDetails));
+        mainPresenter = new MainPresenterImpl(this, new SdCardInteractorImpl());
 
 
         /**
@@ -341,6 +344,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.design_bottom_sheet));
         delete = (ImageButton) findViewById(R.id.delete);
         upload = (ImageButton) findViewById(R.id.upload);
+        imageGridView.setSaveEnabled(true);
 
     }
 
@@ -522,7 +526,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void itemAdd(MediaDetails mediaDetails) {
-        gridViewAdapter.add(mediaDetails);
+
+        if (mediaDetails.getMediaType().equals("image")) {
+            imageDetails.add(mediaDetails);
+            gridViewAdapter.add(mediaDetails);
+        } else {
+            videoDetails.add(mediaDetails);
+        }
     }
 
     @Override
@@ -543,6 +553,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onErrorOccurred() {
 
+    }
+
+    private Observable<MediaDetails> getFromSdCard() {
+        return Observable.create(new Observable.OnSubscribe<MediaDetails>() {
+            @Override
+            public void call(Subscriber<? super MediaDetails> subscriber) {
+                File file = new File(mediaStorageDir.getPath());
+                Matrix matrix = new Matrix();
+                matrix.postRotate(270);
+                if (file.isDirectory()) {
+                    File[] listFile = file.listFiles();
+                    for (File aListFile : listFile) {
+                        String path = aListFile.getAbsolutePath();
+                        String newFileName = path.substring(path.lastIndexOf("/") + 1);
+                        if (aListFile.getAbsolutePath().contains("jpg")) {
+                            Bitmap image = BitmapFactory.decodeFile(aListFile.getAbsolutePath());
+                            imageDetails.add(new MediaDetails(ThumbnailUtils.extractThumbnail
+                                    (image, 500, 500), newFileName, "image"));
+                            subscriber.onNext(new MediaDetails(ThumbnailUtils.extractThumbnail
+                                    (image, 500, 500), newFileName, "image"));
+                        } else if (aListFile.getAbsolutePath().contains("mp4"))
+                            videoDetails.add(new MediaDetails(ThumbnailUtils.createVideoThumbnail
+                                    (aListFile.getAbsolutePath(), MediaStore.Video.Thumbnails
+                                            .MINI_KIND), newFileName, "video"));
+                    }
+                    if (!subscriber.isUnsubscribed()) {
+                        subscriber.onCompleted();
+                    }
+                }
+            }
+        });
     }
 }
 

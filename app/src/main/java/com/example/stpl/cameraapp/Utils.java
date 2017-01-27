@@ -48,8 +48,8 @@ public class Utils {
         return inSampleSize;
     }
 
-    public static Bitmap decodeSampledBitmapFromResource(String fileName,
-                                                         int reqWidth, int reqHeight) {
+    public static Bitmap decodeSampledBitmapFromFile(String fileName,
+                                                     int reqWidth, int reqHeight) {
 
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -63,4 +63,17 @@ public class Utils {
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeFile(fileName, options);
     }
+//    public static Bitmap decodeSampledBitmapFromBitmap(Bitmap bitmap,int reqWidth,int reqHeight){
+//        final BitmapFactory.Options options = new BitmapFactory.Options();
+//        options.inJustDecodeBounds = true;
+//        BitmapFactory.decodeFile(fileName, options);
+//
+//        // Calculate inSampleSize
+//        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+//
+//        // Decode bitmap with inSampleSize set
+//        options.inJustDecodeBounds = false;
+//        return BitmapFactory.decodeFile(fileName, options);
+//    }
+
 }

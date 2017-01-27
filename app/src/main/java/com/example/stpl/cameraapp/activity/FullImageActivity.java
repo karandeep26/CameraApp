@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -43,7 +44,7 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         super.onCreate(savedInstanceState);
         makeFullScreen();
         setContentView(R.layout.activity_full_image);
-        bindViews();
+        findViewById();
         Intent intent = getIntent();
         position = intent.getIntExtra("position", -1);
         mediaDetails = intent.getParcelableArrayListExtra("model");
@@ -51,6 +52,17 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         mViewPager.setAdapter(new CustomViewPagerAdapter(this, mediaDetails));
         mViewPager.setCurrentItem(position);
         mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
+        LinearLayout layout = (LinearLayout) findViewById(R.id.pager_layout);
+        layout.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    toggleTopPanelVisibility();
+                    Log.d("touch intercepted", "true");
+                    break;
+            }
+//            toggleTopPanelVisibility();
+            return true;
+        });
 
     }
 
@@ -122,7 +134,7 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
 
     }
 
-    private void bindViews() {
+    private void findViewById() {
         mViewPager = (ViewPager) findViewById(R.id.pager);
         topPanel = (LinearLayout) findViewById(R.id.topPanel);
         upload = (ImageButton) findViewById(R.id.upload);
