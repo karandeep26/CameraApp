@@ -44,11 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import rx.Observable;
-import rx.Subscriber;
 import rx.Subscription;
-
-import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
         OnPictureTaken, AdapterView.OnItemClickListener, MainView.FileDeletedListener,
@@ -70,8 +66,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private BottomSheetBehavior bottomSheetBehavior;
     private ImageButton pictures, video, delete, upload;
     private LinearLayout gridViewButton, menu;
-    private ArrayList<MediaDetails> imageDetails = new ArrayList<>();
-    private ArrayList<MediaDetails> videoDetails = new ArrayList<>();
+    private ArrayList<MediaDetails> imageDetails;
+    private ArrayList<MediaDetails> videoDetails;
     private BottomSheetBehavior.BottomSheetCallback bottomSheetCallback;
     private ArrayList<MediaDetails> selectedItems = new ArrayList<>();
     private HashMap<Integer, View> tickView = new HashMap<>();
@@ -93,11 +89,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          */
         findViewById();
         /**
+         * Request run time permissions
+         */
+        mainPresenter.checkForPermissions();
+        /**
          * Initialize GridViewAdapter
          * Set GridView
          * Set BottomSheetCallback
          */
         initVariables();
+
         /**
          * Set button on click listeners
          */
@@ -108,10 +109,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         height = displayMetrics.heightPixels;
-        /**
-         * Request run time permissions
-         */
-        mainPresenter.checkForPermissions();
+
 
 //        /**
 //         * Initialize Firebase instance
@@ -352,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Initialise GridView and other items
      */
     private void initVariables() {
-        gridViewAdapter = new GridViewAdapter(this, imageDetails);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         imageGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE);
         imageGridView.setOnItemLongClickListener(this);
 
@@ -480,6 +478,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void permissionAvailable() {
+        int initialCapacity = mainPresenter.getMediaSize("jpg");
+        imageDetails = new ArrayList<>();
+        videoDetails = new ArrayList<>();
+        gridViewAdapter = new GridViewAdapter(this, imageDetails, initialCapacity);
         pictures.setSelected(true);
         preview = new Preview(this, this);
         /**
@@ -555,36 +557,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private Observable<MediaDetails> getFromSdCard() {
-        return Observable.create(new Observable.OnSubscribe<MediaDetails>() {
-            @Override
-            public void call(Subscriber<? super MediaDetails> subscriber) {
-                File file = new File(mediaStorageDir.getPath());
-                Matrix matrix = new Matrix();
-                matrix.postRotate(270);
-                if (file.isDirectory()) {
-                    File[] listFile = file.listFiles();
-                    for (File aListFile : listFile) {
-                        String path = aListFile.getAbsolutePath();
-                        String newFileName = path.substring(path.lastIndexOf("/") + 1);
-                        if (aListFile.getAbsolutePath().contains("jpg")) {
-                            Bitmap image = BitmapFactory.decodeFile(aListFile.getAbsolutePath());
-                            imageDetails.add(new MediaDetails(ThumbnailUtils.extractThumbnail
-                                    (image, 500, 500), newFileName, "image"));
-                            subscriber.onNext(new MediaDetails(ThumbnailUtils.extractThumbnail
-                                    (image, 500, 500), newFileName, "image"));
-                        } else if (aListFile.getAbsolutePath().contains("mp4"))
-                            videoDetails.add(new MediaDetails(ThumbnailUtils.createVideoThumbnail
-                                    (aListFile.getAbsolutePath(), MediaStore.Video.Thumbnails
-                                            .MINI_KIND), newFileName, "video"));
-                    }
-                    if (!subscriber.isUnsubscribed()) {
-                        subscriber.onCompleted();
-                    }
-                }
-            }
-        });
-    }
+
 }
 
 

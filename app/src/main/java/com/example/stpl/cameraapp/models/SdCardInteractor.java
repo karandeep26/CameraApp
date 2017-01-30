@@ -12,6 +12,8 @@ public interface SdCardInteractor {
 
     boolean deleteFromSdCard(MediaDetails mediaDetails);
 
+    int getMediaCount(String type);
+
     interface OnFinishedListener {
         void onFinished();
     }

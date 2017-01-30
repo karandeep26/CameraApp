@@ -21,4 +21,6 @@ interface MainPresenter {
 
     Subscription startTimer();
 
+    int getMediaSize(String mediaType);
+
 }

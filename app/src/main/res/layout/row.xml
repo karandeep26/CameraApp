@@ -9,7 +9,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
-        android:src="@mipmap/ic_launcher"/>
+        android:src="@drawable/placeholder"/>
 
     <ImageView
         android:id="@+id/tick"
@@ -18,9 +18,10 @@
         android:layout_gravity="top|right"
         android:background="@drawable/circle"
         android:src="@drawable/ic_done_white_24dp"
-        android:visibility="visible"/>
+        android:visibility="invisible"/>
 
     <ImageView
+        android:visibility="invisible"
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

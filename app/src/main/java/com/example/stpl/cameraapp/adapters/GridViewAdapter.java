@@ -17,18 +17,25 @@ import java.util.ArrayList;
 
 
 public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
+    private final int initialCapacity;
     private ArrayList<MediaDetails> mediaDetails;
     private LayoutInflater inflater;
 
-    public GridViewAdapter(Context context, ArrayList<MediaDetails> mediaDetails) {
+    public GridViewAdapter(Context context, ArrayList<MediaDetails> mediaDetails, int
+            initialCapacity) {
         super(context, 0);
         this.mediaDetails = mediaDetails;
         inflater = ((Activity) context).getLayoutInflater();
+        this.initialCapacity = initialCapacity;
     }
 
 
     @Override
     public int getCount() {
+        if (initialCapacity > mediaDetails.size()) {
+            return initialCapacity;
+        }
+
         return mediaDetails.size();
     }
 
@@ -37,7 +44,6 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
     public View getView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
         ViewHolder viewHolder;
-        MediaDetails currentObject = mediaDetails.get(position);
         if (row == null) {
             row = inflater.inflate(R.layout.row, null);
             viewHolder = new ViewHolder();
@@ -47,11 +53,14 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         } else {
             viewHolder = (ViewHolder) row.getTag();
         }
-        viewHolder.imageView.setImageBitmap(currentObject.getImage());
-        if (currentObject.isChecked()) {
-            viewHolder.tickView.setVisibility(View.VISIBLE);
-        } else {
-            viewHolder.tickView.setVisibility(View.GONE);
+        if (position < mediaDetails.size()) {
+            MediaDetails currentObject = mediaDetails.get(position);
+            viewHolder.imageView.setImageBitmap(currentObject.getImage());
+            if (currentObject.isChecked()) {
+                viewHolder.tickView.setVisibility(View.VISIBLE);
+            } else {
+                viewHolder.tickView.setVisibility(View.GONE);
+            }
         }
 
         return row;

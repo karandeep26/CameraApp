@@ -95,9 +95,9 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
         try {
             camera.setPreviewDisplay(surfaceHolder);
             setCamera();
-            for (Camera.Size size : mSupportedPreviewSizes) {
-                Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
-            }
+//            for (Camera.Size size : mSupportedPreviewSizes) {
+//                Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
+//            }
         } catch (IOException e) {
             e.printStackTrace();
         }

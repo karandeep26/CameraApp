@@ -31,41 +31,35 @@ public class SdCardInteractorImpl implements SdCardInteractor {
                 Matrix matrix = new Matrix();
                 matrix.postRotate(270);
                 if (file.isDirectory()) {
-                    File[] listFile = file.listFiles(pathname -> {
-                        return pathname.getAbsolutePath().contains("jpg");
-                    });
+                    File[] listFile = file.listFiles();
                     for (File aListFile : listFile) {
                         String path = aListFile.getAbsolutePath();
                         String newFileName = path.substring(path.lastIndexOf("/") + 1);
-                        Bitmap image = Utils.decodeSampledBitmapFromFile
-                                (aListFile.getAbsolutePath(), 500, 500);
-                        mediaDetails = new MediaDetails(ThumbnailUtils
-                                .extractThumbnail
-                                        (image, 500, 500), newFileName, "image");
+                        if (newFileName.contains("jpg")) {
+                            Bitmap image = Utils.decodeSampledBitmapFromFile
+                                    (aListFile.getAbsolutePath(), 500, 500);
+                            mediaDetails = new MediaDetails(ThumbnailUtils
+                                    .extractThumbnail
+                                            (image, 500, 500), newFileName, "image");
+                        } else if (newFileName.contains("mp4")) {
+                            BitmapFactory.Options options = new BitmapFactory.Options();
+                            options.outWidth = 500;
+                            options.outHeight = 500;
+                            mediaDetails = new MediaDetails(ThumbnailUtils
+                                    .createVideoThumbnail
+                                            (aListFile.getAbsolutePath(), MediaStore.Video
+                                                    .Thumbnails
+                                                    .MINI_KIND), newFileName, "video");
+                        }
                         subscriber.onNext(mediaDetails);
                     }
-                    listFile = file.listFiles(pathname -> {
-                        return pathname.getAbsolutePath().contains("mp4");
-                    });
-                    for (File aListFile : listFile) {
-                        BitmapFactory.Options options = new BitmapFactory.Options();
-                        options.outWidth = 500;
-                        options.outHeight = 500;
-                        String path = aListFile.getAbsolutePath();
-                        String newFileName = path.substring(path.lastIndexOf("/") + 1);
-                        mediaDetails = new MediaDetails(ThumbnailUtils
-                                .createVideoThumbnail
-                                        (aListFile.getAbsolutePath(), MediaStore.Video.Thumbnails
-                                                .MINI_KIND), newFileName, "video");
-                        subscriber.onNext(mediaDetails);
-                    }
-
-
                     if (!subscriber.isUnsubscribed()) {
                         subscriber.onCompleted();
                     }
                 }
             }
+
+
         });
     }
 
@@ -74,6 +68,15 @@ public class SdCardInteractorImpl implements SdCardInteractor {
         File deleteFile = new File(Utils.mediaStorageDir + "/" + mediaDetails.getFilePath());
         return deleteFile.delete();
 
+    }
+
+    @Override
+    public int getMediaCount(String type) {
+        File file = new File(mediaStorageDir.getPath());
+        File[] imageFile = file.listFiles(pathname -> {
+            return pathname.getAbsolutePath().contains(type);
+        });
+        return imageFile.length;
     }
 }
 
