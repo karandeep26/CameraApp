@@ -2,7 +2,6 @@ package com.example.stpl.cameraapp.models;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
 
@@ -11,7 +10,7 @@ import com.example.stpl.cameraapp.Utils;
 import java.io.File;
 
 import rx.Observable;
-import rx.Subscriber;
+import rx.schedulers.Schedulers;
 
 import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
 
@@ -20,47 +19,17 @@ import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
  */
 
 public class SdCardInteractorImpl implements SdCardInteractor {
+
+
     @Override
     public Observable<MediaDetails> getFromSdCard() {
+        File file = new File(mediaStorageDir.getPath());
+        File[] listFile = file.listFiles();
+        Observable<File> fileObservable = Observable.from(listFile);
+        return fileObservable.flatMap(file1 -> Observable.just(file1)
+                .subscribeOn(Schedulers.computation())
+                .map(this::getMediaDetails));
 
-        return Observable.create(new Observable.OnSubscribe<MediaDetails>() {
-            @Override
-            public void call(Subscriber<? super MediaDetails> subscriber) {
-                MediaDetails mediaDetails = null;
-                File file = new File(mediaStorageDir.getPath());
-                Matrix matrix = new Matrix();
-                matrix.postRotate(270);
-                if (file.isDirectory()) {
-                    File[] listFile = file.listFiles();
-                    for (File aListFile : listFile) {
-                        String path = aListFile.getAbsolutePath();
-                        String newFileName = path.substring(path.lastIndexOf("/") + 1);
-                        if (newFileName.contains("jpg")) {
-                            Bitmap image = Utils.decodeSampledBitmapFromFile
-                                    (aListFile.getAbsolutePath(), 500, 500);
-                            mediaDetails = new MediaDetails(ThumbnailUtils
-                                    .extractThumbnail
-                                            (image, 500, 500), newFileName, "image");
-                        } else if (newFileName.contains("mp4")) {
-                            BitmapFactory.Options options = new BitmapFactory.Options();
-                            options.outWidth = 500;
-                            options.outHeight = 500;
-                            mediaDetails = new MediaDetails(ThumbnailUtils
-                                    .createVideoThumbnail
-                                            (aListFile.getAbsolutePath(), MediaStore.Video
-                                                    .Thumbnails
-                                                    .MINI_KIND), newFileName, "video");
-                        }
-                        subscriber.onNext(mediaDetails);
-                    }
-                    if (!subscriber.isUnsubscribed()) {
-                        subscriber.onCompleted();
-                    }
-                }
-            }
-
-
-        });
     }
 
     @Override
@@ -77,6 +46,30 @@ public class SdCardInteractorImpl implements SdCardInteractor {
             return pathname.getAbsolutePath().contains(type);
         });
         return imageFile.length;
+    }
+
+    private MediaDetails getMediaDetails(File file) {
+        MediaDetails mediaDetails;
+        Bitmap bitmap;
+        String path = file.getAbsolutePath();
+        String newFileName = path.substring(path.lastIndexOf("/") + 1);
+        if (newFileName.contains("jpg")) {
+            Bitmap image = Utils.decodeSampledBitmapFromFile
+                    (file.getAbsolutePath(), 500, 500);
+            bitmap = (ThumbnailUtils.extractThumbnail(image, 500, 500));
+            mediaDetails = new MediaDetails(bitmap, newFileName, "image");
+        } else {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.outWidth = 500;
+            options.outHeight = 500;
+            bitmap = ThumbnailUtils
+                    .createVideoThumbnail
+                            (file.getAbsolutePath(), MediaStore.Video
+                                    .Thumbnails
+                                    .MINI_KIND);
+            mediaDetails = new MediaDetails(bitmap, newFileName, "video");
+        }
+        return mediaDetails;
     }
 }
 

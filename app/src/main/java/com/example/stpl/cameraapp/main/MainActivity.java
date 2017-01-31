@@ -550,6 +550,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             videoDetails.remove(mediaDetails);
         }
         gridViewAdapter.notifyDataSetChanged();
+
     }
 
     @Override

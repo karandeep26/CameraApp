@@ -1,7 +1,6 @@
 package com.example.stpl.cameraapp;
 
 import android.support.design.widget.BottomSheetBehavior;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.GridView;
 
@@ -27,7 +26,6 @@ public class GestureDetector extends android.view.GestureDetector.SimpleOnGestur
         if (Math.abs(diffY) > SWIPE_MIN_DISTANCE) {
             if (diffY > 0) {
                 //SwipeDown
-                Log.d("swipe", "down");
                 if (gridView.getFirstVisiblePosition() == 0) {
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 }

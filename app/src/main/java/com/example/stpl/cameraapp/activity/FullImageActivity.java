@@ -35,9 +35,8 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     LinearLayout topPanel;
     int visibility;
     ImageButton upload;
-    StorageReference storageReference;
     StorageReference uploadReference;
-    boolean isDragging = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
