@@ -1,6 +1,5 @@
 package com.example.stpl.cameraapp.models;
 
-import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -17,13 +16,12 @@ public class MediaDetails implements Parcelable {
             return new MediaDetails[size];
         }
     };
-    private Bitmap image;
+
     private String filePath;
     private String mediaType;
     private boolean isChecked = false;
 
-    public MediaDetails(Bitmap image, String filePath, String type) {
-        this.image = image;
+    public MediaDetails(String filePath, String type) {
         this.filePath = filePath;
         mediaType = type;
     }
@@ -33,9 +31,6 @@ public class MediaDetails implements Parcelable {
 
     }
 
-    public Bitmap getImage() {
-        return image;
-    }
 
     public String getFilePath() {
         return filePath;

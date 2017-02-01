@@ -14,8 +14,6 @@ import com.squareup.picasso.Picasso;
 import java.io.File;
 import java.util.ArrayList;
 
-import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
-
 
 public class CustomViewPagerAdapter extends PagerAdapter {
     private Context mContext;
@@ -49,7 +47,7 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup container, int position) {
         View itemView = mLayoutInflater.inflate(R.layout.viewpager_item, container, false);
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
-        Picasso.with(mContext).load(new File(mediaStorageDir + "/" + mediaDetails.get(position)
+        Picasso.with(mContext).load(new File(mediaDetails.get(position)
                 .getFilePath())).into(imageView);
         container.addView(itemView);
         return itemView;

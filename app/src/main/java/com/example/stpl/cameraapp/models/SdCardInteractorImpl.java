@@ -1,11 +1,5 @@
 package com.example.stpl.cameraapp.models;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.ThumbnailUtils;
-import android.provider.MediaStore;
-
-import com.example.stpl.cameraapp.Utils;
 
 import java.io.File;
 
@@ -34,10 +28,11 @@ public class SdCardInteractorImpl implements SdCardInteractor {
 
     @Override
     public boolean deleteFromSdCard(MediaDetails mediaDetails) {
-        File deleteFile = new File(Utils.mediaStorageDir + "/" + mediaDetails.getFilePath());
+        File deleteFile = new File(mediaDetails.getFilePath());
         return deleteFile.delete();
 
     }
+
 
     @Override
     public int getMediaCount(String type) {
@@ -50,24 +45,11 @@ public class SdCardInteractorImpl implements SdCardInteractor {
 
     private MediaDetails getMediaDetails(File file) {
         MediaDetails mediaDetails;
-        Bitmap bitmap;
         String path = file.getAbsolutePath();
-        String newFileName = path.substring(path.lastIndexOf("/") + 1);
-        if (newFileName.contains("jpg")) {
-            Bitmap image = Utils.decodeSampledBitmapFromFile
-                    (file.getAbsolutePath(), 500, 500);
-            bitmap = (ThumbnailUtils.extractThumbnail(image, 500, 500));
-            mediaDetails = new MediaDetails(bitmap, newFileName, "image");
+        if (path.contains("jpg")) {
+            mediaDetails = new MediaDetails(path, "image");
         } else {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.outWidth = 500;
-            options.outHeight = 500;
-            bitmap = ThumbnailUtils
-                    .createVideoThumbnail
-                            (file.getAbsolutePath(), MediaStore.Video
-                                    .Thumbnails
-                                    .MINI_KIND);
-            mediaDetails = new MediaDetails(bitmap, newFileName, "video");
+            mediaDetails = new MediaDetails(path, "video");
         }
         return mediaDetails;
     }

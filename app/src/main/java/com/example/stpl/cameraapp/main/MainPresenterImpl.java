@@ -32,7 +32,6 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
     private Subscription subscription;
 
 
-
     MainPresenterImpl(MainView mainView, SdCardInteractor sdCardInteractor) {
         this.mainView = mainView;
         mContext = (Context) mainView;

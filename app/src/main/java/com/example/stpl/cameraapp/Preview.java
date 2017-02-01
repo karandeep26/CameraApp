@@ -64,7 +64,6 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         camera = openFrontFacingCameraGingerbread();
         mSupportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
-
     }
 
     private File getOutputMediaFile() {

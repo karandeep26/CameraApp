@@ -4,12 +4,8 @@ import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.media.ThumbnailUtils;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.ActivityCompat;
@@ -32,14 +28,15 @@ import com.example.stpl.cameraapp.GestureDetector;
 import com.example.stpl.cameraapp.OnPictureTaken;
 import com.example.stpl.cameraapp.Preview;
 import com.example.stpl.cameraapp.R;
+import com.example.stpl.cameraapp.ScrollListener;
 import com.example.stpl.cameraapp.activity.FullImageActivity;
 import com.example.stpl.cameraapp.activity.PlayVideoActivity;
 import com.example.stpl.cameraapp.adapters.GridViewAdapter;
 import com.example.stpl.cameraapp.customViews.ExpandableHeightGridView;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
+import com.squareup.picasso.Picasso;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -195,20 +192,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void pictureTaken(String fileName) {
-        File file = new File(fileName);
-        String newFileName = fileName.substring(fileName.lastIndexOf("/") + 1);
         Matrix matrix = new Matrix();
         matrix.postRotate(270);
         MediaDetails mediaDetails;
-        if (!fileName.contains("IMG")) {
-            mediaDetails = new MediaDetails(ThumbnailUtils.createVideoThumbnail(file
-                    .getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND), newFileName,
-                    "video");
+        if (!fileName.contains("jpg")) {
+            mediaDetails = new MediaDetails(fileName, "video");
             videoDetails.add(mediaDetails);
         } else {
-            Bitmap image = BitmapFactory.decodeFile(file.getAbsolutePath());
-            mediaDetails = new MediaDetails(ThumbnailUtils.extractThumbnail(image, 500, 500),
-                    newFileName, "image");
+            mediaDetails = new MediaDetails(fileName, "image");
             imageDetails.add(mediaDetails);
         }
         findViewById(R.id.design_bottom_sheet).requestLayout();
@@ -223,36 +214,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                            @NonNull int[] grantResults) {
         switch (requestCode) {
             case MULTIPLE_PERMISSIONS:
-                    Map<String, Integer> perms = new HashMap<>();
+                Map<String, Integer> perms = new HashMap<>();
 
-                    perms.put(Manifest.permission.CAMERA, PackageManager.PERMISSION_GRANTED);
-                    perms.put(Manifest.permission.READ_EXTERNAL_STORAGE, PackageManager
-                            .PERMISSION_GRANTED);
-                    perms.put(Manifest.permission.WRITE_EXTERNAL_STORAGE, PackageManager
-                            .PERMISSION_GRANTED);
+                perms.put(Manifest.permission.CAMERA, PackageManager.PERMISSION_GRANTED);
+                perms.put(Manifest.permission.READ_EXTERNAL_STORAGE, PackageManager
+                        .PERMISSION_GRANTED);
+                perms.put(Manifest.permission.WRITE_EXTERNAL_STORAGE, PackageManager
+                        .PERMISSION_GRANTED);
 
-                    for (int i = 0; i < permissions.length; i++)
-                        perms.put(permissions[i], grantResults[i]);
+                for (int i = 0; i < permissions.length; i++)
+                    perms.put(permissions[i], grantResults[i]);
 
-                    if (perms.get(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-                            && perms.get(Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                            PackageManager.PERMISSION_GRANTED
-                            && perms.get(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
-                            PackageManager.PERMISSION_GRANTED) {
-                        /**
-                         * Permissions are available,set up the screen now
-                         */
-                        permissionAvailable();
-                    }
-                    // All Permissions Granted
-                    else {
-                        // Permission Denied
-                        Toast.makeText(MainActivity.this, "Some Permission is Denied", Toast
-                                .LENGTH_SHORT)
-                                .show();
-                    }
+                if (perms.get(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+                        && perms.get(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                        PackageManager.PERMISSION_GRANTED
+                        && perms.get(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                        PackageManager.PERMISSION_GRANTED) {
+                    /**
+                     * Permissions are available,set up the screen now
+                     */
+                    permissionAvailable();
+                }
+                // All Permissions Granted
+                else {
+                    // Permission Denied
+                    Toast.makeText(MainActivity.this, "Some Permission is Denied", Toast
+                            .LENGTH_SHORT)
+                            .show();
+                }
 
-            break;
+                break;
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
@@ -350,9 +341,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Initialise GridView and other items
      */
     private void initVariables() {
+        Picasso.with(this).setIndicatorsEnabled(true);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         imageGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE);
         imageGridView.setOnItemLongClickListener(this);
+        imageGridView.setOnScrollListener(new ScrollListener(this));
 
         bottomSheetCallback = new BottomSheetBehavior.BottomSheetCallback() {
             @Override
@@ -481,6 +474,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int initialCapacity = mainPresenter.getMediaSize("jpg");
         imageDetails = new ArrayList<>();
         videoDetails = new ArrayList<>();
+        Log.d("videos length", mainPresenter.getMediaSize("mp4") + "");
         gridViewAdapter = new GridViewAdapter(this, imageDetails, initialCapacity);
         pictures.setSelected(true);
         preview = new Preview(this, this);
@@ -495,7 +489,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 new GestureDetector(imageGridView, bottomSheetBehavior));
         /**
          * If first item of GridView is Visible,Disable GridView Scrolling top to bottom.
-         * If first item is not visible,continue with nested scroll view scrolling
+         * If first item is not visible,continue with gridView scroll scrolling
          */
         imageGridView.setOnTouchListener((v, event) -> {
             v.getParent().requestDisallowInterceptTouchEvent(true);
@@ -550,11 +544,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             videoDetails.remove(mediaDetails);
         }
         gridViewAdapter.notifyDataSetChanged();
+        Log.d("file deleted", "true");
 
     }
 
     @Override
     public void onErrorOccurred() {
+        Log.d("file deleted", "false");
 
     }
 

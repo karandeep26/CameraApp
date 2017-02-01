@@ -12,7 +12,9 @@ import android.widget.ImageView;
 
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.models.MediaDetails;
+import com.squareup.picasso.Picasso;
 
+import java.io.File;
 import java.util.ArrayList;
 
 
@@ -21,8 +23,8 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
     private ArrayList<MediaDetails> mediaDetails;
     private LayoutInflater inflater;
 
-    public GridViewAdapter(Context context, ArrayList<MediaDetails> mediaDetails, int
-            initialCapacity) {
+    public GridViewAdapter(Context context, ArrayList<MediaDetails> mediaDetails,
+                           int initialCapacity) {
         super(context, 0);
         this.mediaDetails = mediaDetails;
         inflater = ((Activity) context).getLayoutInflater();
@@ -32,10 +34,6 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
 
     @Override
     public int getCount() {
-        if (initialCapacity > mediaDetails.size()) {
-            return initialCapacity;
-        }
-
         return mediaDetails.size();
     }
 
@@ -55,7 +53,15 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         }
         if (position < mediaDetails.size()) {
             MediaDetails currentObject = mediaDetails.get(position);
-            viewHolder.imageView.setImageBitmap(currentObject.getImage());
+            if (currentObject.getMediaType().equals("image")) {
+                Picasso.with(parent.getContext()).load(new File(currentObject.getFilePath()))
+                        .tag("tag").centerCrop().resize(500, 500)
+                        .placeholder(R.drawable.placeholder).into(viewHolder.imageView);
+            } else {
+                Picasso.with(parent.getContext()).load("video:" + currentObject.getFilePath()).
+                        centerCrop().resize(500, 500).placeholder(R.drawable.placeholder).
+                        into(viewHolder.imageView);
+            }
             if (currentObject.isChecked()) {
                 viewHolder.tickView.setVisibility(View.VISIBLE);
             } else {
