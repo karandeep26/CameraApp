@@ -10,7 +10,7 @@ import rx.Subscription;
  * Created by stpl on 1/20/2017.
  */
 
-interface MainPresenter {
+public interface MainPresenter {
     void checkForPermissions();
 
     void fetchFromSdCard();
@@ -22,5 +22,10 @@ interface MainPresenter {
     Subscription startTimer();
 
     int getMediaSize(String mediaType);
+
+    void savePhotoSdCard(byte[] data);
+
+    void getCurrentSavedVideo(String fileName);
+
 
 }

@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Matrix;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
@@ -25,7 +24,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.stpl.cameraapp.GestureDetector;
-import com.example.stpl.cameraapp.OnPictureTaken;
 import com.example.stpl.cameraapp.Preview;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.ScrollListener;
@@ -44,8 +42,8 @@ import java.util.Map;
 import rx.Subscription;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        OnPictureTaken, AdapterView.OnItemClickListener, MainView.FileDeletedListener,
-        AdapterView.OnItemLongClickListener, MainView {
+        AdapterView.OnItemClickListener, MainView.FileListener, AdapterView.OnItemLongClickListener,
+        MainView {
     public static boolean isSignedIn;
     final int MULTIPLE_PERMISSIONS = 123;
     boolean recording = false;
@@ -68,13 +66,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private BottomSheetBehavior.BottomSheetCallback bottomSheetCallback;
     private ArrayList<MediaDetails> selectedItems = new ArrayList<>();
     private HashMap<Integer, View> tickView = new HashMap<>();
+    SdCardInteractorImpl mSdCardInteractorImpl;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mainPresenter = new MainPresenterImpl(this, new SdCardInteractorImpl());
+        mSdCardInteractorImpl = new SdCardInteractorImpl();
+        mainPresenter = new MainPresenterImpl(this, mSdCardInteractorImpl);
 
 
         /**
@@ -181,31 +181,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 menu.setVisibility(View.GONE);
                 break;
         }
-    }
-
-
-    /**
-     * Callback from the preview class to load the thumbnail of a fresh Video/picture
-     * capture
-     *
-     * @param fileName of the new picture/video file
-     */
-    @Override
-    public void pictureTaken(String fileName) {
-        Matrix matrix = new Matrix();
-        matrix.postRotate(270);
-        MediaDetails mediaDetails;
-        if (!fileName.contains("jpg")) {
-            mediaDetails = new MediaDetails(fileName, "video");
-            videoDetails.add(mediaDetails);
-        } else {
-            mediaDetails = new MediaDetails(fileName, "image");
-            imageDetails.add(mediaDetails);
-        }
-        findViewById(R.id.design_bottom_sheet).requestLayout();
-        gridViewAdapter.add(mediaDetails);
-
-
     }
 
 
@@ -477,7 +452,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d("videos length", mainPresenter.getMediaSize("mp4") + "");
         gridViewAdapter = new GridViewAdapter(this, imageDetails, initialCapacity);
         pictures.setSelected(true);
-        preview = new Preview(this, this);
+        preview = new Preview(this, mainPresenter);
         /**
          * To overlay capture button
          */
@@ -551,6 +526,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onErrorOccurred() {
         Log.d("file deleted", "false");
+
+    }
+
+    @Override
+    public void onFileAdded(MediaDetails mediaDetails) {
+        if (!mediaDetails.getFilePath().contains("jpg")) {
+            videoDetails.add(mediaDetails);
+        } else {
+            imageDetails.add(mediaDetails);
+        }
+        findViewById(R.id.design_bottom_sheet).requestLayout();
+        gridViewAdapter.add(mediaDetails);
 
     }
 

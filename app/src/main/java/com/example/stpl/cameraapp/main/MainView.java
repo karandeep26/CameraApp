@@ -18,10 +18,11 @@ interface MainView {
 
     void setTimerValue(String timer);
 
-    interface FileDeletedListener {
+    interface FileListener {
         void onFileDeleted(MediaDetails mediaDetails);
-
         void onErrorOccurred();
+
+        void onFileAdded(MediaDetails mediaDetails);
     }
 
 

@@ -25,7 +25,7 @@ import rx.subscriptions.CompositeSubscription;
 class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedListener {
     private Context mContext;
     private MainView mainView;
-    private MainView.FileDeletedListener fileDeletedListener;
+    private MainView.FileListener fileListener;
     private SdCardInteractor sdCardInteractor;
     private CompositeSubscription compositeSubscription;
     private int minutes = 0;
@@ -37,7 +37,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
         mContext = (Context) mainView;
         this.sdCardInteractor = sdCardInteractor;
         compositeSubscription = new CompositeSubscription();
-        fileDeletedListener = (MainView.FileDeletedListener) mainView;
+        fileListener = (MainView.FileListener) mainView;
     }
 
     @Override
@@ -63,10 +63,18 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
 
     @Override
     public void fetchFromSdCard() {
+        float startTime = System.currentTimeMillis();
+        Log.d("start time", startTime + "");
+
         subscription = sdCardInteractor.getFromSdCard().observeOn(AndroidSchedulers.mainThread())
                 .subscribe(mediaDetails -> mainView.itemAdd(mediaDetails),
                         throwable -> Log.d("debug", throwable.getMessage()),
-                        () -> subscription.unsubscribe());
+                        () -> {
+                            subscription.unsubscribe();
+                            float endTime = System.currentTimeMillis();
+                            float totalTime = endTime - startTime;
+                            Log.d("total time******", "****" + totalTime / 1000 + "");
+                        });
         compositeSubscription.add(subscription);
 
     }
@@ -78,9 +86,9 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
             boolean isDeletionSuccessful;
             isDeletionSuccessful = sdCardInteractor.deleteFromSdCard(details);
             if (isDeletionSuccessful) {
-                fileDeletedListener.onFileDeleted(details);
+                fileListener.onFileDeleted(details);
             } else {
-                fileDeletedListener.onErrorOccurred();
+                fileListener.onErrorOccurred();
             }
         }
     }
@@ -115,6 +123,26 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
     @Override
     public int getMediaSize(String mediaType) {
         return sdCardInteractor.getMediaCount(mediaType);
+    }
+
+    @Override
+    public void savePhotoSdCard(byte[] data) {
+        MediaDetails mediaDetails = sdCardInteractor.savePhoto(data);
+        if (mediaDetails == null) {
+            fileListener.onErrorOccurred();
+        } else {
+            fileListener.onFileAdded(mediaDetails);
+        }
+    }
+
+    @Override
+    public void getCurrentSavedVideo(String fileName) {
+        MediaDetails mediaDetails = sdCardInteractor.getSavedVideo(fileName);
+        if (mediaDetails == null) {
+            fileListener.onErrorOccurred();
+        } else {
+            fileListener.onFileAdded(mediaDetails);
+        }
     }
 
 

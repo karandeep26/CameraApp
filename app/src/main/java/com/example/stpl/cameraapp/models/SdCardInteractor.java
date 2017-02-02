@@ -14,6 +14,11 @@ public interface SdCardInteractor {
 
     int getMediaCount(String type);
 
+    MediaDetails savePhoto(byte[] data);
+
+    MediaDetails getSavedVideo(String fileName);
+
+
     interface OnFinishedListener {
         void onFinished();
     }

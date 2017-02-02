@@ -2,9 +2,6 @@ package com.example.stpl.cameraapp;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
@@ -14,9 +11,9 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import java.io.ByteArrayOutputStream;
+import com.example.stpl.cameraapp.main.MainPresenter;
+
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -37,7 +34,6 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
     static boolean surfaceCreated = false;
     String fileName;
     Context activity;
-    OnPictureTaken pictureTaken;
     MediaRecorder mediaRecorder;
     private SurfaceHolder surfaceHolder;
     private Camera camera;
@@ -45,20 +41,17 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
     private Camera.Size mPreviewSize;
     private int camId;
     PublishSubject<String> subject = PublishSubject.create();
+    MainPresenter mainPresenter;
 
     public Observable<String> getSubject() {
         return subject;
     }
 
-    public void setFileName(String fileName) {
-        subject.onNext(fileName);
-    }
 
-
-    public Preview(Context context, OnPictureTaken pictureTaken) {
+    public Preview(Context context, MainPresenter mainPresenter) {
         super(context);
         activity = context;
-        this.pictureTaken = pictureTaken;
+        this.mainPresenter = mainPresenter;
         surfaceHolder = this.getHolder();
         surfaceHolder.addCallback(this);
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -66,26 +59,7 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
         mSupportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
     }
 
-    private File getOutputMediaFile() {
-        File mediaStorageDir = new File(
-                Environment
-                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                "MyCameraApp");
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
-                Log.d("MyCameraApp", "failed to create directory");
-                return null;
-            }
-        }
-        // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
-                .format(new Date());
-        fileName = mediaStorageDir.getPath() + File.separator + "IMG_" + timeStamp + ".jpg";
 
-        File mediaFile;
-        mediaFile = new File(fileName);
-        return mediaFile;
-    }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
@@ -162,8 +136,7 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
         cpHigh.fileFormat = MediaRecorder.OutputFormat.MPEG_4;
         mediaRecorder.setProfile(cpHigh);
         mediaRecorder.setOrientationHint(270);
-        File mediaStorageDir = new File(
-                Environment
+        File mediaStorageDir = new File(Environment
                         .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
                 "MyCameraApp");
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
@@ -177,28 +150,7 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
 
     public void takePicture() {
         camera.takePicture(null, null, (data, camera1) -> {
-            File pictureFile = getOutputMediaFile();
-
-            if (pictureFile == null) {
-                return;
-            }
-            try {
-                if (activity != null) {
-                    FileOutputStream fos = new FileOutputStream(pictureFile);
-                    Bitmap image = BitmapFactory.decodeByteArray(data, 0, data.length);
-                    Matrix matrix = new Matrix();
-                    matrix.postRotate(270);
-                    Bitmap rotatedImage = Bitmap.createBitmap(image, 0, 0, image.getWidth(),
-                            image.getHeight(), matrix, true);
-
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                    rotatedImage.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
-                    fos.write(outputStream.toByteArray());
-                    fos.close();
-
-                }
-                setFileName(fileName);
-                pictureTaken.pictureTaken(fileName);
+            mainPresenter.savePhotoSdCard(data);
                 camera1.stopPreview();
                 TimerTask task = new TimerTask() {
                     @Override
@@ -208,9 +160,6 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
                 };
                 Timer timer = new Timer();
                 timer.schedule(task, 1000);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         });
     }
 
@@ -337,7 +286,7 @@ public class Preview extends SurfaceView implements SurfaceHolder.Callback {
     public void stopVideo() {
         mediaRecorder.stop();
         mediaRecorder.release();
-        pictureTaken.pictureTaken(fileName);
+        mainPresenter.getCurrentSavedVideo(fileName);
     }
 
     public Camera getCamera() {
