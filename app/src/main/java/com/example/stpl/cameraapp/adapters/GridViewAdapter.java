@@ -19,31 +19,28 @@ import java.util.ArrayList;
 
 
 public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
-    private final int initialCapacity;
     private ArrayList<MediaDetails> mediaDetails;
     private LayoutInflater inflater;
 
-    public GridViewAdapter(Context context, ArrayList<MediaDetails> mediaDetails,
-                           int initialCapacity) {
+    public GridViewAdapter(Context context) {
         super(context, 0);
-        this.mediaDetails = mediaDetails;
         inflater = ((Activity) context).getLayoutInflater();
-        this.initialCapacity = initialCapacity;
+        mediaDetails = new ArrayList<>();
     }
 
 
     @Override
     public int getCount() {
-        return mediaDetails.size();
+        return (mediaDetails == null) ? 0 : mediaDetails.size();
     }
 
     @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
         View row = convertView;
         ViewHolder viewHolder;
         if (row == null) {
-            row = inflater.inflate(R.layout.row, null);
+            row = inflater.inflate(R.layout.row, parent, false);
             viewHolder = new ViewHolder();
             viewHolder.imageView = (ImageView) row.findViewById(R.id.image);
             viewHolder.tickView = (ImageView) row.findViewById(R.id.tick);
@@ -51,24 +48,22 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         } else {
             viewHolder = (ViewHolder) row.getTag();
         }
-        if (position < mediaDetails.size()) {
-            MediaDetails currentObject = mediaDetails.get(position);
-            if (currentObject.getMediaType().equals("image")) {
-                Picasso.with(parent.getContext()).load(new File(currentObject.getFilePath()))
-                        .tag("tag").centerCrop().resize(500, 500)
-                        .placeholder(R.drawable.placeholder).into(viewHolder.imageView);
-            } else {
-                Picasso.with(parent.getContext()).load("video:" + currentObject.getFilePath()).
-                        centerCrop().resize(500, 500).placeholder(R.drawable.placeholder).
-                        into(viewHolder.imageView);
-            }
-            if (currentObject.isChecked()) {
-                viewHolder.tickView.setVisibility(View.VISIBLE);
-            } else {
-                viewHolder.tickView.setVisibility(View.GONE);
-            }
-        }
 
+        MediaDetails currentObject = mediaDetails.get(position);
+        if (currentObject.getMediaType().equals("image")) {
+            Picasso.with(parent.getContext()).load(new File(currentObject.getFilePath()))
+                    .tag("tag").centerCrop().resize(500, 500)
+                    .placeholder(R.drawable.placeholder).into(viewHolder.imageView);
+        } else {
+            Picasso.with(parent.getContext()).load("video:" + currentObject.getFilePath())
+                    .tag("tag").centerCrop().resize(500, 500)
+                    .placeholder(R.drawable.placeholder).into(viewHolder.imageView);
+        }
+        if (currentObject.isChecked()) {
+            viewHolder.tickView.setVisibility(View.VISIBLE);
+        } else {
+            viewHolder.tickView.setVisibility(View.GONE);
+        }
         return row;
     }
 
@@ -85,5 +80,11 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
 
     private static class ViewHolder {
         ImageView imageView, tickView;
+    }
+
+    @Override
+    public void add(MediaDetails object) {
+        super.add(object);
+        mediaDetails.add(object);
     }
 }

@@ -25,5 +25,7 @@ interface MainView {
         void onFileAdded(MediaDetails mediaDetails);
     }
 
+    void updateAdapter(ArrayList<MediaDetails> mediaDetails);
+
 
 }

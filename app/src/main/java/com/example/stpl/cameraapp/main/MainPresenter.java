@@ -27,5 +27,7 @@ public interface MainPresenter {
 
     void getCurrentSavedVideo(String fileName);
 
+    void updateAdapter(String mediaType);
+
 
 }

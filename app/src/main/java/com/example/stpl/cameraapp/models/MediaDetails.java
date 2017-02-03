@@ -28,7 +28,6 @@ public class MediaDetails implements Parcelable {
 
     private MediaDetails(Parcel in) {
         filePath = in.readString();
-
     }
 
 

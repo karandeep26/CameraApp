@@ -30,6 +30,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
     private CompositeSubscription compositeSubscription;
     private int minutes = 0;
     private Subscription subscription;
+    private SdCardInteractor.GetMediaList getMediaList;
 
 
     MainPresenterImpl(MainView mainView, SdCardInteractor sdCardInteractor) {
@@ -38,6 +39,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
         this.sdCardInteractor = sdCardInteractor;
         compositeSubscription = new CompositeSubscription();
         fileListener = (MainView.FileListener) mainView;
+        getMediaList = (SdCardInteractor.GetMediaList) sdCardInteractor;
     }
 
     @Override
@@ -67,7 +69,11 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
         Log.d("start time", startTime + "");
 
         subscription = sdCardInteractor.getFromSdCard().observeOn(AndroidSchedulers.mainThread())
-                .subscribe(mediaDetails -> mainView.itemAdd(mediaDetails),
+                .subscribe(mediaDetails -> {
+                            if (mediaDetails.getMediaType().equals("image")) {
+                                mainView.itemAdd(mediaDetails);
+                            }
+                        },
                         throwable -> Log.d("debug", throwable.getMessage()),
                         () -> {
                             subscription.unsubscribe();
@@ -143,6 +149,12 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
         } else {
             fileListener.onFileAdded(mediaDetails);
         }
+    }
+
+    @Override
+    public void updateAdapter(String mediaType) {
+        ArrayList<MediaDetails> mediaDetails = getMediaList.getMedia(mediaType);
+        mainView.updateAdapter(mediaDetails);
     }
 
 

@@ -1,6 +1,8 @@
 package com.example.stpl.cameraapp.models;
 
 
+import java.util.ArrayList;
+
 import rx.Observable;
 
 /**
@@ -21,6 +23,10 @@ public interface SdCardInteractor {
 
     interface OnFinishedListener {
         void onFinished();
+    }
+
+    interface GetMediaList {
+        ArrayList<MediaDetails> getMedia(String type);
     }
 
 

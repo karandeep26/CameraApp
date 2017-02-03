@@ -61,8 +61,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private BottomSheetBehavior bottomSheetBehavior;
     private ImageButton pictures, video, delete, upload;
     private LinearLayout gridViewButton, menu;
-    private ArrayList<MediaDetails> imageDetails;
-    private ArrayList<MediaDetails> videoDetails;
     private BottomSheetBehavior.BottomSheetCallback bottomSheetCallback;
     private ArrayList<MediaDetails> selectedItems = new ArrayList<>();
     private HashMap<Integer, View> tickView = new HashMap<>();
@@ -144,8 +142,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              */
             case R.id.videos:
                 video.setSelected(true);
-                gridViewAdapter.setMediaDetails(videoDetails);
-                gridViewAdapter.notifyDataSetChanged();
+                mainPresenter.updateAdapter("videos");
                 if (pictures.isSelected()) {
                     pictures.setSelected(false);
                 }
@@ -154,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Loading pictures thumbnails in a GridView
              */
             case R.id.pictures:
-                gridViewAdapter.setMediaDetails(imageDetails);
+                mainPresenter.updateAdapter("images");
                 pictures.setSelected(true);
                 if (video.isSelected()) {
                     video.setSelected(false);
@@ -282,10 +279,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent;
             if (details.getMediaType().equals("image")) {
                 intent = new Intent(MainActivity.this, FullImageActivity.class);
-                intent.putParcelableArrayListExtra("model", imageDetails);
+//                intent.putParcelableArrayListExtra("model", imageDetails);
             } else {
                 intent = new Intent(MainActivity.this, PlayVideoActivity.class);
-                intent.putExtra("fileName", videoDetails.get(position).getFilePath());
+//                intent.putExtra("fileName", videoDetails.get(position).getFilePath());
             }
             intent.putExtra("position", position);
             startActivity(intent);
@@ -446,13 +443,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void permissionAvailable() {
-        int initialCapacity = mainPresenter.getMediaSize("jpg");
-        imageDetails = new ArrayList<>();
-        videoDetails = new ArrayList<>();
-        Log.d("videos length", mainPresenter.getMediaSize("mp4") + "");
-        gridViewAdapter = new GridViewAdapter(this, imageDetails, initialCapacity);
+        gridViewAdapter = new GridViewAdapter(this);
         pictures.setSelected(true);
         preview = new Preview(this, mainPresenter);
+
         /**
          * To overlay capture button
          */
@@ -497,13 +491,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void itemAdd(MediaDetails mediaDetails) {
-
-        if (mediaDetails.getMediaType().equals("image")) {
-            imageDetails.add(mediaDetails);
-            gridViewAdapter.add(mediaDetails);
-        } else {
-            videoDetails.add(mediaDetails);
-        }
+        gridViewAdapter.add(mediaDetails);
     }
 
     @Override
@@ -512,12 +500,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public void updateAdapter(ArrayList<MediaDetails> mediaDetails) {
+        gridViewAdapter.setMediaDetails(mediaDetails);
+    }
+
+    @Override
     public void onFileDeleted(MediaDetails mediaDetails) {
-        if (mediaDetails.getMediaType().equals("image")) {
-            imageDetails.remove(mediaDetails);
-        } else {
-            videoDetails.remove(mediaDetails);
-        }
+//        if (mediaDetails.getMediaType().equals("image")) {
+//            imageDetails.remove(mediaDetails);
+//        } else {
+//            videoDetails.remove(mediaDetails);
+//        }
         gridViewAdapter.notifyDataSetChanged();
         Log.d("file deleted", "true");
 
@@ -531,11 +524,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onFileAdded(MediaDetails mediaDetails) {
-        if (!mediaDetails.getFilePath().contains("jpg")) {
-            videoDetails.add(mediaDetails);
-        } else {
-            imageDetails.add(mediaDetails);
-        }
+//        if (!mediaDetails.getFilePath().contains("jpg")) {
+//            videoDetails.add(mediaDetails);
+//        } else {
+//            imageDetails.add(mediaDetails);
+//        }
         findViewById(R.id.design_bottom_sheet).requestLayout();
         gridViewAdapter.add(mediaDetails);
 
