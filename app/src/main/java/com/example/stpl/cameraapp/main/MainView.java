@@ -4,9 +4,6 @@ import com.example.stpl.cameraapp.models.MediaDetails;
 
 import java.util.ArrayList;
 
-/**
- * Created by stpl on 1/19/2017.
- */
 
 interface MainView {
     void permissionAvailable();

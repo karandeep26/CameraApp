@@ -18,9 +18,6 @@ import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.subscriptions.CompositeSubscription;
 
-/**
- * Created by stpl on 1/20/2017.
- */
 
 class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedListener {
     private Context mContext;

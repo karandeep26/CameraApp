@@ -5,9 +5,6 @@ import java.util.ArrayList;
 
 import rx.Observable;
 
-/**
- * Created by stpl on 1/20/2017.
- */
 
 public interface SdCardInteractor {
     Observable<MediaDetails> getFromSdCard();

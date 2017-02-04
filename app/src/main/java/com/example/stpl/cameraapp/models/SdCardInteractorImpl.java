@@ -20,9 +20,6 @@ import rx.schedulers.Schedulers;
 
 import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
 
-/**
- * Created by stpl on 1/23/2017.
- */
 
 public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.GetMediaList {
     private ArrayList<MediaDetails> images, videos;

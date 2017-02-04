@@ -10,9 +10,6 @@ import com.squareup.picasso.RequestHandler;
 
 import java.io.IOException;
 
-/**
- * Created by stpl on 2/1/2017.
- */
 
 class MyRequestHandler extends RequestHandler {
     private static final String VIDEO_SCHEME = "video";

@@ -4,9 +4,6 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.view.MotionEvent;
 import android.widget.GridView;
 
-/**
- * Created by stpl on 11/25/2016.
- */
 
 public class GestureDetector extends android.view.GestureDetector.SimpleOnGestureListener {
     private static final int SWIPE_MIN_DISTANCE = 120;

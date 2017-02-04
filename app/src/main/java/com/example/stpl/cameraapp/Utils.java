@@ -9,9 +9,6 @@ import android.util.DisplayMetrics;
 
 import java.io.File;
 
-/**
- * Created by stpl on 1/11/2017.
- */
 
 public class Utils {
     static public File mediaStorageDir = new File(

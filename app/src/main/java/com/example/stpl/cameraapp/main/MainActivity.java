@@ -23,8 +23,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.stpl.cameraapp.CustomCamera;
 import com.example.stpl.cameraapp.GestureDetector;
-import com.example.stpl.cameraapp.Preview;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.ScrollListener;
 import com.example.stpl.cameraapp.activity.FullImageActivity;
@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Subscription subscription;
     MainPresenter mainPresenter;
     private FrameLayout frameLayout;
-    private Preview preview;
+    private CustomCamera customCamera;
     private ImageButton captureButton;
     private GridViewAdapter gridViewAdapter;
     private ExpandableHeightGridView imageGridView;
@@ -114,8 +114,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            FirebaseUser user = firebaseAuth.getCurrentUser();
 //            isSignedIn = user != null;
 //        });
-        if (preview != null) {
-            preview.getSubject().subscribe(s -> {
+        if (customCamera != null) {
+            customCamera.getSubject().subscribe(s -> {
                 Log.d("file name", s);
             });
         }
@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Take photo
              */
             case R.id.capture:
-                preview.takePicture();
+                customCamera.takePicture();
                 break;
             /**
              * Record Video
@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onPause() {
         super.onPause();
-//        preview.releaseCamera();
+//        customCamera.releaseCamera();
     }
 
 
@@ -243,8 +243,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
         makeFullScreen();
 
-//       if(preview.getCamera()==null)
-//            preview.setCamera();
+//       if(customCamera.getCamera()==null)
+//            customCamera.setCamera();
     }
 
     @Override
@@ -395,8 +395,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (preview != null && preview.getCamera() != null) {
-            preview.releaseCamera();
+        if (customCamera != null && customCamera.getCamera() != null) {
+            customCamera.releaseCamera();
         }
         if (mainPresenter != null) {
             mainPresenter.onDestroy();
@@ -411,11 +411,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (!recording) {
             recording = true;
             time.setVisibility(View.VISIBLE);
-            preview.recordVideo();
+            customCamera.recordVideo();
             subscription = mainPresenter.startTimer();
         } else {
             time.setVisibility(View.GONE);
-            preview.stopVideo();
+            customCamera.stopVideo();
             recording = false;
             if (subscription != null && !subscription.isUnsubscribed()) {
                 subscription.unsubscribe();
@@ -445,13 +445,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void permissionAvailable() {
         gridViewAdapter = new GridViewAdapter(this);
         pictures.setSelected(true);
-        preview = new Preview(this, mainPresenter);
+        customCamera = new CustomCamera(this, mainPresenter);
 
         /**
          * To overlay capture button
          */
-        preview.setWillNotDraw(false);
-        frameLayout.addView(preview);
+        customCamera.setWillNotDraw(false);
+        frameLayout.addView(customCamera);
         gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> imageGridView.
                 getLayoutParams().height = height - gridViewButton.getHeight());
         imageGestureDetector = new GestureDetectorCompat(this,
