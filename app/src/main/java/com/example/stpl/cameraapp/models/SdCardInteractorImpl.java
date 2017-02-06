@@ -13,7 +13,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
 import rx.Observable;
 import rx.schedulers.Schedulers;
@@ -21,22 +25,47 @@ import rx.schedulers.Schedulers;
 import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
 
 
-public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.GetMediaList {
+public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.GetMediaList,
+        SdCardInteractor.Selection {
     private ArrayList<MediaDetails> images, videos;
+    private ArrayList<MediaDetails> selected;
 
     public SdCardInteractorImpl() {
         this.images = new ArrayList<>();
         this.videos = new ArrayList<>();
+        selected = new ArrayList<>();
     }
 
     @Override
-    public Observable<MediaDetails> getFromSdCard() {
+    public Observable<List<MediaDetails>> getFromSdCard(String type) {
         File file = new File(mediaStorageDir.getPath());
-        File[] listFile = file.listFiles();
+        File[] listFile;
+
+        if (type.equals("video")) {
+            listFile = file.listFiles(pathname -> {
+                return pathname.getAbsolutePath().contains("mp4");
+            });
+        } else if (type.equalsIgnoreCase("image")) {
+            listFile = file.listFiles(pathname -> {
+                return pathname.getAbsolutePath().equalsIgnoreCase("jpg");
+            });
+        } else {
+            listFile = file.listFiles();
+        }
+
+        Arrays.sort(listFile, (o1, o2) -> {
+            if(o1.lastModified()>o2.lastModified()) {
+                return -1;
+            }
+            else if(o1.lastModified()<o2.lastModified()) {
+                return 1;
+            }
+            return 0;
+        });
         Observable<File> fileObservable = Observable.from(listFile);
         return fileObservable.flatMap(file1 -> Observable.just(file1)
                 .subscribeOn(Schedulers.io())
-                .map(this::getMediaDetails));
+                .map(this::getMediaDetails)).toList();
 
     }
 
@@ -61,6 +90,7 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
     private MediaDetails getMediaDetails(File file) {
         MediaDetails mediaDetails;
         String path = file.getAbsolutePath();
+
         if (path.contains("jpg")) {
             mediaDetails = new MediaDetails(path, "image");
             images.add(mediaDetails);
@@ -130,6 +160,27 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
             return videos;
         }
         return null;
+    }
+
+    @Override
+    public void remove(MediaDetails mediaDetails) {
+        selected.remove(mediaDetails);
+    }
+
+    @Override
+    public void add(MediaDetails mediaDetails) {
+        selected.add(mediaDetails);
+    }
+
+    @Override
+    public boolean isSelectionMode() {
+        return selected.size() > 0;
+    }
+
+    @Override
+    public void clearAll() {
+        selected.clear();
+
     }
 }
 

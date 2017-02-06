@@ -21,11 +21,13 @@ import java.util.ArrayList;
 public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
     private ArrayList<MediaDetails> mediaDetails;
     private LayoutInflater inflater;
+    Context mContext;
 
     public GridViewAdapter(Context context) {
         super(context, 0);
         inflater = ((Activity) context).getLayoutInflater();
         mediaDetails = new ArrayList<>();
+        mContext=context;
     }
 
 
@@ -52,11 +54,11 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         MediaDetails currentObject = mediaDetails.get(position);
         if (currentObject.getMediaType().equals("image")) {
             Picasso.with(parent.getContext()).load(new File(currentObject.getFilePath()))
-                    .tag("tag").centerCrop().resize(500, 500)
+                    .tag(mContext).centerCrop().fit()
                     .placeholder(R.drawable.placeholder).into(viewHolder.imageView);
         } else {
             Picasso.with(parent.getContext()).load("video:" + currentObject.getFilePath())
-                    .tag("tag").centerCrop().resize(500, 500)
+                    .tag(mContext).centerCrop().fit()
                     .placeholder(R.drawable.placeholder).into(viewHolder.imageView);
         }
         if (currentObject.isChecked()) {
@@ -87,4 +89,6 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         super.add(object);
         mediaDetails.add(object);
     }
+
+
 }

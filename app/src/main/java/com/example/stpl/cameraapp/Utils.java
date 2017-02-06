@@ -13,8 +13,8 @@ import java.io.File;
 public class Utils {
     static public File mediaStorageDir = new File(
             Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-            "MyCameraApp");
+                    .getExternalStoragePublicDirectory("DCIM"),
+            "Camera");
 
     public static float convertDpToPixel(Context context, float dp) {
         Resources resources = context.getResources();
@@ -60,17 +60,6 @@ public class Utils {
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeFile(fileName, options);
     }
-//    public static Bitmap decodeSampledBitmapFromBitmap(Bitmap bitmap,int reqWidth,int reqHeight){
-//        final BitmapFactory.Options options = new BitmapFactory.Options();
-//        options.inJustDecodeBounds = true;
-//        BitmapFactory.decodeFile(fileName, options);
-//
-//        // Calculate inSampleSize
-//        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
-//
-//        // Decode bitmap with inSampleSize set
-//        options.inJustDecodeBounds = false;
-//        return BitmapFactory.decodeFile(fileName, options);
-//    }
+
 
 }

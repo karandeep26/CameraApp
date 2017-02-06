@@ -27,7 +27,7 @@ import com.example.stpl.cameraapp.CustomCamera;
 import com.example.stpl.cameraapp.GestureDetector;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.ScrollListener;
-import com.example.stpl.cameraapp.activity.FullImageActivity;
+import com.example.stpl.cameraapp.fullImageView.FullImageActivity;
 import com.example.stpl.cameraapp.activity.PlayVideoActivity;
 import com.example.stpl.cameraapp.adapters.GridViewAdapter;
 import com.example.stpl.cameraapp.customViews.ExpandableHeightGridView;
@@ -38,12 +38,16 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import rx.Observable;
 import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
         AdapterView.OnItemClickListener, MainView.FileListener, AdapterView.OnItemLongClickListener,
-        MainView {
+        MainView,MainView.Adapter {
     public static boolean isSignedIn;
     final int MULTIPLE_PERMISSIONS = 123;
     boolean recording = false;
@@ -65,6 +69,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<MediaDetails> selectedItems = new ArrayList<>();
     private HashMap<Integer, View> tickView = new HashMap<>();
     SdCardInteractorImpl mSdCardInteractorImpl;
+    MainPresenter.OnItemClick onItemClick;
+    MainPresenterImpl mainPresenterImpl;
+    MainPresenter.Adapter presenterAdapter;
 
 
     @Override
@@ -72,7 +79,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSdCardInteractorImpl = new SdCardInteractorImpl();
-        mainPresenter = new MainPresenterImpl(this, mSdCardInteractorImpl);
+        mainPresenterImpl = new MainPresenterImpl((MainView)this,mSdCardInteractorImpl);
+        mainPresenter = mainPresenterImpl;
+        presenterAdapter=mainPresenterImpl;
+        onItemClick=mainPresenterImpl;
 
 
         /**
@@ -142,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              */
             case R.id.videos:
                 video.setSelected(true);
-                mainPresenter.updateAdapter("videos");
+                presenterAdapter.updateAdapter("video");
                 if (pictures.isSelected()) {
                     pictures.setSelected(false);
                 }
@@ -151,7 +161,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Loading pictures thumbnails in a GridView
              */
             case R.id.pictures:
-                mainPresenter.updateAdapter("images");
+                presenterAdapter.updateAdapter("image");
                 pictures.setSelected(true);
                 if (video.isSelected()) {
                     video.setSelected(false);
@@ -250,28 +260,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         MediaDetails details = (MediaDetails) parent.getItemAtPosition(position);
+        details.getFilePath();
         ImageView tick = (ImageView) view.findViewById(R.id.tick);
         /**
          * if items are in selection mode,show/hide display the tick icon
          */
-        if (selectedItems.size() > 0) {
-            details.toggleChecked();
-            if (details.isChecked()) {
-                selectedItems.add(details);
+        if(onItemClick.isSelectionMode()){
+            mainPresenter.modifySelection(details);
+            if(details.isChecked()){
                 tick.setVisibility(View.VISIBLE);
                 tickView.put(position, view);
-            } else {
+            }
+            else{
                 tick.setVisibility(View.INVISIBLE);
-                selectedItems.remove(details);
                 tickView.remove(position);
-                if (selectedItems.size() == 0) {
-                    imageGridView.requestLayout();
-                    imageGridView.clearChoices();
-                    gridViewButton.setVisibility(View.VISIBLE);
-                    menu.setVisibility(View.GONE);
-                }
+            }
+            if(!onItemClick.isSelectionMode()){
+                imageGridView.requestLayout();
+                imageGridView.clearChoices();
+                gridViewButton.setVisibility(View.VISIBLE);
+                menu.setVisibility(View.GONE);
             }
         }
+
+
+
+
+
         /**
          * If not in selection mode,fire an Intent to display Fullscreen video/picture
          */
@@ -279,10 +294,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent;
             if (details.getMediaType().equals("image")) {
                 intent = new Intent(MainActivity.this, FullImageActivity.class);
-//                intent.putParcelableArrayListExtra("model", imageDetails);
             } else {
                 intent = new Intent(MainActivity.this, PlayVideoActivity.class);
-//                intent.putExtra("fileName", videoDetails.get(position).getFilePath());
             }
             intent.putExtra("position", position);
             startActivity(intent);
@@ -360,10 +373,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         /**
          * If GridView is in selection mode,clear the selections
          */
-        if (selectedItems.size() > 0) {
-            for (MediaDetails mediaDetails : selectedItems) {
-                mediaDetails.toggleChecked();
-            }
+        Log.d("boolean",onItemClick.isSelectionMode()+"");
+        if (onItemClick.isSelectionMode()) {
+            mainPresenter.removeSelectedItems();
+
 
             for (Integer key : tickView.keySet()) {
                 tickView.get(key).findViewById(R.id.tick).setVisibility(View.GONE);
@@ -381,6 +394,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         /**
          * If bottom sheet is open,hide it.
          */
+
         else if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         }
@@ -391,6 +405,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             finish();
         }
     }
+
 
     @Override
     protected void onDestroy() {
@@ -427,12 +442,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         MediaDetails image = (MediaDetails) parent.getItemAtPosition(position);
+        mainPresenter.modifySelection(image);
         ImageView tick = (ImageView) view.findViewById(R.id.tick);
-        image.toggleChecked();
         menu.setVisibility(View.VISIBLE);
         gridViewButton.setVisibility(View.INVISIBLE);
         tick.setVisibility(View.VISIBLE);
-        selectedItems.add(image);
         tickView.put(position, view);
         return true;
     }
@@ -472,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imageGridView.setAdapter(gridViewAdapter);
         imageGridView.setOnItemClickListener(this);
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
-        mainPresenter.fetchFromSdCard();
+        mainPresenter.fetchFromSdCard("all");
 
     }
 
@@ -499,18 +513,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         time.setText(timer);
     }
 
+
     @Override
     public void updateAdapter(ArrayList<MediaDetails> mediaDetails) {
         gridViewAdapter.setMediaDetails(mediaDetails);
+        imageGridView.setSmoothScrollbarEnabled(false);
+        imageGridView.post(() -> imageGridView.setSelection(0));
     }
 
     @Override
     public void onFileDeleted(MediaDetails mediaDetails) {
-//        if (mediaDetails.getMediaType().equals("image")) {
-//            imageDetails.remove(mediaDetails);
-//        } else {
-//            videoDetails.remove(mediaDetails);
-//        }
         gridViewAdapter.notifyDataSetChanged();
         Log.d("file deleted", "true");
 
@@ -524,11 +536,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onFileAdded(MediaDetails mediaDetails) {
-//        if (!mediaDetails.getFilePath().contains("jpg")) {
-//            videoDetails.add(mediaDetails);
-//        } else {
-//            imageDetails.add(mediaDetails);
-//        }
         findViewById(R.id.design_bottom_sheet).requestLayout();
         gridViewAdapter.add(mediaDetails);
 

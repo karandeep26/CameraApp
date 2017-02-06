@@ -1,41 +1,41 @@
-package com.example.stpl.cameraapp.activity;
+package com.example.stpl.cameraapp.fullImageView;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import com.example.stpl.cameraapp.R;
-import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.ZoomOutPageTransformer;
 import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
 import com.example.stpl.cameraapp.main.MainActivity;
+import com.example.stpl.cameraapp.main.MainPresenter;
+import com.example.stpl.cameraapp.main.MainPresenterImpl;
+import com.example.stpl.cameraapp.main.MainView;
 import com.example.stpl.cameraapp.models.MediaDetails;
+import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.ArrayList;
 
-public class FullImageActivity extends AppCompatActivity implements View.OnClickListener {
+public class FullImageActivity extends AppCompatActivity implements View.OnClickListener,
+        MainView.Adapter, MainView.FileListener {
     int position;
     ViewPager mViewPager;
-    ArrayList<MediaDetails> mediaDetails;
     FirebaseAuth firebaseAuth;
     LinearLayout topPanel;
     int visibility;
     ImageButton upload;
     StorageReference uploadReference;
+    MainPresenter.Adapter adapter;
+
+    MainPresenterImpl mainPresenterImpl;
 
 
     @Override
@@ -44,12 +44,13 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         makeFullScreen();
         setContentView(R.layout.activity_full_image);
         findViewById();
+        mainPresenterImpl = new MainPresenterImpl(this, new SdCardInteractorImpl());
+        adapter=mainPresenterImpl;
+        adapter.updateAdapter("image");
         Intent intent = getIntent();
         position = intent.getIntExtra("position", -1);
-        mediaDetails = intent.getParcelableArrayListExtra("model");
         mViewPager.setOffscreenPageLimit(3);
-        mViewPager.setAdapter(new CustomViewPagerAdapter(this, mediaDetails));
-        mViewPager.setCurrentItem(position);
+//        mViewPager.setAdapter(new CustomViewPagerAdapter(this, mediaDetails));
         mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
         mViewPager.setOnTouchListener(new View.OnTouchListener() {
             private float pointX;
@@ -128,7 +129,6 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
@@ -136,18 +136,18 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.upload:
-                try {
-                    InputStream inputStream = new FileInputStream(new File(Utils.mediaStorageDir
-                            + "/" + mediaDetails.
-                            get(mViewPager.getCurrentItem()).getFilePath()));
-                    UploadTask uploadTask = uploadReference.putStream(inputStream);
-                    uploadTask.addOnSuccessListener(taskSnapshot -> Log.d("file uploaded", "true")).
-                            addOnFailureListener(e -> Log.e("error", e.getMessage())).
-                            addOnProgressListener(taskSnapshot -> Log.d("bytes", taskSnapshot
-                                    .getBytesTransferred() / 1024 + ""));
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    InputStream inputStream = new FileInputStream(new File(Utils.mediaStorageDir
+//                            + "/" + mediaDetails.
+//                            get(mViewPager.getCurrentItem()).getFilePath()));
+//                    UploadTask uploadTask = uploadReference.putStream(inputStream);
+//                    uploadTask.addOnSuccessListener(taskSnapshot -> Log.d("file uploaded", "true")).
+//                            addOnFailureListener(e -> Log.e("error", e.getMessage())).
+//                            addOnProgressListener(taskSnapshot -> Log.d("bytes", taskSnapshot
+//                                    .getBytesTransferred() / 1024 + ""));
+//                } catch (FileNotFoundException e) {
+//                    e.printStackTrace();
+//                }
         }
 
     }
@@ -172,4 +172,27 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     }
 
 
+    @Override
+    public void updateAdapter(ArrayList<MediaDetails> mediaDetails) {
+        mViewPager.setAdapter(new CustomViewPagerAdapter(this, mediaDetails));
+        mediaDetails.get(position).getFilePath();
+        mViewPager.setCurrentItem(position);
+
+
+    }
+
+    @Override
+    public void onFileDeleted(MediaDetails mediaDetails) {
+
+    }
+
+    @Override
+    public void onErrorOccurred() {
+
+    }
+
+    @Override
+    public void onFileAdded(MediaDetails mediaDetails) {
+
+    }
 }

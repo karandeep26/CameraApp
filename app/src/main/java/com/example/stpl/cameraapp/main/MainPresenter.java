@@ -10,7 +10,7 @@ import rx.Subscription;
 public interface MainPresenter {
     void checkForPermissions();
 
-    void fetchFromSdCard();
+    void fetchFromSdCard(String mediaType);
 
     void deleteFromSdCard(ArrayList<MediaDetails> mediaDetails);
 
@@ -24,7 +24,15 @@ public interface MainPresenter {
 
     void getCurrentSavedVideo(String fileName);
 
-    void updateAdapter(String mediaType);
+    void removeSelectedItems();
+    boolean modifySelection(MediaDetails mediaDetail);
+    interface OnItemClick{
+        boolean isSelectionMode();
+    }
+    interface  Adapter{
+        void updateAdapter(String mediaType);
+
+    }
 
 
 }

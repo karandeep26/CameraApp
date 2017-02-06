@@ -2,12 +2,13 @@ package com.example.stpl.cameraapp.models;
 
 
 import java.util.ArrayList;
+import java.util.List;
 
 import rx.Observable;
 
 
 public interface SdCardInteractor {
-    Observable<MediaDetails> getFromSdCard();
+    Observable<List<MediaDetails>> getFromSdCard(String type);
 
     boolean deleteFromSdCard(MediaDetails mediaDetails);
 
@@ -21,9 +22,16 @@ public interface SdCardInteractor {
     interface OnFinishedListener {
         void onFinished();
     }
+    interface Selection{
+        void remove(MediaDetails mediaDetails);
+        void add(MediaDetails mediaDetails);
+        boolean isSelectionMode();
+        void clearAll();
+    }
 
     interface GetMediaList {
         ArrayList<MediaDetails> getMedia(String type);
+
     }
 
 

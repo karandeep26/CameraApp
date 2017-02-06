@@ -6,7 +6,7 @@
                 android:layout_height="match_parent"
                 android:animateLayoutChanges="true"
                 android:background="#000"
-                tools:context="com.example.stpl.cameraapp.activity.FullImageActivity">
+                tools:context="com.example.stpl.cameraapp.fullImageView.FullImageActivity">
 
 
     <LinearLayout

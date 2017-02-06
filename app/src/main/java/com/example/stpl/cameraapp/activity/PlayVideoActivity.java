@@ -27,7 +27,7 @@ public class PlayVideoActivity extends AppCompatActivity {
         android.widget.MediaController mediaController = new android.widget.MediaController(this);
         mediaController.setAnchorView(videoView);
         videoView.setMediaController(mediaController);
-        videoView.setVideoPath((mediaStorageDir + "/" + fileName));
+        videoView.setVideoPath((fileName));
 
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
