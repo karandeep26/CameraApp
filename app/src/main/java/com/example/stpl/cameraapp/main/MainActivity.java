@@ -27,10 +27,10 @@ import com.example.stpl.cameraapp.CustomCamera;
 import com.example.stpl.cameraapp.GestureDetector;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.ScrollListener;
-import com.example.stpl.cameraapp.fullImageView.FullImageActivity;
 import com.example.stpl.cameraapp.activity.PlayVideoActivity;
 import com.example.stpl.cameraapp.adapters.GridViewAdapter;
 import com.example.stpl.cameraapp.customViews.ExpandableHeightGridView;
+import com.example.stpl.cameraapp.fullImageView.FullImageActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
 import com.squareup.picasso.Picasso;
@@ -38,12 +38,8 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-import rx.Observable;
 import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
         AdapterView.OnItemClickListener, MainView.FileListener, AdapterView.OnItemLongClickListener,
@@ -294,6 +290,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent;
             if (details.getMediaType().equals("image")) {
                 intent = new Intent(MainActivity.this, FullImageActivity.class);
+                Log.d("file path", details.getFilePath());
+
             } else {
                 intent = new Intent(MainActivity.this, PlayVideoActivity.class);
             }
@@ -505,7 +503,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void itemAdd(MediaDetails mediaDetails) {
-        gridViewAdapter.add(mediaDetails);
+        gridViewAdapter.addImage(mediaDetails, 1);
+
     }
 
     @Override
@@ -537,7 +536,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onFileAdded(MediaDetails mediaDetails) {
         findViewById(R.id.design_bottom_sheet).requestLayout();
-        gridViewAdapter.add(mediaDetails);
+        gridViewAdapter.addImage(mediaDetails, 0);
 
     }
 

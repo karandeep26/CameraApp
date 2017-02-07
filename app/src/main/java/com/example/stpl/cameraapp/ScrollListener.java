@@ -7,7 +7,7 @@ import com.squareup.picasso.Picasso;
 
 
 public class ScrollListener implements AbsListView.OnScrollListener {
-    Context context;
+    private Context context;
 
     public ScrollListener(Context context) {
         this.context = context;

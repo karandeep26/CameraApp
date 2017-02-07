@@ -12,9 +12,10 @@ import java.io.File;
 
 public class Utils {
     static public File mediaStorageDir = new File(
-            Environment
-                    .getExternalStoragePublicDirectory("DCIM"),
-            "Camera");
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+            "MyCameraApp");
+    static public int height;
+    public static int width;
 
     public static float convertDpToPixel(Context context, float dp) {
         Resources resources = context.getResources();
@@ -22,7 +23,7 @@ public class Utils {
         return dp * ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
     }
 
-    public static int calculateInSampleSize(
+    private static int calculateInSampleSize(
             BitmapFactory.Options options, int reqWidth, int reqHeight) {
         // Raw height and width of image
         final int height = options.outHeight;

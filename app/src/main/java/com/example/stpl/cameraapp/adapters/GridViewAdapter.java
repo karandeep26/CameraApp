@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
 import com.example.stpl.cameraapp.R;
+import com.example.stpl.cameraapp.customViews.SquareImageView;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.squareup.picasso.Picasso;
 
@@ -21,7 +22,8 @@ import java.util.ArrayList;
 public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
     private ArrayList<MediaDetails> mediaDetails;
     private LayoutInflater inflater;
-    Context mContext;
+    private Context mContext;
+    static int START = 0, END = 1;
 
     public GridViewAdapter(Context context) {
         super(context, 0);
@@ -44,7 +46,7 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         if (row == null) {
             row = inflater.inflate(R.layout.row, parent, false);
             viewHolder = new ViewHolder();
-            viewHolder.imageView = (ImageView) row.findViewById(R.id.image);
+            viewHolder.imageView = (SquareImageView) row.findViewById(R.id.image);
             viewHolder.tickView = (ImageView) row.findViewById(R.id.tick);
             row.setTag(viewHolder);
         } else {
@@ -53,9 +55,10 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
 
         MediaDetails currentObject = mediaDetails.get(position);
         if (currentObject.getMediaType().equals("image")) {
-            Picasso.with(parent.getContext()).load(new File(currentObject.getFilePath()))
-                    .tag(mContext).centerCrop().fit()
-                    .placeholder(R.drawable.placeholder).into(viewHolder.imageView);
+            Picasso.with(parent.getContext()).load("file://" + new File(currentObject.getFilePath
+                    ()))
+                    .tag(mContext).centerCrop().fit().placeholder(R.drawable.placeholder)
+                    .into(viewHolder.imageView);
         } else {
             Picasso.with(parent.getContext()).load("video:" + currentObject.getFilePath())
                     .tag(mContext).centerCrop().fit()
@@ -80,14 +83,23 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         notifyDataSetChanged();
     }
 
-    private static class ViewHolder {
-        ImageView imageView, tickView;
+    /**
+     * @param mediaDetails object to be added
+     * @param flag         0 for start,1 for end
+     */
+    public void addImage(MediaDetails mediaDetails, int flag) {
+        if (flag == START) {
+            this.mediaDetails.add(0, mediaDetails);
+        } else {
+            this.mediaDetails.add(mediaDetails);
+        }
+        notifyDataSetChanged();
     }
 
-    @Override
-    public void add(MediaDetails object) {
-        super.add(object);
-        mediaDetails.add(object);
+
+    private static class ViewHolder {
+        SquareImageView imageView;
+        ImageView tickView;
     }
 
 

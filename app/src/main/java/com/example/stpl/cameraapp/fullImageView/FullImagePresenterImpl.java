@@ -1,6 +1,9 @@
 package com.example.stpl.cameraapp.fullImageView;
 
+import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractor;
+
+import java.util.ArrayList;
 
 /**
  * Created by karan on 5/2/17.
@@ -8,15 +11,17 @@ import com.example.stpl.cameraapp.models.SdCardInteractor;
 
 public class FullImagePresenterImpl implements FullImageInterface  {
     private FullImageView fullImageView;
-    private SdCardInteractor.GetMediaList sdCardInteractor;
+    private SdCardInteractor sdCardInteractor;
 
-    public FullImagePresenterImpl(FullImageView fullImageView, SdCardInteractor.GetMediaList sdCardInteractor) {
+    FullImagePresenterImpl(FullImageView fullImageView, SdCardInteractor sdCardInteractor) {
         this.fullImageView = fullImageView;
         this.sdCardInteractor = sdCardInteractor;
     }
 
     @Override
     public void fetchImages() {
-        fullImageView.updateAdapter(sdCardInteractor.getMedia("image"));
+        sdCardInteractor.getFromSdCard("image").subscribe(mediaDetails -> {
+            fullImageView.updateAdapter((ArrayList<MediaDetails>) mediaDetails);
+        });
     }
 }

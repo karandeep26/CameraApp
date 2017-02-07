@@ -4,18 +4,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import com.example.stpl.cameraapp.R;
+import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.ZoomOutPageTransformer;
 import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
 import com.example.stpl.cameraapp.main.MainActivity;
-import com.example.stpl.cameraapp.main.MainPresenter;
-import com.example.stpl.cameraapp.main.MainPresenterImpl;
-import com.example.stpl.cameraapp.main.MainView;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
 import com.google.firebase.auth.FirebaseAuth;
@@ -25,7 +25,7 @@ import com.google.firebase.storage.StorageReference;
 import java.util.ArrayList;
 
 public class FullImageActivity extends AppCompatActivity implements View.OnClickListener,
-        MainView.Adapter, MainView.FileListener {
+        FullImageView {
     int position;
     ViewPager mViewPager;
     FirebaseAuth firebaseAuth;
@@ -33,9 +33,8 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     int visibility;
     ImageButton upload;
     StorageReference uploadReference;
-    MainPresenter.Adapter adapter;
-
-    MainPresenterImpl mainPresenterImpl;
+    FullImagePresenterImpl fullImagePresenterImpl;
+    FullImageInterface fullImageInterface;
 
 
     @Override
@@ -44,9 +43,13 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         makeFullScreen();
         setContentView(R.layout.activity_full_image);
         findViewById();
-        mainPresenterImpl = new MainPresenterImpl(this, new SdCardInteractorImpl());
-        adapter=mainPresenterImpl;
-        adapter.updateAdapter("image");
+        DisplayMetrics displaymetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+        Utils.height = displaymetrics.heightPixels;
+        Utils.width = displaymetrics.widthPixels;
+        fullImagePresenterImpl = new FullImagePresenterImpl(this, new SdCardInteractorImpl());
+        fullImageInterface = fullImagePresenterImpl;
+        fullImageInterface.fetchImages();
         Intent intent = getIntent();
         position = intent.getIntExtra("position", -1);
         mViewPager.setOffscreenPageLimit(3);
@@ -176,23 +179,9 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     public void updateAdapter(ArrayList<MediaDetails> mediaDetails) {
         mViewPager.setAdapter(new CustomViewPagerAdapter(this, mediaDetails));
         mediaDetails.get(position).getFilePath();
+        Log.d("file path", mediaDetails.get(position).getFilePath());
         mViewPager.setCurrentItem(position);
 
-
-    }
-
-    @Override
-    public void onFileDeleted(MediaDetails mediaDetails) {
-
-    }
-
-    @Override
-    public void onErrorOccurred() {
-
-    }
-
-    @Override
-    public void onFileAdded(MediaDetails mediaDetails) {
 
     }
 }

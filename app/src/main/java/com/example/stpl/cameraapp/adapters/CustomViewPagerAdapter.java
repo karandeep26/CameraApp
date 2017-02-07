@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.example.stpl.cameraapp.R;
+import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.squareup.picasso.Picasso;
 
@@ -47,8 +48,8 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup container, int position) {
         View itemView = mLayoutInflater.inflate(R.layout.viewpager_item, container, false);
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
-        Picasso.with(mContext).load(new File(mediaDetails.get(position)
-                .getFilePath())).into(imageView);
+        Picasso.with(mContext).load("file://" + new File(mediaDetails.get(position)
+                .getFilePath())).resize(Utils.width, 0).into(imageView);
         container.addView(itemView);
         return itemView;
     }

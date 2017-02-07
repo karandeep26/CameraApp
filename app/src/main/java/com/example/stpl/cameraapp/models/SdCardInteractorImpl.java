@@ -1,21 +1,15 @@
 package com.example.stpl.cameraapp.models;
 
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.os.Environment;
 import android.util.Log;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -47,7 +41,7 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
             });
         } else if (type.equalsIgnoreCase("image")) {
             listFile = file.listFiles(pathname -> {
-                return pathname.getAbsolutePath().equalsIgnoreCase("jpg");
+                return pathname.getAbsolutePath().contains("jpg");
             });
         } else {
             listFile = file.listFiles();
@@ -125,26 +119,27 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
     @Override
     public MediaDetails savePhoto(byte[] data) {
         File pictureFile = getOutputMediaFile();
-
+        MediaDetails mediaDetails;
         if (pictureFile == null) {
             return null;
         }
         try {
             FileOutputStream fos = new FileOutputStream(pictureFile);
-            Bitmap image = BitmapFactory.decodeByteArray(data, 0, data.length);
-            Matrix matrix = new Matrix();
-            matrix.postRotate(270);
-            Bitmap rotatedImage = Bitmap.createBitmap(image, 0, 0, image.getWidth(),
-                    image.getHeight(), matrix, true);
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            rotatedImage.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
-            fos.write(outputStream.toByteArray());
+//            Bitmap image = BitmapFactory.decodeByteArray(data, 0, data.length);
+//            Matrix matrix = new Matrix();
+//            matrix.postRotate(270);
+//            Bitmap rotatedImage = Bitmap.createBitmap(image, 0, 0, image.getWidth(),
+//                    image.getHeight(), matrix, true);
+//            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//            rotatedImage.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+            fos.write(data);
             fos.close();
+            images.add(0, getMediaDetails(pictureFile));
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
-        return getMediaDetails(pictureFile);
+        return images.get(0);
     }
 
     @Override
