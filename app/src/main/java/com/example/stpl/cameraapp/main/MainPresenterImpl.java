@@ -75,7 +75,8 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
         float startTime = System.currentTimeMillis();
         Log.d("start time", startTime + "");
 
-        subscription = sdCardInteractor.getFromSdCard(mediaType).observeOn(AndroidSchedulers.mainThread())
+        subscription = sdCardInteractor.getFromSdCard(mediaType).
+                observeOn(AndroidSchedulers.mainThread())
                 .subscribe(mediaDetails -> {
                            for(MediaDetails temp:mediaDetails){
                                if(temp.getMediaType().equals("image")){
@@ -141,15 +142,15 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
     }
 
     @Override
-    public void savePhotoSdCard(byte[] data) {
+    public String savePhotoSdCard(byte[] data) {
         MediaDetails mediaDetails = sdCardInteractor.savePhoto(data);
         if (mediaDetails == null) {
             fileListener.onErrorOccurred();
+            return null;
         } else {
-            if(mediaType.equals(mediaDetails.getMediaType())) {
                 fileListener.onFileAdded(mediaDetails);
-            }
         }
+        return mediaDetails.getFilePath();
     }
 
     @Override

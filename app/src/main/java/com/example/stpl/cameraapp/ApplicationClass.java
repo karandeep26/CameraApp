@@ -12,6 +12,7 @@ public class ApplicationClass extends Application {
         super.onCreate();
         Picasso.Builder builder = new Picasso.Builder(this);
         builder.addRequestHandler(new MyRequestHandler());
+        builder.listener((picasso, uri, exception) -> exception.printStackTrace());
         Picasso picasso = builder.build();
 
         Picasso.setSingletonInstance(picasso);

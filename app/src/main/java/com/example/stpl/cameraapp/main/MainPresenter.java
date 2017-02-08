@@ -20,7 +20,7 @@ public interface MainPresenter {
 
     int getMediaSize(String mediaType);
 
-    void savePhotoSdCard(byte[] data);
+    String savePhotoSdCard(byte[] data);
 
     void getCurrentSavedVideo(String fileName);
 

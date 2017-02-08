@@ -1,8 +1,9 @@
 package com.example.stpl.cameraapp.models;
 
 
-import android.os.Environment;
 import android.util.Log;
+
+import com.example.stpl.cameraapp.Utils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import rx.Observable;
 import rx.schedulers.Schedulers;
@@ -96,10 +98,7 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
     }
 
     private File getOutputMediaFile() {
-        File mediaStorageDir = new File(
-                Environment
-                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                "MyCameraApp");
+        File mediaStorageDir = Utils.mediaStorageDir;
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
                 Log.d("MyCameraApp", "failed to create directory");
@@ -107,7 +106,7 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
             }
         }
         // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                 .format(new Date());
         String fileName = mediaStorageDir.getPath() + File.separator + "IMG_" + timeStamp + ".jpg";
 
@@ -119,22 +118,14 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
     @Override
     public MediaDetails savePhoto(byte[] data) {
         File pictureFile = getOutputMediaFile();
-        MediaDetails mediaDetails;
         if (pictureFile == null) {
             return null;
         }
         try {
             FileOutputStream fos = new FileOutputStream(pictureFile);
-//            Bitmap image = BitmapFactory.decodeByteArray(data, 0, data.length);
-//            Matrix matrix = new Matrix();
-//            matrix.postRotate(270);
-//            Bitmap rotatedImage = Bitmap.createBitmap(image, 0, 0, image.getWidth(),
-//                    image.getHeight(), matrix, true);
-//            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//            rotatedImage.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
             fos.write(data);
-            fos.close();
             images.add(0, getMediaDetails(pictureFile));
+
         } catch (IOException e) {
             e.printStackTrace();
             return null;

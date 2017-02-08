@@ -3,7 +3,9 @@ package com.example.stpl.cameraapp.main;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
@@ -35,6 +37,7 @@ import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -74,11 +77,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
         mSdCardInteractorImpl = new SdCardInteractorImpl();
         mainPresenterImpl = new MainPresenterImpl((MainView)this,mSdCardInteractorImpl);
         mainPresenter = mainPresenterImpl;
         presenterAdapter=mainPresenterImpl;
         onItemClick=mainPresenterImpl;
+
 
 
         /**
@@ -536,7 +541,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onFileAdded(MediaDetails mediaDetails) {
         findViewById(R.id.design_bottom_sheet).requestLayout();
+        File file = new File(mediaDetails.getFilePath());
+        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        intent.setData(Uri.fromFile(file));
+        sendBroadcast(intent);
         gridViewAdapter.addImage(mediaDetails, 0);
+
 
     }
 
