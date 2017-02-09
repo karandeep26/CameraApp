@@ -303,8 +303,6 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             surfaceCreated = true;
             parameters = camera.getParameters();
             correctOrientation = getCorrectCameraOrientation(cameraInfo);
-            requestLayout();
-            invalidate();
             parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
             parameters.setPictureSize(mPreviewSize.width, mPreviewSize.height);
             camera.setDisplayOrientation(correctOrientation);

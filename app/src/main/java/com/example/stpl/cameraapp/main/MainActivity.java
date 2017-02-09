@@ -80,13 +80,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSdCardInteractorImpl = new SdCardInteractorImpl();
-        mainPresenterImpl = new MainPresenterImpl((MainView)this,mSdCardInteractorImpl);
+        mainPresenterImpl = new MainPresenterImpl((MainView) this, mSdCardInteractorImpl);
         mainPresenter = mainPresenterImpl;
-        presenterAdapter=mainPresenterImpl;
-        onItemClick=mainPresenterImpl;
-
-
-
+        presenterAdapter = mainPresenterImpl;
+        onItemClick = mainPresenterImpl;
 
         /**
          * Set Window Flags to make app full screen
@@ -96,6 +93,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          * Standard findViewById
          */
         findViewById();
+        mainPresenter.checkForPermissions();
         /**
          * Initialize GridViewAdapter
          * Set GridView
@@ -107,11 +105,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          */
         setClickListeners();
 
-        /**
-         * Request run time permissions
-         */
-        mainPresenter.checkForPermissions();
-
 
         /**
          * Calculate Screen Height
@@ -119,7 +112,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         height = displayMetrics.heightPixels;
-
 
 
         if (customCamera != null) {
@@ -276,26 +268,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         /**
          * if items are in selection mode,show/hide display the tick icon
          */
-        if(onItemClick.isSelectionMode()){
+        if (onItemClick.isSelectionMode()) {
             mainPresenter.modifySelection(details);
-            if(details.isChecked()){
+            if (details.isChecked()) {
                 tick.setVisibility(View.VISIBLE);
                 tickView.put(position, view);
-            }
-            else{
+            } else {
                 tick.setVisibility(View.INVISIBLE);
                 tickView.remove(position);
             }
-            if(!onItemClick.isSelectionMode()){
+            if (!onItemClick.isSelectionMode()) {
                 imageGridView.requestLayout();
                 imageGridView.clearChoices();
                 gridViewButton.setVisibility(View.VISIBLE);
                 menu.setVisibility(View.GONE);
             }
         }
-
-
-
 
 
         /**
@@ -402,7 +390,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         /**
          * If GridView is in selection mode,clear the selections
          */
-        Log.d("boolean",onItemClick.isSelectionMode()+"");
+        Log.d("boolean", onItemClick.isSelectionMode() + "");
         if (onItemClick.isSelectionMode()) {
             mainPresenter.removeSelectedItems();
             for (int i = 0; i < tickView.size(); i++) {
