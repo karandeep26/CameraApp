@@ -78,11 +78,13 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
         subscription = sdCardInteractor.getFromSdCard(mediaType).
                 observeOn(AndroidSchedulers.mainThread())
                 .subscribe(mediaDetails -> {
+                            if (mediaDetails != null) {
                            for(MediaDetails temp:mediaDetails){
                                if(temp.getMediaType().equals("image")){
                                    mainView.itemAdd(temp);
                                }
                            }
+                            }
                         },
                         throwable -> Log.d("debug", throwable.getMessage()),
                         () -> {

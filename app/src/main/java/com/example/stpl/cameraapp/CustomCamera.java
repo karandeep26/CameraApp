@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -43,14 +44,19 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     MainPresenter mainPresenter;
     int rotation;
     int correctOrientation;
+    Camera.Parameters parameters;
 
     public Observable<String> getSubject() {
         return subject;
     }
 
 
-    public CustomCamera(Context context, MainPresenter mainPresenter) {
+    public CustomCamera(Context context) {
         super(context);
+    }
+
+    public CustomCamera(Context context, MainPresenter mainPresenter) {
+        this(context);
         activity = context;
         this.mainPresenter = mainPresenter;
         surfaceHolder = this.getHolder();
@@ -59,9 +65,6 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         camera = openFrontFacingCameraGingerbread();
         mSupportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
         rotation = activity.getResources().getConfiguration().orientation;
-
-
-
     }
 
 
@@ -73,9 +76,9 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         try {
             camera.setPreviewDisplay(surfaceHolder);
             setCamera();
-            for (Camera.Size size : mSupportedPreviewSizes) {
-                Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
-            }
+//            for (Camera.Size size : mSupportedPreviewSizes) {
+//                Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
+//            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -84,9 +87,16 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-
+        Log.d("surface changed", "true");
+        if (width < height) {
+            parameters.setPreviewSize(width, height);
+            parameters.setPictureSize(width, height);
+        } else {
+            parameters.setPreviewSize(height, width);
+            parameters.setPictureSize(height, width);
+        }
     }
+
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
@@ -144,7 +154,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         File mediaStorageDir = new File(Environment
                         .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
                 "MyCameraApp");
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                 .format(new Date());
         fileName = mediaStorageDir.getPath() + File.separator + "VID_" + timeStamp + ".mp4";
         mediaRecorder.setOutputFile(fileName);
@@ -226,6 +236,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         return optimalSize;
     }
 
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final int width = resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec);
@@ -235,11 +246,8 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         setMeasuredDimension(width, height);
 
         if (mSupportedPreviewSizes != null) {
-            if (rotation == Configuration.ORIENTATION_PORTRAIT) {
+
                 mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
-            } else {
-                mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, height, width);
-            }
         }
 
     }
@@ -283,9 +291,9 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             camera = openFrontFacingCameraGingerbread();
             try {
                 camera.setPreviewDisplay(surfaceHolder);
-                for (Camera.Size size : mSupportedPreviewSizes) {
-                    Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
-                }
+//                for (Camera.Size size : mSupportedPreviewSizes) {
+//                    Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
+//                }
 
 
             } catch (IOException e) {
@@ -297,12 +305,12 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             Camera.getCameraInfo(camId, cameraInfo);
             surfaceCreated = true;
 
-            Camera.Parameters parameters = camera.getParameters();
+            parameters = camera.getParameters();
             correctOrientation = getCorrectCameraOrientation(cameraInfo);
             camera.setDisplayOrientation(correctOrientation);
 //            if(rotation==Configuration.ORIENTATION_PORTRAIT){
-            parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
-            parameters.setPictureSize(mPreviewSize.width, mPreviewSize.height);
+//            parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+//            parameters.setPictureSize(mPreviewSize.width, mPreviewSize.height);
             //     }
 //            else{
 //                requestLayout();
@@ -326,10 +334,20 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     @Override
     protected void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+//        requestLayout();
+//        forceLayout();
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        Camera.getCameraInfo(camId, cameraInfo);
+        parameters = camera.getParameters();
+        correctOrientation = getCorrectCameraOrientation(cameraInfo);
+//        camera.setDisplayOrientation(correctOrientation);
+
     }
+
 
     public Camera getCamera() {
         return camera;
     }
+
 }
 

@@ -23,7 +23,7 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
     private ArrayList<MediaDetails> mediaDetails;
     private LayoutInflater inflater;
     private Context mContext;
-    static int START = 0, END = 1;
+    private static int START = 0, END = 1;
 
     public GridViewAdapter(Context context) {
         super(context, 0);
@@ -54,20 +54,14 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         }
 
         MediaDetails currentObject = mediaDetails.get(position);
-        File file = new File(currentObject.getFilePath());
-//        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-//        intent.setData(Uri.fromFile(file));
-//        mContext.sendBroadcast(intent);
-//        viewHolder.imageView.setImageBitmap(Utils.decodeSampledBitmapFromFile(currentObject
-// .getFilePath(),200,200));
         if (currentObject.getMediaType().equals("image")) {
             Picasso.with(parent.getContext()).load("file://" + new File(currentObject.getFilePath()))
                     .tag(mContext).centerCrop().fit().placeholder(R.drawable.placeholder)
                     .into(viewHolder.imageView);
         } else {
-//            Picasso.with(parent.getContext()).load(currentObject.getFilePath())
-//                    .tag(mContext).centerCrop().fit()
-//                    .placeholder(R.drawable.placeholder).into(viewHolder.imageView);
+            Picasso.with(parent.getContext()).load("video://" + currentObject.getFilePath())
+                    .tag(mContext).centerCrop().fit()
+                    .placeholder(R.drawable.placeholder).into(viewHolder.imageView);
         }
         if (currentObject.isChecked()) {
             viewHolder.tickView.setVisibility(View.VISIBLE);

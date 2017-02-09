@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -16,6 +17,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.GridView;
@@ -77,7 +80,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+
         mSdCardInteractorImpl = new SdCardInteractorImpl();
         mainPresenterImpl = new MainPresenterImpl((MainView)this,mSdCardInteractorImpl);
         mainPresenter = mainPresenterImpl;
@@ -546,11 +550,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         intent.setData(Uri.fromFile(file));
         sendBroadcast(intent);
         gridViewAdapter.addImage(mediaDetails, 0);
-
-
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+    }
 
+    @Override
+    public void setRequestedOrientation(int requestedOrientation) {
+        super.setRequestedOrientation(requestedOrientation);
+
+        int rotationAnimation = WindowManager.LayoutParams.ROTATION_ANIMATION_JUMPCUT;
+        Window win = getWindow();
+        WindowManager.LayoutParams winParams = win.getAttributes();
+        winParams.rotationAnimation = rotationAnimation;
+        win.setAttributes(winParams);
+
+    }
 }
 
 

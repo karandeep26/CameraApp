@@ -5,10 +5,12 @@
                                                  android:id="@+id/slide_panel"
                                                  android:layout_width="match_parent"
                                                  android:layout_height="match_parent"
-                                                 android:animateLayoutChanges="true"
+                                                 android:screenOrientation="portrait"
+                                                 android:configChanges="orientation"
                                                  tools:context="com.example.stpl.cameraapp.main.MainActivity">
 
     <android.support.v4.widget.NestedScrollView
+
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
@@ -41,6 +43,7 @@
                 android:visibility="gone"/>
 
             <ImageButton
+                android:visibility="invisible"
                 android:id="@+id/record_video"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -51,6 +54,8 @@
                 android:src="@drawable/ic_videocam_blue_grey_300_36dp"/>
 
             <ImageButton
+                android:visibility="invisible"
+
                 android:id="@+id/capture"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -64,6 +69,7 @@
 
 
     <android.support.v4.widget.NestedScrollView
+        android:visibility="invisible"
         android:id="@+id/design_bottom_sheet"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
