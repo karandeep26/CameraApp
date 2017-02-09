@@ -69,6 +69,9 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         surfaceHolder.addCallback(this);
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         rotation = activity.getResources().getConfiguration().orientation;
+        camera = openFrontFacingCameraGingerbread();
+        mSupportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
+
     }
 
 
@@ -77,8 +80,8 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     public void surfaceCreated(SurfaceHolder holder) {
         if (camera == null) {
             camera = openFrontFacingCameraGingerbread();
+        }
             try {
-                mSupportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
                 camera.setPreviewDisplay(surfaceHolder);
                 setCamera();
 //            for (Camera.Size size : mSupportedPreviewSizes) {
@@ -87,7 +90,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+
 
     }
 
@@ -110,8 +113,10 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
                 camera.setPreviewDisplay(null);
                 camera.release();
                 camera = null;
-                orientationListener.disable();
-                orientationListener = null;
+                if (orientationListener != null) {
+                    orientationListener.disable();
+                    orientationListener = null;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -297,7 +302,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
                 e.printStackTrace();
             }
         }
-        if (camera != null && !isCameraSet) {
+        if (camera != null) {
             Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
             Camera.getCameraInfo(camId, cameraInfo);
             surfaceCreated = true;

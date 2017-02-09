@@ -112,25 +112,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         height = displayMetrics.heightPixels;
-
-
-        if (customCamera != null) {
-            customCamera._getRotation().subscribe(rotation -> {
-                if (rotation == Utils.ROTATION_O) {
-                    captureButton.animate().rotation(0).start();
-                    videoCapture.animate().rotation(0).start();
-                } else if (rotation == Utils.ROTATION_90) {
-                    captureButton.animate().rotation(90).start();
-                    videoCapture.animate().rotation(90).start();
-                } else if (rotation == Utils.ROTATION_270) {
-                    captureButton.animate().rotation(-90).start();
-                    videoCapture.animate().rotation(-90).start();
-                }
-                Log.d("current rotation", captureButton.getRotation() + "");
-            });
-        }
-
-
     }
 
     @Override
@@ -256,8 +237,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
         makeFullScreen();
 
-//       if(customCamera!=null&&customCamera.getCamera()==null)
-//            customCamera.setCamera();
+        if (customCamera != null && customCamera.getCamera() == null)
+            customCamera.setCamera();
     }
 
     @Override
@@ -479,6 +460,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         customCamera.setWillNotDraw(false);
         frameLayout.addView(customCamera);
         mainPresenter.fetchFromSdCard("all");
+        customCamera._getRotation().subscribe(rotation -> {
+            if (rotation == Utils.ROTATION_O) {
+                captureButton.animate().rotation(0).start();
+                videoCapture.animate().rotation(0).start();
+            } else if (rotation == Utils.ROTATION_90) {
+                captureButton.animate().rotation(90).start();
+                videoCapture.animate().rotation(90).start();
+            } else if (rotation == Utils.ROTATION_270) {
+                captureButton.animate().rotation(-90).start();
+                videoCapture.animate().rotation(-90).start();
+            }
+            Log.d("current rotation", captureButton.getRotation() + "");
+        });
 
     }
 
