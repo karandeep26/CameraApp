@@ -48,16 +48,20 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
         } else {
             listFile = file.listFiles();
         }
+        if (listFile == null || listFile.length == 0) {
+            listFile = new File[0];
+        }
 
         Arrays.sort(listFile, (o1, o2) -> {
-            if(o1.lastModified()>o2.lastModified()) {
+            if (o1.lastModified() > o2.lastModified()) {
                 return -1;
-            }
-            else if(o1.lastModified()<o2.lastModified()) {
+            } else if (o1.lastModified() < o2.lastModified()) {
                 return 1;
             }
             return 0;
         });
+
+
         Observable<File> fileObservable = Observable.from(listFile);
         return fileObservable.flatMap(file1 -> Observable.just(file1)
                 .subscribeOn(Schedulers.io())

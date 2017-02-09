@@ -1,22 +1,31 @@
 package com.example.stpl.cameraapp.main;
 
-import android.widget.GridView;
 
-import com.example.stpl.cameraapp.adapters.GridViewAdapter;
+
 import com.example.stpl.cameraapp.models.MediaDetails;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public interface MainView {
+    interface UpdateView {
+        void setTimerValue(String timer);
+
+        void updateAdapter(ArrayList<MediaDetails> mediaDetails);
+
+        void rotateViews();
+
+    }
     void permissionAvailable();
+
+    boolean addPermission(List<String> permissionsList, String permission);
 
     void permissionNotAvailable(ArrayList<String> permissionNeeded, ArrayList<String>
             permissionList);
 
     void itemAdd(MediaDetails mediaDetails);
 
-    void setTimerValue(String timer);
 
     interface FileListener {
         void onFileDeleted(MediaDetails mediaDetails);
@@ -24,7 +33,6 @@ public interface MainView {
         void onFileAdded(MediaDetails mediaDetails);
     }
     interface Adapter {
-        void updateAdapter(ArrayList<MediaDetails> mediaDetails);
     }
 
 }

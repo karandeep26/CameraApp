@@ -1,16 +1,12 @@
 package com.example.stpl.cameraapp.main;
 
 import android.Manifest;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractor;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
@@ -21,9 +17,8 @@ import rx.subscriptions.CompositeSubscription;
 
 public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedListener,
         MainPresenter.OnItemClick,MainPresenter.Adapter {
-    private Context mContext;
     private MainView mainView;
-    private MainView.Adapter mainViewAdapter;
+    private MainView.UpdateView updateView;
     private MainView.FileListener fileListener;
     private SdCardInteractor sdCardInteractor;
     private CompositeSubscription compositeSubscription;
@@ -34,18 +29,16 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
     private String mediaType="image";
 
 
-
-    public MainPresenterImpl(MainView.Adapter mainViewAdapter,SdCardInteractor sdCardInteractor){
+    public MainPresenterImpl(MainView.UpdateView updateView, SdCardInteractor sdCardInteractor) {
         compositeSubscription=new CompositeSubscription();
         this.sdCardInteractor=sdCardInteractor;
-        fileListener= (MainView.FileListener) mainViewAdapter;
-        this.mainViewAdapter=  mainViewAdapter;
+        fileListener = (MainView.FileListener) updateView;
+        this.updateView = updateView;
         getMediaList = (SdCardInteractor.GetMediaList) sdCardInteractor;
     }
     public MainPresenterImpl(MainView mainView, SdCardInteractor sdCardInteractor) {
-        this((MainView.Adapter)mainView,sdCardInteractor);
+        this((MainView.UpdateView) mainView, sdCardInteractor);
         this.mainView = mainView;
-        mContext = (Context) mainView;
         selection = (SdCardInteractor.Selection) sdCardInteractor;
     }
 
@@ -53,20 +46,19 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
     public void checkForPermissions() {
         ArrayList<String> permissionNeeded = new ArrayList<>();
         ArrayList<String> permissionList = new ArrayList<>();
-        if (!addPermission(permissionList, Manifest.permission.CAMERA))
+        if (!mainView.addPermission(permissionList, Manifest.permission.CAMERA))
             permissionNeeded.add("camera");
-        if (!addPermission(permissionList, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+        if (!mainView.addPermission(permissionList, Manifest.permission.WRITE_EXTERNAL_STORAGE))
             permissionNeeded.add("write");
-        if (!addPermission(permissionList, Manifest.permission.READ_EXTERNAL_STORAGE))
+        if (!mainView.addPermission(permissionList, Manifest.permission.READ_EXTERNAL_STORAGE))
             permissionNeeded.add("read");
-        if (!addPermission(permissionList, Manifest.permission.RECORD_AUDIO))
+        if (!mainView.addPermission(permissionList, Manifest.permission.RECORD_AUDIO))
             permissionNeeded.add("record audio");
         if (permissionNeeded.size() > 0) {
             mainView.permissionNotAvailable(permissionNeeded, permissionList);
         } else {
             mainView.permissionAvailable();
         }
-        mContext = null;
 
     }
 
@@ -126,9 +118,9 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
                 Observable.interval(1, TimeUnit.SECONDS), (integer, aLong) -> integer).repeat()
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(seconds -> {
                     if (seconds > 9) {
-                        mainView.setTimerValue(minutes + ": 0" + seconds);
+                        updateView.setTimerValue(minutes + ": 0" + seconds);
                     } else {
-                        mainView.setTimerValue(minutes + ":" + seconds);
+                        updateView.setTimerValue(minutes + ":" + seconds);
                     }
                     if (seconds == 59) {
                         minutes++;
@@ -172,20 +164,10 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
     public void updateAdapter(String mediaType) {
         this.mediaType=mediaType;
         ArrayList<MediaDetails> mediaDetails = getMediaList.getMedia(mediaType);
-        mainViewAdapter.updateAdapter(mediaDetails);
+        updateView.updateAdapter(mediaDetails);
     }
 
 
-    private boolean addPermission(List<String> permissionsList, String permission) {
-        if (ActivityCompat.checkSelfPermission(mContext, permission) != PackageManager
-                .PERMISSION_GRANTED) {
-            permissionsList.add(permission);
-            if (!ActivityCompat.shouldShowRequestPermissionRationale((MainActivity) mContext,
-                    permission))
-                return false;
-        }
-        return true;
-    }
 
     @Override
     public void onFinished() {

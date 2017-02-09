@@ -16,6 +16,10 @@ public class Utils {
             "MyCameraApp");
     static public int height;
     public static int width;
+    public static int ROTATION_O = 1;
+    public static int ROTATION_90 = 2;
+    public static int ROTATION_180 = 3;
+    public static int ROTATION_270 = 4;
 
     public static float convertDpToPixel(Context context, float dp) {
         Resources resources = context.getResources();
