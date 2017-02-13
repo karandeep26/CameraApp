@@ -153,12 +153,12 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
     }
 
     @Override
-    public void remove(MediaDetails mediaDetails) {
+    public void removeFromSelection(MediaDetails mediaDetails) {
         selected.remove(mediaDetails);
     }
 
     @Override
-    public void add(MediaDetails mediaDetails) {
+    public void addToSelection(MediaDetails mediaDetails) {
         selected.add(mediaDetails);
     }
 
@@ -171,6 +171,11 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
     public void clearAll() {
         selected.clear();
 
+    }
+
+    @Override
+    public ArrayList<MediaDetails> getSelectedItems() {
+        return selected;
     }
 }
 

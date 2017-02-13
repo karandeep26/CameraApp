@@ -8,13 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public interface MainView {
+interface MainView {
     interface UpdateView {
         void setTimerValue(String timer);
 
         void updateAdapter(ArrayList<MediaDetails> mediaDetails);
 
-        void rotateViews();
 
     }
     void permissionAvailable();

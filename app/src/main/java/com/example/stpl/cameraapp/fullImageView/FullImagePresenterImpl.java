@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * Created by karan on 5/2/17.
  */
 
-public class FullImagePresenterImpl implements FullImageInterface  {
+class FullImagePresenterImpl implements FullImageInterface {
     private FullImageView fullImageView;
     private SdCardInteractor sdCardInteractor;
 
@@ -23,5 +23,9 @@ public class FullImagePresenterImpl implements FullImageInterface  {
         sdCardInteractor.getFromSdCard("image").subscribe(mediaDetails -> {
             fullImageView.updateAdapter((ArrayList<MediaDetails>) mediaDetails);
         });
+    }
+
+    @Override
+    public void deleteFile() {
     }
 }

@@ -23,10 +23,13 @@ public interface SdCardInteractor {
         void onFinished();
     }
     interface Selection{
-        void remove(MediaDetails mediaDetails);
-        void add(MediaDetails mediaDetails);
+        void removeFromSelection(MediaDetails mediaDetails);
+
+        void addToSelection(MediaDetails mediaDetails);
         boolean isSelectionMode();
         void clearAll();
+
+        ArrayList<MediaDetails> getSelectedItems();
     }
 
     interface GetMediaList {

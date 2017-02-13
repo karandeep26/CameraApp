@@ -95,6 +95,12 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         notifyDataSetChanged();
     }
 
+    @Override
+    public void remove(MediaDetails object) {
+        super.remove(object);
+        mediaDetails.remove(object);
+        notifyDataSetChanged();
+    }
 
     private static class ViewHolder {
         SquareImageView imageView;

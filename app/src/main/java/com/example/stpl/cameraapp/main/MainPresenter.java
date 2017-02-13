@@ -2,9 +2,7 @@ package com.example.stpl.cameraapp.main;
 
 import com.example.stpl.cameraapp.models.MediaDetails;
 
-import java.util.ArrayList;
-
-import rx.Subscription;
+import rx.Subscriber;
 
 
 public interface MainPresenter {
@@ -12,11 +10,11 @@ public interface MainPresenter {
 
     void fetchFromSdCard(String mediaType);
 
-    void deleteFromSdCard(ArrayList<MediaDetails> mediaDetails);
+    void deleteFromSdCard();
 
     void onDestroy();
 
-    Subscription startTimer();
+    Subscriber startTimer();
 
     int getMediaSize(String mediaType);
 

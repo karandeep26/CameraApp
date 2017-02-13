@@ -20,7 +20,6 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     private Context mContext;
     private LayoutInflater mLayoutInflater;
     private ArrayList<MediaDetails> mediaDetails;
-    private float downX, downY;
 
     public CustomViewPagerAdapter(Context mContext, ArrayList<MediaDetails> mediaDetails) {
         this.mediaDetails = mediaDetails;
@@ -51,8 +50,10 @@ public class CustomViewPagerAdapter extends PagerAdapter {
         Picasso.with(mContext).load("file://" + new File(mediaDetails.get(position)
                 .getFilePath())).resize(Utils.width, 0).into(imageView);
         container.addView(itemView);
+        itemView.setTag("myView" + position);
         return itemView;
     }
+
 }
 
 

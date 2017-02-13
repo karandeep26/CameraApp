@@ -284,7 +284,6 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         } else {
             result = (info.orientation - degrees + 360) % 360;
         }
-        Log.d("result", "" + result);
         return result;
     }
 
@@ -347,7 +346,6 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         public void onOrientationChanged(int orientation) {
             if ((orientation < 35 || orientation > 325) && rotation != ROTATION_O) { // PORTRAIT
                 rotation = ROTATION_O;
-                Log.d("orientation", "portrait");
                 rotationSubject.onNext(rotation);
             } else if (orientation > 145 && orientation < 215 && rotation != ROTATION_180) { //
                 // REVERSE PORTRAIT
@@ -357,13 +355,11 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
                 // REVERSE LANDSCAPE
                 rotation = ROTATION_270;
                 rotationSubject.onNext(rotation);
-                Log.d("orientation", " reverse landscape");
 
             } else if (orientation > 235 && orientation < 305 && rotation != ROTATION_90) {
                 //LANDSCAPE
                 rotation = ROTATION_90;
                 rotationSubject.onNext(rotation);
-                Log.d("orientation", " landscape");
 
             }
         }

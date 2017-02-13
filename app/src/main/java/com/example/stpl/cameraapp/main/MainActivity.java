@@ -44,7 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import rx.Subscription;
+import rx.Subscriber;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
         AdapterView.OnItemClickListener, MainView.FileListener, AdapterView.OnItemLongClickListener,
@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TextView time;
     GestureDetectorCompat imageGestureDetector;
     int height;
-    Subscription subscription;
+    Subscriber subscription;
     MainPresenter mainPresenter;
     private FrameLayout frameLayout;
     private CustomCamera customCamera;
@@ -67,7 +67,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageButton pictures, video, delete, upload;
     private LinearLayout gridViewButton, menu;
     private BottomSheetBehavior.BottomSheetCallback bottomSheetCallback;
-    private ArrayList<MediaDetails> selectedItems = new ArrayList<>();
     private SparseArray<View> tickView = new SparseArray<>();
     SdCardInteractorImpl mSdCardInteractorImpl;
     MainPresenter.OnItemClick onItemClick;
@@ -80,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSdCardInteractorImpl = new SdCardInteractorImpl();
-        mainPresenterImpl = new MainPresenterImpl((MainView) this, mSdCardInteractorImpl);
+        mainPresenterImpl = new MainPresenterImpl(this, mSdCardInteractorImpl);
         mainPresenter = mainPresenterImpl;
         presenterAdapter = mainPresenterImpl;
         onItemClick = mainPresenterImpl;
@@ -104,7 +103,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          * Set button on click listeners
          */
         setClickListeners();
-
 
         /**
          * Calculate Screen Height
@@ -159,13 +157,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Delete pictures/videos from the phone
              */
             case R.id.delete:
-                mainPresenter.deleteFromSdCard(selectedItems);
+                mainPresenter.deleteFromSdCard();
                 /**
                  * Restore GridView from the selection mode
                  */
                 imageGridView.requestLayout();
                 imageGridView.clearChoices();
-                selectedItems.clear();
                 gridViewButton.setVisibility(View.VISIBLE);
                 menu.setVisibility(View.GONE);
                 break;
@@ -237,8 +234,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
         makeFullScreen();
 
-        if (customCamera != null && customCamera.getCamera() == null)
+        if (customCamera != null && customCamera.getCamera() == null) {
             customCamera.setCamera();
+        }
     }
 
     @Override
@@ -382,7 +380,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              */
             imageGridView.requestLayout();
             imageGridView.clearChoices();
-            selectedItems.clear();
             gridViewButton.setVisibility(View.VISIBLE);
             menu.setVisibility(View.GONE);
 
@@ -429,6 +426,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             customCamera.stopVideo();
             recording = false;
             if (subscription != null && !subscription.isUnsubscribed()) {
+                subscription.onCompleted();
                 subscription.unsubscribe();
             }
         }
@@ -460,6 +458,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         customCamera.setWillNotDraw(false);
         frameLayout.addView(customCamera);
         mainPresenter.fetchFromSdCard("all");
+
         customCamera._getRotation().subscribe(rotation -> {
             if (rotation == Utils.ROTATION_O) {
                 captureButton.animate().rotation(0).start();
@@ -471,7 +470,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 captureButton.animate().rotation(-90).start();
                 videoCapture.animate().rotation(-90).start();
             }
-            Log.d("current rotation", captureButton.getRotation() + "");
         });
 
     }
@@ -509,14 +507,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void rotateViews() {
-
-    }
-
-    @Override
     public void onFileDeleted(MediaDetails mediaDetails) {
-        gridViewAdapter.notifyDataSetChanged();
-        Log.d("file deleted", "true");
+        gridViewAdapter.remove(mediaDetails);
 
     }
 

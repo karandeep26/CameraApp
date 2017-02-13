@@ -10,12 +10,13 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
+import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.subscriptions.CompositeSubscription;
 
 
-public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedListener,
+class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedListener,
         MainPresenter.OnItemClick,MainPresenter.Adapter {
     private MainView mainView;
     private MainView.UpdateView updateView;
@@ -29,15 +30,12 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
     private String mediaType="image";
 
 
-    public MainPresenterImpl(MainView.UpdateView updateView, SdCardInteractor sdCardInteractor) {
+    MainPresenterImpl(MainView mainView, SdCardInteractor sdCardInteractor) {
         compositeSubscription=new CompositeSubscription();
         this.sdCardInteractor=sdCardInteractor;
         fileListener = (MainView.FileListener) updateView;
-        this.updateView = updateView;
+        this.updateView = (MainView.UpdateView) mainView;
         getMediaList = (SdCardInteractor.GetMediaList) sdCardInteractor;
-    }
-    public MainPresenterImpl(MainView mainView, SdCardInteractor sdCardInteractor) {
-        this((MainView.UpdateView) mainView, sdCardInteractor);
         this.mainView = mainView;
         selection = (SdCardInteractor.Selection) sdCardInteractor;
     }
@@ -83,7 +81,6 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
                             subscription.unsubscribe();
                             float endTime = System.currentTimeMillis();
                             float totalTime = endTime - startTime;
-                            Log.d("total time******", "****" + totalTime / 1000 + "");
                         });
         compositeSubscription.add(subscription);
 
@@ -91,7 +88,8 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
 
 
     @Override
-    public void deleteFromSdCard(ArrayList<MediaDetails> mediaDetails) {
+    public void deleteFromSdCard() {
+        ArrayList<MediaDetails> mediaDetails = selection.getSelectedItems();
         for (MediaDetails details : mediaDetails) {
             boolean isDeletionSuccessful;
             isDeletionSuccessful = sdCardInteractor.deleteFromSdCard(details);
@@ -112,22 +110,39 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
     }
 
     @Override
-    public Subscription startTimer() {
+    public Subscriber<Integer> startTimer() {
+        Subscriber<Integer> subscriber = new Subscriber<Integer>() {
+            @Override
+            public void onCompleted() {
+                updateView.setTimerValue("");
+                Log.d("on completed", "called");
+            }
 
-        Subscription timerSubscription = Observable.zip(Observable.range(0, 60),
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(Integer seconds) {
+                if (seconds > 9) {
+                    updateView.setTimerValue(minutes + ": 0" + seconds);
+                } else {
+                    updateView.setTimerValue(minutes + ":" + seconds);
+                }
+                if (seconds == 59) {
+                    minutes++;
+                }
+                Log.d("seconds", seconds + "");
+
+            }
+        };
+        Observable.zip(Observable.range(0, 60),
                 Observable.interval(1, TimeUnit.SECONDS), (integer, aLong) -> integer).repeat()
-                .observeOn(AndroidSchedulers.mainThread()).subscribe(seconds -> {
-                    if (seconds > 9) {
-                        updateView.setTimerValue(minutes + ": 0" + seconds);
-                    } else {
-                        updateView.setTimerValue(minutes + ":" + seconds);
-                    }
-                    if (seconds == 59) {
-                        minutes++;
-                    }
-                });
-        compositeSubscription.add(timerSubscription);
-        return timerSubscription;
+                .observeOn(AndroidSchedulers.mainThread()).subscribe(subscriber);
+
+        compositeSubscription.add(subscriber);
+        return subscriber;
     }
 
     @Override
@@ -177,10 +192,10 @@ public class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFini
     @Override
     public boolean modifySelection(MediaDetails mediaDetail) {
         if(mediaDetail.isChecked()){
-            selection.remove(mediaDetail);
+            selection.removeFromSelection(mediaDetail);
         }
         else {
-            selection.add(mediaDetail);
+            selection.addToSelection(mediaDetail);
         }
         mediaDetail.toggleChecked();
         return selection.isSelectionMode();

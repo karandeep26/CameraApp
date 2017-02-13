@@ -6,4 +6,6 @@ package com.example.stpl.cameraapp.fullImageView;
 
 public interface FullImageInterface {
     void fetchImages();
+
+    void deleteFile();
 }
