@@ -182,8 +182,6 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
         updateView.updateAdapter(mediaDetails);
     }
 
-
-
     @Override
     public void onFinished() {
 
