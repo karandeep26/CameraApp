@@ -23,7 +23,11 @@ public class Utils {
     public static int ROTATION_90 = 2;
     public static int ROTATION_180 = 3;
     public static int ROTATION_270 = 4;
-
+    public static String JPG = "jpg";
+    public static String MP4 = "mp4";
+    public static String IMAGE = "image";
+    public static String VIDEO = "video";
+    public static String ALL = "all";
     public static float convertDpToPixel(Context context, float dp) {
         Resources resources = context.getResources();
         DisplayMetrics metrics = resources.getDisplayMetrics();

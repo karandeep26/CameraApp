@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
@@ -51,6 +52,7 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         fullImageInterface.fetchImages();
         Intent intent = getIntent();
         position = intent.getIntExtra("position", -1);
+        Log.d("position", position + "");
         mViewPager.setOffscreenPageLimit(3);
         mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
         mViewPager.setOnTouchListener(new View.OnTouchListener() {

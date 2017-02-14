@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -134,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              */
             case R.id.videos:
                 video.setSelected(true);
-                presenterAdapter.updateAdapter("video");
+                presenterAdapter.updateAdapter(Utils.VIDEO);
                 if (pictures.isSelected()) {
                     pictures.setSelected(false);
                 }
@@ -143,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Loading pictures thumbnails in a GridView
              */
             case R.id.pictures:
-                presenterAdapter.updateAdapter("image");
+                presenterAdapter.updateAdapter(Utils.IMAGE);
                 pictures.setSelected(true);
                 if (video.isSelected()) {
                     video.setSelected(false);
@@ -272,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          */
         else {
             Intent intent;
-            if (details.getMediaType().equals("image")) {
+            if (details.getMediaType().equals(Utils.IMAGE)) {
                 intent = new Intent(MainActivity.this, FullImageActivity.class);
                 Log.d("file path", details.getFilePath());
 
@@ -325,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 imageGestureDetector.onTouchEvent(event);
             return false;
         });
-        bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
+
         bottomSheetCallback = new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
@@ -333,7 +334,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     bottomSheet.requestLayout();
                     Log.d("expanded", "true");
                     bottomSheet.invalidate();
-                    imageGridView.smoothScrollToPosition(0);
+//                    imageGridView.smoothScrollToPosition(0);
                     imageGridView.requestLayout();
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
                 } else {
@@ -345,6 +346,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
             }
         };
+        bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
         gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> imageGridView.
                 getLayoutParams().height = height - gridViewButton.getHeight());
         imageGestureDetector = new GestureDetectorCompat(this,
@@ -463,7 +465,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          */
         customCamera.setWillNotDraw(false);
         frameLayout.addView(customCamera);
-        mainPresenter.fetchFromSdCard("all");
+        mainPresenter.fetchFromSdCard(Utils.ALL);
 
         customCamera._getRotation().subscribe(rotation -> {
             if (rotation == Utils.ROTATION_O) {
@@ -546,7 +548,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return true;
     }
 
-
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        switch (newConfig.orientation) {
+            case Configuration.ORIENTATION_LANDSCAPE:
+                imageGridView.setNumColumns(5);
+                break;
+            default:
+                imageGridView.setNumColumns(3);
+        }
+    }
 }
 
 

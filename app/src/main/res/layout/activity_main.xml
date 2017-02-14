@@ -149,6 +149,7 @@
                 android:horizontalSpacing="1dp"
                 android:isScrollContainer="false"
                 android:numColumns="3"
+                android:visibility="visible"
                 android:stretchMode="columnWidth"
                 android:verticalSpacing="1dp"/>
         </RelativeLayout>

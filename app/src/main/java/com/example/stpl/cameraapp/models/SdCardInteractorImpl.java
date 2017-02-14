@@ -38,30 +38,18 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
         File[] listFile;
 
         if (type.equals("video")) {
-            listFile = file.listFiles(pathname -> {
-                return pathname.getAbsolutePath().contains("mp4");
-            });
+            listFile = file.listFiles(pathname -> pathname.getAbsolutePath().contains("mp4"));
         } else if (type.equalsIgnoreCase("image")) {
-            listFile = file.listFiles(pathname -> {
-                return pathname.getAbsolutePath().contains("jpg");
-            });
+            listFile = file.listFiles(pathname -> pathname.getAbsolutePath().contains("jpg"));
         } else {
-            listFile = file.listFiles();
+            listFile = file.listFiles(pathname -> pathname.getAbsolutePath().contains("mp4")
+                    || pathname.getAbsolutePath().contains("jpg"));
         }
         if (listFile == null || listFile.length == 0) {
             listFile = new File[0];
         }
 
-        Arrays.sort(listFile, (o1, o2) -> {
-            if (o1.lastModified() > o2.lastModified()) {
-                return -1;
-            } else if (o1.lastModified() < o2.lastModified()) {
-                return 1;
-            }
-            return 0;
-        });
-
-
+        Arrays.sort(listFile, (o1, o2) -> Long.compare(o1.lastModified(), o2.lastModified()));
         Observable<File> fileObservable = Observable.from(listFile);
         return fileObservable.flatMap(file1 -> Observable.just(file1)
                 .subscribeOn(Schedulers.io())

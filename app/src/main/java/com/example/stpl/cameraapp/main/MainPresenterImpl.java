@@ -7,6 +7,7 @@ import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
@@ -69,6 +70,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
                 observeOn(AndroidSchedulers.mainThread())
                 .subscribe(mediaDetails -> {
                             if (mediaDetails != null) {
+                                Collections.reverse(mediaDetails);
                            for(MediaDetails temp:mediaDetails){
                                if(temp.getMediaType().equals("image")){
                                    mainView.itemAdd(temp);

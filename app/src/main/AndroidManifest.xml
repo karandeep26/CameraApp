@@ -18,7 +18,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".main.MainActivity">
+            android:name=".main.MainActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <action android:name="android.intent.action.VIEW"/>
@@ -26,7 +27,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".fullImageView.FullImageActivity"/>
+        <activity
+            android:name=".fullImageView.FullImageActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"/>
         <activity android:name=".activity.PlayVideoActivity"/>
     </application>
 
