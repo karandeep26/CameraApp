@@ -2,6 +2,7 @@ package com.example.stpl.cameraapp;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.ExifInterface;
@@ -369,5 +370,9 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         }
     }
 
+    @Override
+    protected void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+    }
 }
 

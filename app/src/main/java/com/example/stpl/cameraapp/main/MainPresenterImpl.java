@@ -33,7 +33,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
     MainPresenterImpl(MainView mainView, SdCardInteractor sdCardInteractor) {
         compositeSubscription=new CompositeSubscription();
         this.sdCardInteractor=sdCardInteractor;
-        fileListener = (MainView.FileListener) updateView;
+        fileListener = (MainView.FileListener) mainView;
         this.updateView = (MainView.UpdateView) mainView;
         getMediaList = (SdCardInteractor.GetMediaList) sdCardInteractor;
         this.mainView = mainView;
@@ -81,6 +81,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
                             subscription.unsubscribe();
                             float endTime = System.currentTimeMillis();
                             float totalTime = endTime - startTime;
+                            Log.d("total time", endTime + "");
                         });
         compositeSubscription.add(subscription);
 
@@ -115,7 +116,6 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
             @Override
             public void onCompleted() {
                 updateView.setTimerValue("");
-                Log.d("on completed", "called");
             }
 
             @Override

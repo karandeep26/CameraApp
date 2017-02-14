@@ -4,9 +4,6 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
-/**
- * Created by karan on 6/2/17.
- */
 
 public class SquareImageView extends ImageView {
 
