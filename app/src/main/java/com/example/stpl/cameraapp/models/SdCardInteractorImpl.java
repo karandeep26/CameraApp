@@ -72,7 +72,15 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
     @Override
     public boolean deleteFromSdCard(MediaDetails mediaDetails) {
         File deleteFile = new File(mediaDetails.getFilePath());
-        return deleteFile.delete();
+        boolean isDeleted = deleteFile.delete();
+        if (isDeleted) {
+            if (mediaDetails.getMediaType().equals("image")) {
+                images.remove(mediaDetails);
+            } else {
+                videos.remove(mediaDetails);
+            }
+        }
+        return isDeleted;
 
     }
 

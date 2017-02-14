@@ -3,6 +3,7 @@ package com.example.stpl.cameraapp.main;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -78,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         mSdCardInteractorImpl = new SdCardInteractorImpl();
         mainPresenterImpl = new MainPresenterImpl(this, mSdCardInteractorImpl);
         mainPresenter = mainPresenterImpl;
@@ -278,7 +280,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 intent = new Intent(MainActivity.this, PlayVideoActivity.class);
             }
             intent.putExtra("position", position);
-            startActivity(intent);
+            startActivityForResult(intent, 123);
         }
     }
 
@@ -329,9 +331,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
                     bottomSheet.requestLayout();
+                    Log.d("expanded", "true");
                     bottomSheet.invalidate();
                     imageGridView.smoothScrollToPosition(0);
                     imageGridView.requestLayout();
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+                } else {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 }
             }
 
