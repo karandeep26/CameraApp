@@ -11,7 +11,7 @@ import java.io.File;
 
 
 public class Utils {
-    //    static public File mediaStorageDir = new File(
+    //        static public File mediaStorageDir = new File(
 //            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
 //            "MyCameraApp");
     static public File mediaStorageDir = new File(

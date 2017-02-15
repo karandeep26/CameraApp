@@ -28,6 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.stpl.cameraapp.CustomCamera;
+import com.example.stpl.cameraapp.FileListener;
 import com.example.stpl.cameraapp.GestureDetector;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.ScrollListener;
@@ -49,7 +50,7 @@ import java.util.Map;
 import rx.Subscriber;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        AdapterView.OnItemClickListener, MainView.FileListener, AdapterView.OnItemLongClickListener,
+        AdapterView.OnItemClickListener, FileListener, AdapterView.OnItemLongClickListener,
         MainView, MainView.Adapter, MainView.UpdateView {
     public static boolean isSignedIn;
     final int MULTIPLE_PERMISSIONS = 123;
@@ -68,7 +69,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private BottomSheetBehavior bottomSheetBehavior;
     private ImageButton pictures, video, delete, upload;
     private LinearLayout gridViewButton, menu;
-    private BottomSheetBehavior.BottomSheetCallback bottomSheetCallback;
     private SparseArray<View> tickView = new SparseArray<>();
     SdCardInteractorImpl mSdCardInteractorImpl;
     MainPresenter.OnItemClick onItemClick;
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         mSdCardInteractorImpl = new SdCardInteractorImpl();
         mainPresenterImpl = new MainPresenterImpl(this, mSdCardInteractorImpl);
         mainPresenter = mainPresenterImpl;
@@ -327,18 +327,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return false;
         });
 
-        bottomSheetCallback = new BottomSheetBehavior.BottomSheetCallback() {
+        BottomSheetBehavior.BottomSheetCallback bottomSheetCallback = new BottomSheetBehavior
+                .BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
                     bottomSheet.requestLayout();
                     Log.d("expanded", "true");
                     bottomSheet.invalidate();
-//                    imageGridView.smoothScrollToPosition(0);
+                    imageGridView.smoothScrollToPosition(0);
                     imageGridView.requestLayout();
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
                 } else {
-                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+//                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 }
             }
 
@@ -347,8 +348,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         };
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
-        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> imageGridView.
-                getLayoutParams().height = height - gridViewButton.getHeight());
+        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            Log.d("gridView button height", gridViewButton.getHeight() + "");
+            imageGridView.
+                    getLayoutParams().height = height - gridViewButton.getHeight();
+        });
         imageGestureDetector = new GestureDetectorCompat(this,
                 new GestureDetector(imageGridView, bottomSheetBehavior));
     }
@@ -508,7 +512,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     @Override
-    public void updateAdapter(ArrayList<MediaDetails> mediaDetails) {
+    public void updateAdapter(List<MediaDetails> mediaDetails) {
         gridViewAdapter.setMediaDetails(mediaDetails);
         imageGridView.setSmoothScrollbarEnabled(false);
         imageGridView.post(() -> imageGridView.setSelection(0));
@@ -558,6 +562,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             default:
                 imageGridView.setNumColumns(3);
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        ArrayList<Integer> indexes = data.getIntegerArrayListExtra("indexes");
+        if (indexes != null && indexes.size() != 0) {
+            for (Integer index : indexes) {
+                gridViewAdapter.removeItemAt(index);
+            }
+        }
+
     }
 }
 

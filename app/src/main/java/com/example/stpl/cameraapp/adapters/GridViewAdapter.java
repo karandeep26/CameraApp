@@ -3,7 +3,6 @@ package com.example.stpl.cameraapp.adapters;
 import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,10 +16,11 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
-    private ArrayList<MediaDetails> mediaDetails;
+    private List<MediaDetails> mediaDetails;
     private LayoutInflater inflater;
     private Context mContext;
     private static int START = 0, END = 1;
@@ -52,8 +52,8 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         } else {
             viewHolder = (ViewHolder) row.getTag();
         }
-
         MediaDetails currentObject = mediaDetails.get(position);
+
         if (currentObject.getMediaType().equals("image")) {
             Picasso.with(parent.getContext()).load("file://" + new File(currentObject.getFilePath()))
                     .tag(mContext).centerCrop().fit().placeholder(R.drawable.placeholder)
@@ -71,13 +71,12 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         return row;
     }
 
-    @Nullable
     @Override
     public MediaDetails getItem(int position) {
         return mediaDetails.get(position);
     }
 
-    public void setMediaDetails(ArrayList<MediaDetails> mediaDetails) {
+    public void setMediaDetails(List<MediaDetails> mediaDetails) {
         this.mediaDetails = mediaDetails;
         notifyDataSetChanged();
     }
@@ -101,6 +100,11 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         mediaDetails.remove(object);
         notifyDataSetChanged();
     }
+
+    public void removeItemAt(int index) {
+        remove(mediaDetails.get(index));
+    }
+
 
     private static class ViewHolder {
         SquareImageView imageView;

@@ -2,6 +2,7 @@ package com.example.stpl.cameraapp.adapters;
 
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +32,9 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
         container.removeView((View) object);
+        Log.d("items size", mediaDetails.size() + "");
+
+
     }
 
     @Override
@@ -53,6 +57,22 @@ public class CustomViewPagerAdapter extends PagerAdapter {
         itemView.setTag("myView" + position);
         return itemView;
     }
+
+    public MediaDetails getObjectAt(int i) {
+        return mediaDetails.get(i);
+    }
+
+    public void removeItemAt(int i) {
+        mediaDetails.remove(i);
+        notifyDataSetChanged();
+
+    }
+
+    @Override
+    public int getItemPosition(Object object) {
+        return PagerAdapter.POSITION_NONE;
+    }
+
 
 }
 

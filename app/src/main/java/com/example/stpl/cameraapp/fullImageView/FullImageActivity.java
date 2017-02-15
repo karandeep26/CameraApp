@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
+import com.example.stpl.cameraapp.FileListener;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.ZoomOutPageTransformer;
@@ -25,17 +26,20 @@ import com.google.firebase.storage.StorageReference;
 import java.util.ArrayList;
 
 public class FullImageActivity extends AppCompatActivity implements View.OnClickListener,
-        FullImageView {
+        FullImageView, FileListener {
     int position;
     ViewPager mViewPager;
     FirebaseAuth firebaseAuth;
     LinearLayout topPanel;
     int visibility;
-    ImageButton upload;
+    ImageButton upload, delete;
     StorageReference uploadReference;
     FullImagePresenterImpl fullImagePresenterImpl;
     FullImageInterface fullImageInterface;
     CustomViewPagerAdapter customViewPagerAdapter;
+    ArrayList<Integer> indexes = new ArrayList<>();
+    int currentItem = -1;
+    boolean deleteClicked = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +47,7 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         makeFullScreen();
         setContentView(R.layout.activity_full_image);
         findViewById();
+        setOnClickListeners();
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
         Utils.height = displaymetrics.heightPixels;
@@ -55,6 +60,28 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         Log.d("position", position + "");
         mViewPager.setOffscreenPageLimit(3);
         mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int
+                    positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                if (deleteClicked && state == ViewPager.SCROLL_STATE_IDLE) {
+//                    customViewPagerAdapter.removeItemAt(currentItem);
+//                    deleteClicked =false;
+                }
+
+            }
+        });
+
         mViewPager.setOnTouchListener(new View.OnTouchListener() {
             private float pointX;
             private float pointY;
@@ -132,6 +159,11 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.delete:
+                currentItem = mViewPager.getCurrentItem();
+                MediaDetails mediaDetails = customViewPagerAdapter.getObjectAt(currentItem);
+                fullImageInterface.deleteFile(mediaDetails);
+
             case R.id.upload:
 //                try {
 //                    InputStream inputStream = new FileInputStream(new File(Utils.mediaStorageDir
@@ -153,8 +185,12 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         mViewPager = (ViewPager) findViewById(R.id.pager);
         topPanel = (LinearLayout) findViewById(R.id.topPanel);
         upload = (ImageButton) findViewById(R.id.upload);
-        upload.setOnClickListener(this);
+        delete = (ImageButton) findViewById(R.id.delete);
+    }
 
+    private void setOnClickListeners() {
+        upload.setOnClickListener(this);
+        delete.setOnClickListener(this);
     }
 
 
@@ -176,6 +212,40 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         mediaDetails.get(position).getFilePath();
         mViewPager.setCurrentItem(position);
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent();
+        intent.putIntegerArrayListExtra("indexes", indexes);
+        setResult(123, intent);
+        super.onBackPressed();
 
     }
+
+    @Override
+    public void onFileDeleted(MediaDetails mediaDetails) {
+        indexes.add(currentItem);
+        Object object = mViewPager.getChildAt(currentItem + 1);
+        customViewPagerAdapter.removeItemAt(currentItem);
+//        mViewPager.setCurrentItem(currentItem,true);
+        if (mViewPager.getChildCount() == 0) {
+            onBackPressed();
+        }
+//        customViewPagerAdapter.removeItemAt(currentItem);
+        customViewPagerAdapter.destroyItem(mViewPager, currentItem, object);
+
+        deleteClicked = true;
+    }
+
+    @Override
+    public void onErrorOccurred() {
+
+    }
+
+    @Override
+    public void onFileAdded(MediaDetails mediaDetails) {
+
+    }
+
 }

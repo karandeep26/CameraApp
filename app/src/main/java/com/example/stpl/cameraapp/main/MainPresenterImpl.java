@@ -3,6 +3,8 @@ package com.example.stpl.cameraapp.main;
 import android.Manifest;
 import android.util.Log;
 
+import com.example.stpl.cameraapp.FileListener;
+import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractor;
 
@@ -14,27 +16,28 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
 
 class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedListener,
-        MainPresenter.OnItemClick,MainPresenter.Adapter {
+        MainPresenter.OnItemClick, MainPresenter.Adapter {
     private MainView mainView;
     private MainView.UpdateView updateView;
-    private MainView.FileListener fileListener;
+    private FileListener fileListener;
     private SdCardInteractor sdCardInteractor;
     private CompositeSubscription compositeSubscription;
     private int minutes = 0;
     private Subscription subscription;
     private SdCardInteractor.GetMediaList getMediaList;
     private SdCardInteractor.Selection selection;
-    private String mediaType="image";
+    private String mediaType = "image";
 
 
     MainPresenterImpl(MainView mainView, SdCardInteractor sdCardInteractor) {
-        compositeSubscription=new CompositeSubscription();
-        this.sdCardInteractor=sdCardInteractor;
-        fileListener = (MainView.FileListener) mainView;
+        compositeSubscription = new CompositeSubscription();
+        this.sdCardInteractor = sdCardInteractor;
+        fileListener = mainView;
         this.updateView = (MainView.UpdateView) mainView;
         getMediaList = (SdCardInteractor.GetMediaList) sdCardInteractor;
         this.mainView = mainView;
@@ -71,11 +74,11 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
                 .subscribe(mediaDetails -> {
                             if (mediaDetails != null) {
                                 Collections.reverse(mediaDetails);
-                           for(MediaDetails temp:mediaDetails){
-                               if(temp.getMediaType().equals("image")){
-                                   mainView.itemAdd(temp);
-                               }
-                           }
+                                for (MediaDetails temp : mediaDetails) {
+                                    if (temp.getMediaType().equals(Utils.IMAGE)) {
+                                        mainView.itemAdd(temp);
+                                    }
+                                }
                             }
                         },
                         throwable -> Log.d("debug", throwable.getMessage()),
@@ -159,7 +162,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
             fileListener.onErrorOccurred();
             return null;
         } else {
-                fileListener.onFileAdded(mediaDetails);
+            fileListener.onFileAdded(mediaDetails);
         }
         return mediaDetails.getFilePath();
     }
@@ -169,8 +172,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
         MediaDetails mediaDetails = sdCardInteractor.getSavedVideo(fileName);
         if (mediaDetails == null) {
             fileListener.onErrorOccurred();
-        }
-        else {
+        } else {
             if (mediaType.equals(mediaDetails.getMediaType())) {
                 fileListener.onFileAdded(mediaDetails);
             }
@@ -179,9 +181,14 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
 
     @Override
     public void updateAdapter(String mediaType) {
-        this.mediaType=mediaType;
-        ArrayList<MediaDetails> mediaDetails = getMediaList.getMedia(mediaType);
-        updateView.updateAdapter(mediaDetails);
+        this.mediaType = mediaType;
+//        ArrayList<MediaDetails> mediaDetails = .getMedia(mediaType);
+        sdCardInteractor.getFromSdCard(mediaType).subscribeOn(Schedulers.io()).
+                observeOn(AndroidSchedulers.mainThread()).subscribe(mediaDetails -> {
+            Collections.reverse(mediaDetails);
+            updateView.updateAdapter(mediaDetails);
+        });
+
     }
 
     @Override
@@ -191,10 +198,9 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
 
     @Override
     public boolean modifySelection(MediaDetails mediaDetail) {
-        if(mediaDetail.isChecked()){
+        if (mediaDetail.isChecked()) {
             selection.removeFromSelection(mediaDetail);
-        }
-        else {
+        } else {
             selection.addToSelection(mediaDetail);
         }
         mediaDetail.toggleChecked();

@@ -1,31 +1,40 @@
 package com.example.stpl.cameraapp.fullImageView;
 
+import com.example.stpl.cameraapp.FileListener;
+import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
-/**
- * Created by karan on 5/2/17.
- */
 
 class FullImagePresenterImpl implements FullImageInterface {
     private FullImageView fullImageView;
     private SdCardInteractor sdCardInteractor;
-
+    private FileListener fileListener;
     FullImagePresenterImpl(FullImageView fullImageView, SdCardInteractor sdCardInteractor) {
         this.fullImageView = fullImageView;
         this.sdCardInteractor = sdCardInteractor;
+        this.fileListener = fullImageView;
     }
 
     @Override
     public void fetchImages() {
-        sdCardInteractor.getFromSdCard("image").subscribe(mediaDetails -> {
+        sdCardInteractor.getFromSdCard(Utils.IMAGE).subscribe(mediaDetails -> {
+            Collections.reverse(mediaDetails);
             fullImageView.updateAdapter((ArrayList<MediaDetails>) mediaDetails);
         });
     }
 
     @Override
-    public void deleteFile() {
+    public void deleteFile(MediaDetails mediaDetails) {
+        boolean isFileDeleted = sdCardInteractor.deleteFromSdCard(mediaDetails);
+        if (isFileDeleted) {
+            fileListener.onFileDeleted(mediaDetails);
+        } else {
+            fileListener.onErrorOccurred();
+        }
+
     }
 }

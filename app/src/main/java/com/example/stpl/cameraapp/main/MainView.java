@@ -1,18 +1,18 @@
 package com.example.stpl.cameraapp.main;
 
 
-
+import com.example.stpl.cameraapp.FileListener;
 import com.example.stpl.cameraapp.models.MediaDetails;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-interface MainView {
+interface MainView extends FileListener {
     interface UpdateView {
         void setTimerValue(String timer);
 
-        void updateAdapter(ArrayList<MediaDetails> mediaDetails);
+        void updateAdapter(List<MediaDetails> mediaDetails);
 
 
     }
@@ -26,11 +26,11 @@ interface MainView {
     void itemAdd(MediaDetails mediaDetails);
 
 
-    interface FileListener {
-        void onFileDeleted(MediaDetails mediaDetails);
-        void onErrorOccurred();
-        void onFileAdded(MediaDetails mediaDetails);
-    }
+    //    interface FileListener {
+//        void onFileDeleted(MediaDetails mediaDetails);
+//        void onErrorOccurred();
+//        void onFileAdded(MediaDetails mediaDetails);
+//    }
     interface Adapter {
     }
 
