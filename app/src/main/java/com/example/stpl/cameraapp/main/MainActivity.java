@@ -74,13 +74,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     MainPresenter.OnItemClick onItemClick;
     MainPresenterImpl mainPresenterImpl;
     MainPresenter.Adapter presenterAdapter;
+    View bottomSheet;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         mSdCardInteractorImpl = new SdCardInteractorImpl();
         mainPresenterImpl = new MainPresenterImpl(this, mSdCardInteractorImpl);
         mainPresenter = mainPresenterImpl;
@@ -298,7 +300,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         videoCapture = (ImageButton) findViewById(R.id.record_video);
         pictures = (ImageButton) findViewById(R.id.pictures);
         video = (ImageButton) findViewById(R.id.videos);
-        bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.design_bottom_sheet));
+        bottomSheet = findViewById(R.id.design_bottom_sheet);
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
         delete = (ImageButton) findViewById(R.id.delete);
         upload = (ImageButton) findViewById(R.id.upload);
     }
@@ -332,14 +335,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
-                    bottomSheet.requestLayout();
                     Log.d("expanded", "true");
+                    bottomSheet.requestLayout();
                     bottomSheet.invalidate();
                     imageGridView.smoothScrollToPosition(0);
                     imageGridView.requestLayout();
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
                 } else {
-//                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 }
             }
 
@@ -558,10 +561,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (newConfig.orientation) {
             case Configuration.ORIENTATION_LANDSCAPE:
                 imageGridView.setNumColumns(5);
+                bottomSheet.requestLayout();
+                bottomSheet.invalidate();
+                imageGridView.smoothScrollToPosition(0);
+                imageGridView.requestLayout();
                 break;
             default:
                 imageGridView.setNumColumns(3);
         }
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        height = displayMetrics.heightPixels;
+        Log.d("height", height + "");
     }
 
     @Override
