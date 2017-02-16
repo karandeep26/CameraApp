@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     MainPresenterImpl mainPresenterImpl;
     MainPresenter.Adapter presenterAdapter;
     View bottomSheet;
+    boolean pictureTaken = false;
 
 
 
@@ -124,7 +125,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Take photo
              */
             case R.id.capture:
-                customCamera.takePicture();
+                if(!pictureTaken) {
+                    customCamera.takePicture();
+                    pictureTaken=true;
+                }
                 break;
             /**
              * Record Video
@@ -277,12 +281,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent;
             if (details.getMediaType().equals(Utils.IMAGE)) {
                 intent = new Intent(MainActivity.this, FullImageActivity.class);
-                Log.d("file path", details.getFilePath());
+                intent.putExtra("position", position);
 
             } else {
                 intent = new Intent(MainActivity.this, PlayVideoActivity.class);
+                intent.putExtra("path",details.getFilePath());
             }
-            intent.putExtra("position", position);
+
             startActivityForResult(intent, 123);
         }
     }
@@ -541,6 +546,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         intent.setData(Uri.fromFile(file));
         sendBroadcast(intent);
         gridViewAdapter.addImage(mediaDetails, 0);
+        pictureTaken=false;
     }
 
     @Override
@@ -578,10 +584,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        ArrayList<Integer> indexes = data.getIntegerArrayListExtra("indexes");
-        if (indexes != null && indexes.size() != 0) {
-            for (Integer index : indexes) {
-                gridViewAdapter.removeItemAt(index);
+        if(data!=null) {
+            ArrayList<Integer> indexes = data.getIntegerArrayListExtra("indexes");
+            if (indexes != null && indexes.size() != 0) {
+                for (Integer index : indexes) {
+                    gridViewAdapter.removeItemAt(index);
+                }
             }
         }
 

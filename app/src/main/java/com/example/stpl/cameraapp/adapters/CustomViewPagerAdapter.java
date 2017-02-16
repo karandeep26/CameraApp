@@ -6,6 +6,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 import com.example.stpl.cameraapp.R;
@@ -21,16 +23,20 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     private Context mContext;
     private LayoutInflater mLayoutInflater;
     private ArrayList<MediaDetails> mediaDetails;
+    private Animation fadeIn, fadeOut;
 
     public CustomViewPagerAdapter(Context mContext, ArrayList<MediaDetails> mediaDetails) {
         this.mediaDetails = mediaDetails;
         this.mContext = mContext;
+        fadeIn = AnimationUtils.loadAnimation(mContext, R.anim.fade_in);
+        fadeOut = AnimationUtils.loadAnimation(mContext, R.anim.fade_out);
         this.mLayoutInflater = (LayoutInflater) mContext.getSystemService(Context
                 .LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
+        ((View)object).startAnimation(fadeOut);
         container.removeView((View) object);
         Log.d("items size", mediaDetails.size() + "");
 
@@ -54,6 +60,7 @@ public class CustomViewPagerAdapter extends PagerAdapter {
         Picasso.with(mContext).load("file://" + new File(mediaDetails.get(position)
                 .getFilePath())).resize(Utils.width, 0).into(imageView);
         container.addView(itemView);
+//        itemView.startAnimation(fadeIn);
         itemView.setTag("myView" + position);
         return itemView;
     }
@@ -65,7 +72,6 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     public void removeItemAt(int i) {
         mediaDetails.remove(i);
         notifyDataSetChanged();
-
     }
 
     @Override

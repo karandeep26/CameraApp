@@ -48,6 +48,7 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
             viewHolder = new ViewHolder();
             viewHolder.imageView = (SquareImageView) row.findViewById(R.id.image);
             viewHolder.tickView = (ImageView) row.findViewById(R.id.tick);
+            viewHolder.playButton= (ImageView) row.findViewById(R.id.play);
             row.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) row.getTag();
@@ -58,10 +59,13 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
             Picasso.with(parent.getContext()).load("file://" + new File(currentObject.getFilePath()))
                     .tag(mContext).centerCrop().fit().placeholder(R.drawable.placeholder)
                     .into(viewHolder.imageView);
+            viewHolder.playButton.setVisibility(View.INVISIBLE);
+
         } else {
             Picasso.with(parent.getContext()).load("video://" + currentObject.getFilePath())
                     .tag(mContext).centerCrop().fit()
                     .placeholder(R.drawable.placeholder).into(viewHolder.imageView);
+            viewHolder.playButton.setVisibility(View.VISIBLE);
         }
         if (currentObject.isChecked()) {
             viewHolder.tickView.setVisibility(View.VISIBLE);
@@ -108,7 +112,7 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
 
     private static class ViewHolder {
         SquareImageView imageView;
-        ImageView tickView;
+        ImageView tickView,playButton;
     }
 
 

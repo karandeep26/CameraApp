@@ -19,11 +19,14 @@ import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
 import com.example.stpl.cameraapp.main.MainActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
+import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.auth.api.Auth;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class FullImageActivity extends AppCompatActivity implements View.OnClickListener,
         FullImageView, FileListener {
@@ -58,30 +61,8 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         Intent intent = getIntent();
         position = intent.getIntExtra("position", -1);
         Log.d("position", position + "");
-        mViewPager.setOffscreenPageLimit(3);
+        mViewPager.setOffscreenPageLimit(2);
         mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
-        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int
-                    positionOffsetPixels) {
-
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-                if (deleteClicked && state == ViewPager.SCROLL_STATE_IDLE) {
-//                    customViewPagerAdapter.removeItemAt(currentItem);
-//                    deleteClicked =false;
-                }
-
-            }
-        });
-
         mViewPager.setOnTouchListener(new View.OnTouchListener() {
             private float pointX;
             private float pointY;
@@ -120,16 +101,24 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
         super.onStart();
         visibility = View.INVISIBLE;
         firebaseAuth = FirebaseAuth.getInstance();
+        List<AuthUI.IdpConfig> providers =new ArrayList<>();
+        providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
+
 
         StorageReference storageRef = FirebaseStorage.getInstance().getReferenceFromUrl
                 ("gs://selfie-geek.appspot.com");
         uploadReference = storageRef.child("upload.jpg");
 
-        if (!MainActivity.isSignedIn) {
-            firebaseAuth.signInAnonymously().addOnCompleteListener(task -> {
-
-            });
-
+        if(firebaseAuth.getCurrentUser()!=null){
+            firebaseAuth.signOut();
+        }
+        if(firebaseAuth.getCurrentUser()==null){
+            startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().
+                    setIsSmartLockEnabled(false).setProviders(providers).build()
+                    ,123);
+        }
+        else{
+            firebaseAuth.getCurrentUser().getEmail();
         }
 
     }
@@ -165,18 +154,8 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
                 fullImageInterface.deleteFile(mediaDetails);
 
             case R.id.upload:
-//                try {
-//                    InputStream inputStream = new FileInputStream(new File(Utils.mediaStorageDir
-//                            + "/" + mediaDetails.
-//                            get(mViewPager.getCurrentItem()).getFilePath()));
-//                    UploadTask uploadTask = uploadReference.putStream(inputStream);
-//                    uploadTask.addOnSuccessListener(taskSnapshot -> Log.d("file uploaded", "true")).
-//                            addOnFailureListener(e -> Log.e("error", e.getMessage())).
-//                            addOnProgressListener(taskSnapshot -> Log.d("bytes", taskSnapshot
-//                                    .getBytesTransferred() / 1024 + ""));
-//                } catch (FileNotFoundException e) {
-//                    e.printStackTrace();
-//                }
+
+
         }
 
     }
@@ -226,16 +205,12 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     @Override
     public void onFileDeleted(MediaDetails mediaDetails) {
         indexes.add(currentItem);
-        Object object = mViewPager.getChildAt(currentItem + 1);
+        deleteClicked = true;
         customViewPagerAdapter.removeItemAt(currentItem);
-//        mViewPager.setCurrentItem(currentItem,true);
-        if (mViewPager.getChildCount() == 0) {
+        if(mViewPager.getChildCount()==0){
             onBackPressed();
         }
-//        customViewPagerAdapter.removeItemAt(currentItem);
-        customViewPagerAdapter.destroyItem(mViewPager, currentItem, object);
 
-        deleteClicked = true;
     }
 
     @Override
@@ -248,4 +223,8 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
 
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 }

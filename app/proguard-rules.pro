@@ -15,3 +15,17 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-dontwarn java.lang.invoke**
+-dontwarn javax.annotation.Nullable
+-dontwarn com.google.common.**
+-dontwarn com.google.api.**
+-dontwarn com.twitter.**
+
+-keep public class com.google.android.gms.* { public *; }
+-dontwarn com.google.android.gms.**
+-dontwarn rx.internal.util.unsafe.**
+-keep class com.google.gson** { *; }
+-keepclassmembers class com.google.gson** {*;}
+-keep public class com.google.common.**
+
+
