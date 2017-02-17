@@ -23,12 +23,11 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     private Context mContext;
     private LayoutInflater mLayoutInflater;
     private ArrayList<MediaDetails> mediaDetails;
-    private Animation fadeIn, fadeOut;
+    private Animation  fadeOut;
 
     public CustomViewPagerAdapter(Context mContext, ArrayList<MediaDetails> mediaDetails) {
         this.mediaDetails = mediaDetails;
         this.mContext = mContext;
-        fadeIn = AnimationUtils.loadAnimation(mContext, R.anim.fade_in);
         fadeOut = AnimationUtils.loadAnimation(mContext, R.anim.fade_out);
         this.mLayoutInflater = (LayoutInflater) mContext.getSystemService(Context
                 .LAYOUT_INFLATER_SERVICE);
@@ -38,7 +37,6 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     public void destroyItem(ViewGroup container, int position, Object object) {
         ((View)object).startAnimation(fadeOut);
         container.removeView((View) object);
-        Log.d("items size", mediaDetails.size() + "");
 
 
     }

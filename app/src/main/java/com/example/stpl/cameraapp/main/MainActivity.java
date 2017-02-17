@@ -6,8 +6,10 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.ActivityCompat;
@@ -17,7 +19,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.GridView;
@@ -39,15 +43,20 @@ import com.example.stpl.cameraapp.customViews.ExpandableHeightGridView;
 import com.example.stpl.cameraapp.fullImageView.FullImageActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
+import com.firebase.ui.auth.AuthUI;
+import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import rx.Subscriber;
+
+import static android.R.attr.rotation;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
         AdapterView.OnItemClickListener, FileListener, AdapterView.OnItemLongClickListener,
@@ -75,10 +84,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     MainPresenterImpl mainPresenterImpl;
     MainPresenter.Adapter presenterAdapter;
     View bottomSheet;
-    boolean pictureTaken = false;
-
-
-
+    boolean safeToTakePicture = true;
+    List<AuthUI.IdpConfig> providers;
+    FirebaseAuth firebaseAuth;
+    int lastOrientation;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,6 +98,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mainPresenter = mainPresenterImpl;
         presenterAdapter = mainPresenterImpl;
         onItemClick = mainPresenterImpl;
+        providers =new ArrayList<>();
+        providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
+        firebaseAuth=FirebaseAuth.getInstance();
+        lastOrientation=-1;
 
         /**
          * Set Window Flags to make app full screen
@@ -125,9 +138,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Take photo
              */
             case R.id.capture:
-                if(!pictureTaken) {
+                if(safeToTakePicture) {
                     customCamera.takePicture();
-                    pictureTaken=true;
+                    safeToTakePicture=false;
                 }
                 break;
             /**
@@ -160,7 +173,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Upload pictures to the Firebase Cloud
              */
             case R.id.upload:
-
+                if(firebaseAuth.getCurrentUser()!=null){
+                    firebaseAuth.signOut();
+                }
+                startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder()
+                        .setIsSmartLockEnabled(false).setProviders(providers).build(),321);
                 break;
             /**
              * Delete pictures/videos from the phone
@@ -235,6 +252,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (customCamera != null) {
             customCamera.releaseCamera();
         }
+        Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+        if(bottomSheetBehavior.getState()==BottomSheetBehavior.STATE_EXPANDED && isRotationEnabled()) {
+            lastOrientation = display.getRotation();
+            if (lastOrientation == Utils.ROTATION_O) {
+                lastOrientation = Utils.ROTATION_O;
+            } else if (rotation == Utils.ROTATION_90) {
+                lastOrientation = Utils.ROTATION_90;
+
+            } else if (rotation == Utils.ROTATION_270) {
+                lastOrientation = Utils.ROTATION_270;
+            }
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+
+
     }
 
 
@@ -244,7 +276,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         makeFullScreen();
 
         if (customCamera != null && customCamera.getCamera() == null) {
-            customCamera.setCamera();
+
+          customCamera.setCamera();
+            Log.d("last rotation",lastOrientation+"");
+            if(isRotationEnabled()&&lastOrientation!=-1)
+            setRequestedOrientation(lastOrientation);
+
         }
     }
 
@@ -340,14 +377,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
-                    Log.d("expanded", "true");
                     bottomSheet.requestLayout();
                     bottomSheet.invalidate();
                     imageGridView.smoothScrollToPosition(0);
                     imageGridView.requestLayout();
-                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+
                 } else {
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
                 }
             }
 
@@ -356,11 +394,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         };
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
-        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            Log.d("gridView button height", gridViewButton.getHeight() + "");
-            imageGridView.
-                    getLayoutParams().height = height - gridViewButton.getHeight();
-        });
+        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> imageGridView.
+                getLayoutParams().height = height - gridViewButton.getHeight());
         imageGestureDetector = new GestureDetectorCompat(this,
                 new GestureDetector(imageGridView, bottomSheetBehavior));
     }
@@ -480,6 +515,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mainPresenter.fetchFromSdCard(Utils.ALL);
 
         customCamera._getRotation().subscribe(rotation -> {
+
             if (rotation == Utils.ROTATION_O) {
                 captureButton.animate().rotation(0).start();
                 videoCapture.animate().rotation(0).start();
@@ -490,6 +526,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 captureButton.animate().rotation(-90).start();
                 videoCapture.animate().rotation(-90).start();
             }
+        });
+        customCamera._getTakePictureSubject().subscribe(safeToTakePicture -> {
+            this.safeToTakePicture=safeToTakePicture;
         });
 
     }
@@ -545,8 +584,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         intent.setData(Uri.fromFile(file));
         sendBroadcast(intent);
-        gridViewAdapter.addImage(mediaDetails, 0);
-        pictureTaken=false;
+        if(gridViewAdapter.getMediaType().equals(mediaDetails.getMediaType())) {
+            gridViewAdapter.addImage(mediaDetails, 0);
+        }
     }
 
     @Override
@@ -575,24 +615,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             default:
                 imageGridView.setNumColumns(3);
         }
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        height = displayMetrics.heightPixels;
-        Log.d("height", height + "");
+        lastOrientation=newConfig.orientation;
+
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(data!=null) {
-            ArrayList<Integer> indexes = data.getIntegerArrayListExtra("indexes");
-            if (indexes != null && indexes.size() != 0) {
-                for (Integer index : indexes) {
-                    gridViewAdapter.removeItemAt(index);
+        if(requestCode==123) {
+            if (data != null) {
+                ArrayList<Integer> indexes = data.getIntegerArrayListExtra("indexes");
+                if (indexes != null && indexes.size() != 0) {
+                    for (Integer index : indexes) {
+                        gridViewAdapter.removeItemAt(index);
+                    }
                 }
             }
         }
+        else if(requestCode == 321){
+            if(firebaseAuth.getCurrentUser()!=null)
+                Log.d("email",firebaseAuth.getCurrentUser().getEmail());
+        }
 
+    }
+    boolean isRotationEnabled(){
+        return Settings.System.getInt(getContentResolver(),
+                Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
     }
 }
 

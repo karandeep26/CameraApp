@@ -2,11 +2,13 @@ package com.example.stpl.cameraapp;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.ExifInterface;
 import android.media.MediaRecorder;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.Surface;
@@ -18,6 +20,8 @@ import com.example.stpl.cameraapp.main.MainPresenter;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -32,6 +36,7 @@ import static com.example.stpl.cameraapp.Utils.ROTATION_180;
 import static com.example.stpl.cameraapp.Utils.ROTATION_270;
 import static com.example.stpl.cameraapp.Utils.ROTATION_90;
 import static com.example.stpl.cameraapp.Utils.ROTATION_O;
+import static com.facebook.FacebookSdk.getApplicationContext;
 
 
 public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback {
@@ -42,18 +47,24 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     private SurfaceHolder surfaceHolder;
     private Camera camera;
     private List<Camera.Size> mSupportedPreviewSizes;
-    private Camera.Size mPreviewSize;
+    public Camera.Size mPreviewSize;
     private int camId;
     PublishSubject<Integer> rotationSubject = PublishSubject.create();
+    PublishSubject<Boolean> takePictureSubject= PublishSubject.create();
     MainPresenter mainPresenter;
     int rotation;
     int correctOrientation;
     OrientationListener orientationListener;
     Camera.Parameters parameters;
     boolean isCameraSet = false;
+    boolean safeToTakePicture=false;
+    Configuration configuration;
 
     public Observable<Integer> _getRotation() {
         return rotationSubject;
+    }
+    public Observable<Boolean> _getTakePictureSubject(){
+        return takePictureSubject;
     }
 
 
@@ -72,6 +83,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         rotation = activity.getResources().getConfiguration().orientation;
         camera = openFrontFacingCameraGingerbread();
         mSupportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
+        configuration = context.getResources().getConfiguration();
 
     }
 
@@ -85,6 +97,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             try {
                 camera.setPreviewDisplay(surfaceHolder);
                 setCamera();
+                Log.d("surface created","true");
 //            for (Camera.Size size : mSupportedPreviewSizes) {
 //                Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
 //            }
@@ -97,6 +110,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        Log.d("surface changed","true");
     }
 
 
@@ -192,6 +206,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
                     @Override
                     public void run() {
                         camera1.startPreview();
+                        takePictureSubject.onNext(true);
                     }
                 };
                 Timer timer = new Timer();
@@ -249,7 +264,6 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         setMeasuredDimension(width, height);
 
         if (mSupportedPreviewSizes != null) {
-
                 mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
         }
 
@@ -345,6 +359,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
 
         @Override
         public void onOrientationChanged(int orientation) {
+
             if ((orientation < 35 || orientation > 325) && rotation != ROTATION_O) { // PORTRAIT
                 rotation = ROTATION_O;
                 rotationSubject.onNext(rotation);
@@ -373,6 +388,8 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     @Override
     protected void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        configuration = newConfig;
     }
+
 }
 

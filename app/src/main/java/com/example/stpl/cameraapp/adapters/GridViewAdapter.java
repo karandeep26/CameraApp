@@ -105,6 +105,13 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         notifyDataSetChanged();
     }
 
+    public String getMediaType(){
+        if(mediaDetails!=null &&mediaDetails.size()>0){
+            return mediaDetails.get(0).getMediaType();
+        }
+        return null;
+    }
+
     public void removeItemAt(int index) {
         remove(mediaDetails.get(index));
     }
@@ -114,6 +121,7 @@ public class GridViewAdapter extends ArrayAdapter<MediaDetails> {
         SquareImageView imageView;
         ImageView tickView,playButton;
     }
+
 
 
 }
