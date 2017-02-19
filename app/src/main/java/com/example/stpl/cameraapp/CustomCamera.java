@@ -9,12 +9,14 @@ import android.media.CamcorderProfile;
 import android.media.ExifInterface;
 import android.media.MediaRecorder;
 import android.provider.Settings;
+import android.support.design.widget.BottomSheetBehavior;
 import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import com.example.stpl.cameraapp.main.MainActivity;
 import com.example.stpl.cameraapp.main.MainPresenter;
 
 import java.io.File;
@@ -39,6 +41,7 @@ import static com.example.stpl.cameraapp.Utils.ROTATION_O;
 import static com.facebook.FacebookSdk.getApplicationContext;
 
 
+@SuppressWarnings("deprecation")
 public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback {
     static boolean surfaceCreated = false;
     String fileName;
@@ -49,7 +52,6 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     private List<Camera.Size> mSupportedPreviewSizes;
     public Camera.Size mPreviewSize;
     private int camId;
-    PublishSubject<Integer> rotationSubject = PublishSubject.create();
     PublishSubject<Boolean> takePictureSubject= PublishSubject.create();
     MainPresenter mainPresenter;
     int rotation;
@@ -57,12 +59,15 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     OrientationListener orientationListener;
     Camera.Parameters parameters;
     boolean isCameraSet = false;
-    boolean safeToTakePicture=false;
     Configuration configuration;
+    boolean shouldMeasure=true;
+    PublishSubject<Integer> rotationSubject = PublishSubject.create();
 
     public Observable<Integer> _getRotation() {
         return rotationSubject;
     }
+
+
     public Observable<Boolean> _getTakePictureSubject(){
         return takePictureSubject;
     }
@@ -84,7 +89,6 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         camera = openFrontFacingCameraGingerbread();
         mSupportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
         configuration = context.getResources().getConfiguration();
-
     }
 
 
@@ -95,8 +99,18 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             camera = openFrontFacingCameraGingerbread();
         }
             try {
-                camera.setPreviewDisplay(surfaceHolder);
-                setCamera();
+                camera.setPreviewDisplay(holder);
+
+                if(((MainActivity)activity).bottomSheetBehavior.getState()==
+                        BottomSheetBehavior.STATE_EXPANDED && ((MainActivity)activity).isRotationEnabled()){
+                        if(orientationListener.getRotation()==Utils.ROTATION_O){
+                            setCamera();
+                        }
+                    }
+                else {
+                    ((Activity) activity).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                    setCamera();
+                }
                 Log.d("surface created","true");
 //            for (Camera.Size size : mSupportedPreviewSizes) {
 //                Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
@@ -110,7 +124,28 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        Log.d("surface changed","true");
+
+        try {
+            if(camera!=null)
+            camera.setPreviewDisplay(holder);
+
+            if(((MainActivity)activity).bottomSheetBehavior.getState()==
+                    BottomSheetBehavior.STATE_EXPANDED && ((MainActivity)activity).isRotationEnabled()){
+                if(orientationListener.getRotation()==Utils.ROTATION_O){
+                    setCamera();
+                }
+            }
+            else {
+                ((Activity) activity).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                setCamera();
+            }
+            Log.d("surface created","true");
+//            for (Camera.Size size : mSupportedPreviewSizes) {
+//                Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
+//            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -128,10 +163,6 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
                 camera.setPreviewDisplay(null);
                 camera.release();
                 camera = null;
-                if (orientationListener != null) {
-                    orientationListener.disable();
-                    orientationListener = null;
-                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -263,8 +294,19 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
 
         setMeasuredDimension(width, height);
 
+        if(orientationListener==null){
+            orientationListener=new OrientationListener(activity);
+            orientationListener.enable();
+        }
         if (mSupportedPreviewSizes != null) {
+            if(shouldMeasure) {
                 mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
+                if(height>0 && width>0){
+                    shouldMeasure=false;
+                }
+
+            }
+
         }
 
     }
@@ -316,22 +358,22 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
                 e.printStackTrace();
             }
         }
+
         if (camera != null) {
             Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
             Camera.getCameraInfo(camId, cameraInfo);
             surfaceCreated = true;
             parameters = camera.getParameters();
             correctOrientation = getCorrectCameraOrientation(cameraInfo);
+            Log.d("mHeight",mPreviewSize.height+"");
             parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
             parameters.setPictureSize(mPreviewSize.width, mPreviewSize.height);
             camera.setDisplayOrientation(correctOrientation);
             camera.setParameters(parameters);
             camera.startPreview();
-            orientationListener = new OrientationListener(getContext());
-            orientationListener.enable();
             isCameraSet = true;
-
         }
+
 
     }
 
@@ -348,14 +390,18 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         return camera;
     }
 
-    private class OrientationListener extends OrientationEventListener {
-
-
+    @Override
+    protected void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        configuration = newConfig;
+    }
+    class OrientationListener extends OrientationEventListener {
         private int rotation = 0;
 
         OrientationListener(Context context) {
             super(context);
         }
+
 
         @Override
         public void onOrientationChanged(int orientation) {
@@ -363,14 +409,17 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             if ((orientation < 35 || orientation > 325) && rotation != ROTATION_O) { // PORTRAIT
                 rotation = ROTATION_O;
                 rotationSubject.onNext(rotation);
+
             } else if (orientation > 145 && orientation < 215 && rotation != ROTATION_180) { //
                 // REVERSE PORTRAIT
                 rotation = ROTATION_180;
                 rotationSubject.onNext(rotation);
+
             } else if (orientation > 55 && orientation < 125 && rotation != ROTATION_270) { //
                 // REVERSE LANDSCAPE
                 rotation = ROTATION_270;
                 rotationSubject.onNext(rotation);
+
 
             } else if (orientation > 235 && orientation < 305 && rotation != ROTATION_90) {
                 //LANDSCAPE
@@ -378,17 +427,12 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
                 rotationSubject.onNext(rotation);
 
             }
+
         }
 
         int getRotation() {
             return rotation;
         }
-    }
-
-    @Override
-    protected void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        configuration = newConfig;
     }
 
 }

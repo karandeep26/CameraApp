@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private GridViewAdapter gridViewAdapter;
     private ExpandableHeightGridView imageGridView;
     private ImageButton videoCapture;
-    private BottomSheetBehavior bottomSheetBehavior;
+    public BottomSheetBehavior bottomSheetBehavior;
     private ImageButton pictures, video, delete, upload;
     private LinearLayout gridViewButton, menu;
     private SparseArray<View> tickView = new SparseArray<>();
@@ -87,7 +87,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     boolean safeToTakePicture = true;
     List<AuthUI.IdpConfig> providers;
     FirebaseAuth firebaseAuth;
-    int lastOrientation;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,7 +100,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         providers =new ArrayList<>();
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
         firebaseAuth=FirebaseAuth.getInstance();
-        lastOrientation=-1;
 
         /**
          * Set Window Flags to make app full screen
@@ -252,21 +250,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (customCamera != null) {
             customCamera.releaseCamera();
         }
-        Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
-        if(bottomSheetBehavior.getState()==BottomSheetBehavior.STATE_EXPANDED && isRotationEnabled()) {
-            lastOrientation = display.getRotation();
-            if (lastOrientation == Utils.ROTATION_O) {
-                lastOrientation = Utils.ROTATION_O;
-            } else if (rotation == Utils.ROTATION_90) {
-                lastOrientation = Utils.ROTATION_90;
-
-            } else if (rotation == Utils.ROTATION_270) {
-                lastOrientation = Utils.ROTATION_270;
-            }
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        }
-
-
     }
 
 
@@ -276,12 +259,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         makeFullScreen();
 
         if (customCamera != null && customCamera.getCamera() == null) {
+            if(bottomSheetBehavior.getState()==BottomSheetBehavior.STATE_EXPANDED){
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                Display getOrient = getWindowManager().getDefaultDisplay();
 
-          customCamera.setCamera();
-            Log.d("last rotation",lastOrientation+"");
-            if(isRotationEnabled()&&lastOrientation!=-1)
-            setRequestedOrientation(lastOrientation);
-
+                if(getOrient.getRotation()==0){
+                    customCamera.setCamera();
+                }
+            }
+            else{
+                customCamera.setCamera();
+            }
         }
     }
 
@@ -367,8 +355,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          */
         imageGridView.setOnTouchListener((v, event) -> {
             v.getParent().requestDisallowInterceptTouchEvent(true);
-            if (imageGridView.getFirstVisiblePosition() == 0)
+            if (imageGridView.getFirstVisiblePosition() == 0) {
                 imageGestureDetector.onTouchEvent(event);
+            }
             return false;
         });
 
@@ -381,7 +370,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     bottomSheet.invalidate();
                     imageGridView.smoothScrollToPosition(0);
                     imageGridView.requestLayout();
-                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
                 } else {
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -394,8 +383,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         };
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
-        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> imageGridView.
-                getLayoutParams().height = height - gridViewButton.getHeight());
+        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() ->
+                    imageGridView.
+                            getLayoutParams().height = height - gridViewButton.getHeight());
+
         imageGestureDetector = new GestureDetectorCompat(this,
                 new GestureDetector(imageGridView, bottomSheetBehavior));
     }
@@ -517,8 +508,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         customCamera._getRotation().subscribe(rotation -> {
 
             if (rotation == Utils.ROTATION_O) {
-                captureButton.animate().rotation(0).start();
-                videoCapture.animate().rotation(0).start();
+                captureButton.animate().rotation(0);
+                videoCapture.animate().rotation(0);
             } else if (rotation == Utils.ROTATION_90) {
                 captureButton.animate().rotation(90).start();
                 videoCapture.animate().rotation(90).start();
@@ -604,18 +595,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        height = displayMetrics.heightPixels;
         switch (newConfig.orientation) {
             case Configuration.ORIENTATION_LANDSCAPE:
                 imageGridView.setNumColumns(5);
-                bottomSheet.requestLayout();
-                bottomSheet.invalidate();
-                imageGridView.smoothScrollToPosition(0);
-                imageGridView.requestLayout();
                 break;
             default:
+                imageGridView.getLayoutParams().height=height-gridViewButton.getHeight();
                 imageGridView.setNumColumns(3);
         }
-        lastOrientation=newConfig.orientation;
+
 
     }
 
@@ -638,7 +629,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
     }
-    boolean isRotationEnabled(){
+   public boolean isRotationEnabled(){
         return Settings.System.getInt(getContentResolver(),
                 Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
     }
