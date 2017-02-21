@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -21,7 +20,6 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.GridView;
@@ -45,11 +43,15 @@ import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     boolean safeToTakePicture = true;
     List<AuthUI.IdpConfig> providers;
     FirebaseAuth firebaseAuth;
+    DatabaseReference databaseReference;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,6 +103,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         providers =new ArrayList<>();
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
         firebaseAuth=FirebaseAuth.getInstance();
+        FirebaseDatabase firebaseDatabase= FirebaseDatabase.getInstance();
+        databaseReference=firebaseDatabase.getReference().child("users");
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+           Log.d("data added",dataSnapshot.getValue().toString());
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        databaseReference.child("13").child("url").child("2").setValue("google.com");
+
+        if(firebaseAuth.getCurrentUser()!=null) {
+          databaseReference.child(firebaseAuth.getCurrentUser().getUid()).child("url");
+        }
+
 
         /**
          * Set Window Flags to make app full screen
@@ -171,9 +193,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Upload pictures to the Firebase Cloud
              */
             case R.id.upload:
-                if(firebaseAuth.getCurrentUser()!=null){
-                    firebaseAuth.signOut();
-                }
                 startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder()
                         .setIsSmartLockEnabled(false).setProviders(providers).build(),321);
                 break;
@@ -321,19 +340,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Standard findViewByIds
      */
     private void findViewById() {
-        gridViewButton = (LinearLayout) findViewById(R.id.gridViewButtons);
-        menu = (LinearLayout) findViewById(R.id.menu);
-        imageGridView = (ExpandableHeightGridView) findViewById(R.id.image_grid_view);
-        frameLayout = (FrameLayout) findViewById(R.id.frame_layout);
-        captureButton = (ImageButton) findViewById(R.id.capture);
-        time = (TextView) findViewById(R.id.timer);
-        videoCapture = (ImageButton) findViewById(R.id.record_video);
-        pictures = (ImageButton) findViewById(R.id.pictures);
-        video = (ImageButton) findViewById(R.id.videos);
-        bottomSheet = findViewById(R.id.design_bottom_sheet);
+        gridViewButton =$(R.id.gridViewButtons);
+        menu = $(R.id.menu);
+        imageGridView = $(R.id.image_grid_view);
+        frameLayout = $(R.id.frame_layout);
+        captureButton = $(R.id.capture);
+        time = $(R.id.timer);
+        videoCapture = $(R.id.record_video);
+        pictures = $(R.id.pictures);
+        video = $(R.id.videos);
+        bottomSheet = $(R.id.design_bottom_sheet);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        delete = (ImageButton) findViewById(R.id.delete);
-        upload = (ImageButton) findViewById(R.id.upload);
+        delete = $(R.id.delete);
+        upload = $(R.id.delete);
+
     }
 
     /**
@@ -626,12 +646,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         else if(requestCode == 321){
             if(firebaseAuth.getCurrentUser()!=null)
                 Log.d("email",firebaseAuth.getCurrentUser().getEmail());
+            if(firebaseAuth.getCurrentUser()!=null) {
+                if (databaseReference.getRef().child(firebaseAuth.getCurrentUser().getUid()) == null) {
+                    databaseReference.getRef().setValue((firebaseAuth.getCurrentUser().getUid()));
+
+                }
+            }
         }
 
     }
    public boolean isRotationEnabled(){
         return Settings.System.getInt(getContentResolver(),
                 Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
+    }
+    @SuppressWarnings("unchecked")
+    public <T extends View> T $(int id) {
+        return (T) findViewById(id);
     }
 }
 
