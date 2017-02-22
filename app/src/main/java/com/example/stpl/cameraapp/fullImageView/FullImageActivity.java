@@ -16,11 +16,9 @@ import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.ZoomOutPageTransformer;
 import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
-import com.example.stpl.cameraapp.main.MainActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
 import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.auth.api.Auth;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -197,7 +195,11 @@ public class FullImageActivity extends AppCompatActivity implements View.OnClick
     public void onBackPressed() {
         Intent intent = new Intent();
         intent.putIntegerArrayListExtra("indexes", indexes);
-        setResult(123, intent);
+        if (intent != null) {
+            setResult(123, intent);
+        } else {
+            Log.d("null pointet was", "here");
+        }
         super.onBackPressed();
 
     }

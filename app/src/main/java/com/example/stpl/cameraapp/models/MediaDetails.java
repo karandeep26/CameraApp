@@ -1,8 +1,6 @@
 package com.example.stpl.cameraapp.models;
 
 public class MediaDetails {
-
-
     private String filePath;
     private String mediaType;
     private boolean isChecked = false;

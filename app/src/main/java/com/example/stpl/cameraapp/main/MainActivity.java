@@ -15,14 +15,15 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
+import android.view.HapticFeedbackConstants;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.FrameLayout;
-import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -32,12 +33,13 @@ import android.widget.Toast;
 import com.example.stpl.cameraapp.CustomCamera;
 import com.example.stpl.cameraapp.FileListener;
 import com.example.stpl.cameraapp.GestureDetector;
+import com.example.stpl.cameraapp.ItemOffsetDecoration;
 import com.example.stpl.cameraapp.R;
+import com.example.stpl.cameraapp.RecyclerItemClickListener;
 import com.example.stpl.cameraapp.ScrollListener;
 import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.activity.PlayVideoActivity;
-import com.example.stpl.cameraapp.adapters.GridViewAdapter;
-import com.example.stpl.cameraapp.customViews.ExpandableHeightGridView;
+import com.example.stpl.cameraapp.adapters.RecyclerViewAdapter;
 import com.example.stpl.cameraapp.fullImageView.FullImageActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
@@ -58,10 +60,9 @@ import java.util.Map;
 
 import rx.Subscriber;
 
-import static android.R.attr.rotation;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        AdapterView.OnItemClickListener, FileListener, AdapterView.OnItemLongClickListener,
+        FileListener, RecyclerItemClickListener.OnItemClickListener,
         MainView, MainView.Adapter, MainView.UpdateView {
     public static boolean isSignedIn;
     final int MULTIPLE_PERMISSIONS = 123;
@@ -74,8 +75,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FrameLayout frameLayout;
     private CustomCamera customCamera;
     private ImageButton captureButton;
-    private GridViewAdapter gridViewAdapter;
-    private ExpandableHeightGridView imageGridView;
+    private RecyclerView recyclerGridView;
     private ImageButton videoCapture;
     public BottomSheetBehavior bottomSheetBehavior;
     private ImageButton pictures, video, delete, upload;
@@ -90,6 +90,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     List<AuthUI.IdpConfig> providers;
     FirebaseAuth firebaseAuth;
     DatabaseReference databaseReference;
+    RecyclerViewAdapter recyclerViewAdapter;
+    GridLayoutManager gridLayoutManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,15 +103,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mainPresenter = mainPresenterImpl;
         presenterAdapter = mainPresenterImpl;
         onItemClick = mainPresenterImpl;
-        providers =new ArrayList<>();
+        providers = new ArrayList<>();
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
-        firebaseAuth=FirebaseAuth.getInstance();
-        FirebaseDatabase firebaseDatabase= FirebaseDatabase.getInstance();
-        databaseReference=firebaseDatabase.getReference().child("users");
+        firebaseAuth = FirebaseAuth.getInstance();
+        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+        databaseReference = firebaseDatabase.getReference().child("users");
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-           Log.d("data added",dataSnapshot.getValue().toString());
+                Log.d("data added", dataSnapshot.getValue().toString());
             }
 
             @Override
@@ -118,8 +121,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
         databaseReference.child("13").child("url").child("2").setValue("google.com");
 
-        if(firebaseAuth.getCurrentUser()!=null) {
-          databaseReference.child(firebaseAuth.getCurrentUser().getUid()).child("url");
+        if (firebaseAuth.getCurrentUser() != null) {
+            databaseReference.child(firebaseAuth.getCurrentUser().getUid()).child("url");
         }
 
 
@@ -133,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById();
         mainPresenter.checkForPermissions();
         /**
-         * Initialize GridViewAdapter
+         * Initialize RecyclerViewAdapter
          * Set GridView
          * Set BottomSheetCallback
          */
@@ -149,6 +152,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         height = displayMetrics.heightPixels;
+
     }
 
     @Override
@@ -158,9 +162,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Take photo
              */
             case R.id.capture:
-                if(safeToTakePicture) {
+                if (safeToTakePicture) {
                     customCamera.takePicture();
-                    safeToTakePicture=false;
+                    safeToTakePicture = false;
                 }
                 break;
             /**
@@ -194,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              */
             case R.id.upload:
                 startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder()
-                        .setIsSmartLockEnabled(false).setProviders(providers).build(),321);
+                        .setIsSmartLockEnabled(false).setProviders(providers).build(), 321);
                 break;
             /**
              * Delete pictures/videos from the phone
@@ -204,8 +208,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 /**
                  * Restore GridView from the selection mode
                  */
-                imageGridView.requestLayout();
-                imageGridView.clearChoices();
+                recyclerGridView.requestLayout();
+//                recyclerGridView.clearChoices();
                 gridViewButton.setVisibility(View.VISIBLE);
                 menu.setVisibility(View.GONE);
                 break;
@@ -278,71 +282,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         makeFullScreen();
 
         if (customCamera != null && customCamera.getCamera() == null) {
-            if(bottomSheetBehavior.getState()==BottomSheetBehavior.STATE_EXPANDED){
+            if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                 Display getOrient = getWindowManager().getDefaultDisplay();
 
-                if(getOrient.getRotation()==0){
+                if (getOrient.getRotation() == 0) {
                     customCamera.setCamera();
                 }
-            }
-            else{
+            } else {
                 customCamera.setCamera();
             }
         }
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        MediaDetails details = (MediaDetails) parent.getItemAtPosition(position);
-        details.getFilePath();
-        ImageView tick = (ImageView) view.findViewById(R.id.tick);
-        /**
-         * if items are in selection mode,show/hide display the tick icon
-         */
-        if (onItemClick.isSelectionMode()) {
-            mainPresenter.modifySelection(details);
-            if (details.isChecked()) {
-                tick.setVisibility(View.VISIBLE);
-                tickView.put(position, view);
-            } else {
-                tick.setVisibility(View.INVISIBLE);
-                tickView.remove(position);
-            }
-            if (!onItemClick.isSelectionMode()) {
-                imageGridView.requestLayout();
-                imageGridView.clearChoices();
-                gridViewButton.setVisibility(View.VISIBLE);
-                menu.setVisibility(View.GONE);
-            }
-        }
 
-
-        /**
-         * If not in selection mode,fire an Intent to display Fullscreen video/picture
-         */
-        else {
-            Intent intent;
-            if (details.getMediaType().equals(Utils.IMAGE)) {
-                intent = new Intent(MainActivity.this, FullImageActivity.class);
-                intent.putExtra("position", position);
-
-            } else {
-                intent = new Intent(MainActivity.this, PlayVideoActivity.class);
-                intent.putExtra("path",details.getFilePath());
-            }
-
-            startActivityForResult(intent, 123);
-        }
-    }
 
     /**
      * Standard findViewByIds
      */
     private void findViewById() {
-        gridViewButton =$(R.id.gridViewButtons);
+        gridViewButton = $(R.id.gridViewButtons);
         menu = $(R.id.menu);
-        imageGridView = $(R.id.image_grid_view);
+        recyclerGridView = $(R.id.recycler_grid);
         frameLayout = $(R.id.frame_layout);
         captureButton = $(R.id.capture);
         time = $(R.id.timer);
@@ -361,25 +322,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void init() {
         Picasso.with(this).setIndicatorsEnabled(true);
-        gridViewAdapter = new GridViewAdapter(this);
-        imageGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE);
-        imageGridView.setOnItemLongClickListener(this);
-        imageGridView.setOnScrollListener(new ScrollListener(this));
-        imageGridView.setExpanded(false);
-        imageGridView.setAdapter(gridViewAdapter);
-        imageGridView.setOnItemClickListener(this);
+        recyclerViewAdapter = new RecyclerViewAdapter();
+        gridLayoutManager = new GridLayoutManager(this, 3);
+        recyclerGridView.setLayoutManager(gridLayoutManager);
+        recyclerGridView.setAdapter(recyclerViewAdapter);
+        recyclerGridView.addOnScrollListener(new ScrollListener(this));
+        ItemOffsetDecoration itemDecoration = new ItemOffsetDecoration(this, R.dimen.item_offset);
+        recyclerGridView.addItemDecoration(itemDecoration);
         pictures.setSelected(true);
         /**
          * If first item of GridView is Visible,Disable GridView Scrolling top to bottom.
          * If first item is not visible,continue with gridView scroll scrolling
          */
-        imageGridView.setOnTouchListener((v, event) -> {
+        recyclerGridView.setOnTouchListener((v, event) -> {
+
             v.getParent().requestDisallowInterceptTouchEvent(true);
-            if (imageGridView.getFirstVisiblePosition() == 0) {
+            recyclerGridView.setNestedScrollingEnabled(false);
+            int position = gridLayoutManager.findFirstCompletelyVisibleItemPosition();
+            if (position == 0) {
                 imageGestureDetector.onTouchEvent(event);
             }
             return false;
         });
+        recyclerGridView.addOnItemTouchListener(new RecyclerItemClickListener(this,
+                this, recyclerGridView));
+
 
         BottomSheetBehavior.BottomSheetCallback bottomSheetCallback = new BottomSheetBehavior
                 .BottomSheetCallback() {
@@ -388,8 +355,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
                     bottomSheet.requestLayout();
                     bottomSheet.invalidate();
-                    imageGridView.smoothScrollToPosition(0);
-                    imageGridView.requestLayout();
+                    recyclerGridView.smoothScrollToPosition(0);
+                    recyclerGridView.requestLayout();
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
                 } else {
@@ -404,11 +371,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         };
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
         gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() ->
-                    imageGridView.
-                            getLayoutParams().height = height - gridViewButton.getHeight());
-
+                recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight());
         imageGestureDetector = new GestureDetectorCompat(this,
-                new GestureDetector(imageGridView, bottomSheetBehavior));
+                new GestureDetector(gridLayoutManager, bottomSheetBehavior));
+
     }
 
     private void setClickListeners() {
@@ -444,8 +410,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             /**
              * Restore gridView from the Selection Mode
              */
-            imageGridView.requestLayout();
-            imageGridView.clearChoices();
+            recyclerGridView.requestLayout();
+//            recyclerGridView.clearChoices();
             gridViewButton.setVisibility(View.VISIBLE);
             menu.setVisibility(View.GONE);
 
@@ -499,17 +465,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    @Override
-    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-        MediaDetails image = (MediaDetails) parent.getItemAtPosition(position);
-        mainPresenter.modifySelection(image);
-        ImageView tick = (ImageView) view.findViewById(R.id.tick);
-        menu.setVisibility(View.VISIBLE);
-        gridViewButton.setVisibility(View.INVISIBLE);
-        tick.setVisibility(View.VISIBLE);
-        tickView.put(position, view);
-        return true;
-    }
 
     /**
      * Loads the camera and thumbnails from the sdCard.
@@ -539,7 +494,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         customCamera._getTakePictureSubject().subscribe(safeToTakePicture -> {
-            this.safeToTakePicture=safeToTakePicture;
+            this.safeToTakePicture = safeToTakePicture;
         });
 
     }
@@ -559,7 +514,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void itemAdd(MediaDetails mediaDetails) {
-        gridViewAdapter.addImage(mediaDetails, 1);
+        recyclerViewAdapter.addItem(mediaDetails);
 
     }
 
@@ -571,15 +526,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void updateAdapter(List<MediaDetails> mediaDetails) {
-        gridViewAdapter.setMediaDetails(mediaDetails);
-        imageGridView.setSmoothScrollbarEnabled(false);
-        imageGridView.post(() -> imageGridView.setSelection(0));
+        recyclerViewAdapter.setMediaDetailsList(mediaDetails);
+//        gridViewAdapter.setMediaDetails(mediaDetails);
+//        recyclerGridView.setSmoothScrollbarEnabled(false);
+//        recyclerGridView.post(() -> recyclerGridView.setSelection(0));
     }
 
     @Override
     public void onFileDeleted(MediaDetails mediaDetails) {
-        gridViewAdapter.remove(mediaDetails);
-
+        recyclerViewAdapter.remove(mediaDetails);
     }
 
     @Override
@@ -595,8 +550,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         intent.setData(Uri.fromFile(file));
         sendBroadcast(intent);
-        if(gridViewAdapter.getMediaType().equals(mediaDetails.getMediaType())) {
-            gridViewAdapter.addImage(mediaDetails, 0);
+//        if (gridViewAdapter.getMediaType().equals(mediaDetails.getMediaType())) {
+//            gridViewAdapter.addImage(mediaDetails, 0);
+//        }
+        if (recyclerViewAdapter.getMediaType().equals(mediaDetails.getMediaType())) {
+            recyclerViewAdapter.addItem(mediaDetails, 0);
         }
     }
 
@@ -620,11 +578,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         height = displayMetrics.heightPixels;
         switch (newConfig.orientation) {
             case Configuration.ORIENTATION_LANDSCAPE:
-                imageGridView.setNumColumns(5);
+//                recyclerGridView.setNumColumns(5);
                 break;
             default:
-                imageGridView.getLayoutParams().height=height-gridViewButton.getHeight();
-                imageGridView.setNumColumns(3);
+                recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight();
+//                recyclerGridView.setNumColumns(3);
         }
 
 
@@ -633,21 +591,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode==123) {
+        if (requestCode == 123) {
             if (data != null) {
                 ArrayList<Integer> indexes = data.getIntegerArrayListExtra("indexes");
                 if (indexes != null && indexes.size() != 0) {
                     for (Integer index : indexes) {
-                        gridViewAdapter.removeItemAt(index);
+                        recyclerViewAdapter.removeItemAt(index);
                     }
                 }
             }
-        }
-        else if(requestCode == 321){
-            if(firebaseAuth.getCurrentUser()!=null)
-                Log.d("email",firebaseAuth.getCurrentUser().getEmail());
-            if(firebaseAuth.getCurrentUser()!=null) {
-                if (databaseReference.getRef().child(firebaseAuth.getCurrentUser().getUid()) == null) {
+        } else if (requestCode == 321) {
+            if (firebaseAuth.getCurrentUser() != null)
+                Log.d("email", firebaseAuth.getCurrentUser().getEmail());
+            if (firebaseAuth.getCurrentUser() != null) {
+                if (databaseReference.getRef().child(firebaseAuth.getCurrentUser().getUid()) ==
+                        null) {
                     databaseReference.getRef().setValue((firebaseAuth.getCurrentUser().getUid()));
 
                 }
@@ -655,13 +613,74 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
     }
-   public boolean isRotationEnabled(){
+
+    public boolean isRotationEnabled() {
         return Settings.System.getInt(getContentResolver(),
                 Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
     }
+
     @SuppressWarnings("unchecked")
     public <T extends View> T $(int id) {
         return (T) findViewById(id);
+    }
+
+    @Override
+    public void onItemClick(View view, int position) {
+
+        MediaDetails details = recyclerViewAdapter.getItemAt(position);
+        details.getFilePath();
+        ImageView tick = (ImageView) view.findViewById(R.id.tick);
+        /**
+         * if items are in selection mode,show/hide display the tick icon
+         */
+        if (onItemClick.isSelectionMode()) {
+            mainPresenter.modifySelection(details);
+            if (details.isChecked()) {
+                tick.setVisibility(View.VISIBLE);
+                tickView.put(position, view);
+            } else {
+                tick.setVisibility(View.INVISIBLE);
+                tickView.remove(position);
+            }
+            if (!onItemClick.isSelectionMode()) {
+                recyclerGridView.requestLayout();
+//                recyclerGridView.clearChoices();
+                gridViewButton.setVisibility(View.VISIBLE);
+                menu.setVisibility(View.GONE);
+            }
+        }
+
+
+        /**
+         * If not in selection mode,fire an Intent to display Fullscreen video/picture
+         */
+        else {
+            Intent intent;
+            if (details.getMediaType().equals(Utils.IMAGE)) {
+                intent = new Intent(MainActivity.this, FullImageActivity.class);
+                intent.putExtra("position", position);
+
+            } else {
+                intent = new Intent(MainActivity.this, PlayVideoActivity.class);
+                intent.putExtra("path", details.getFilePath());
+            }
+
+            startActivityForResult(intent, 123);
+        }
+    }
+
+    @Override
+    public void onItemLongClick(View view, int position) {
+        if (!onItemClick.isSelectionMode()) {
+            MediaDetails details = recyclerViewAdapter.getItemAt(position);
+            mainPresenter.modifySelection(details);
+            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            ImageView tick = (ImageView) view.findViewById(R.id.tick);
+            menu.setVisibility(View.VISIBLE);
+            gridViewButton.setVisibility(View.INVISIBLE);
+            tick.setVisibility(View.VISIBLE);
+            tickView.put(position, view);
+        }
     }
 }
 
