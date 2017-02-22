@@ -624,6 +624,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return (T) findViewById(id);
     }
 
+    /**
+     * Handles RecyclerViewItem OnClick
+     *
+     * @param view     that is clicked
+     * @param position of the clicked View
+     */
+
     @Override
     public void onItemClick(View view, int position) {
 
@@ -643,8 +650,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 tickView.remove(position);
             }
             if (!onItemClick.isSelectionMode()) {
-                recyclerGridView.requestLayout();
-//                recyclerGridView.clearChoices();
                 gridViewButton.setVisibility(View.VISIBLE);
                 menu.setVisibility(View.GONE);
             }
@@ -669,6 +674,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    /**
+     * Handles LongPress on RecyclerViewItem Click
+     * @param view that is long pressed
+     * @param position position of the view.
+     */
     @Override
     public void onItemLongClick(View view, int position) {
         if (!onItemClick.isSelectionMode()) {
