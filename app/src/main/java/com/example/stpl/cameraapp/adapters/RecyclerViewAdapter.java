@@ -35,9 +35,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         this.mediaDetailsList = mediaDetailsList;
         notifyDataSetChanged();
     }
-    //    public RecyclerViewAdapter(List<MediaDetails> mediaDetailsList) {
-//        this.mediaDetailsList = mediaDetailsList;
-//    }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -61,6 +58,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     .into(holder.imageView);
             holder.playButton.setVisibility(View.VISIBLE);
         }
+
 //        if(multiMode){
 //            holder.tickView.setVisibility(View.VISIBLE);
 //        }
@@ -104,9 +102,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         SquareImageView imageView;
         ImageView tickView, playButton;
         FrameLayout rootLayout;
+        View itemView;
 
         ViewHolder(View itemView) {
             super(itemView);
+            this.itemView = itemView;
             rootLayout = (FrameLayout) itemView.findViewById(R.id.root_layout);
             imageView = (SquareImageView) itemView.findViewById(R.id.image);
             tickView = (ImageView) itemView.findViewById(R.id.tick);

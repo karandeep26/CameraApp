@@ -2,7 +2,6 @@ package com.example.stpl.cameraapp.adapters;
 
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,7 +57,6 @@ public class CustomViewPagerAdapter extends PagerAdapter {
         Picasso.with(mContext).load("file://" + new File(mediaDetails.get(position)
                 .getFilePath())).resize(Utils.width, 0).into(imageView);
         container.addView(itemView);
-//        itemView.startAnimation(fadeIn);
         itemView.setTag("myView" + position);
         return itemView;
     }

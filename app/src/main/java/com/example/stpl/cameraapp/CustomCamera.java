@@ -8,7 +8,6 @@ import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.ExifInterface;
 import android.media.MediaRecorder;
-import android.provider.Settings;
 import android.support.design.widget.BottomSheetBehavior;
 import android.util.Log;
 import android.view.OrientationEventListener;
@@ -22,8 +21,6 @@ import com.example.stpl.cameraapp.main.MainPresenter;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -38,7 +35,6 @@ import static com.example.stpl.cameraapp.Utils.ROTATION_180;
 import static com.example.stpl.cameraapp.Utils.ROTATION_270;
 import static com.example.stpl.cameraapp.Utils.ROTATION_90;
 import static com.example.stpl.cameraapp.Utils.ROTATION_O;
-import static com.facebook.FacebookSdk.getApplicationContext;
 
 
 @SuppressWarnings("deprecation")
@@ -166,6 +162,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
         }
     }
 

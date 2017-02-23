@@ -11,7 +11,7 @@ import java.io.File;
 
 
 public class Utils {
-    //            static public File mediaStorageDir = new File(
+    //                static public File mediaStorageDir = new File(
 //            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
 //            "MyCameraApp");
     static public File mediaStorageDir = new File(
@@ -28,6 +28,11 @@ public class Utils {
     public static String IMAGE = "image";
     public static String VIDEO = "video";
     public static String ALL = "all";
+    public static final int MULTIPLE_PERMISSIONS = 2;
+    public static final int RC_SIGN_IN = 1;
+    public static final int DELETE_FILES = 3;
+
+
     public static float convertDpToPixel(Context context, float dp) {
         Resources resources = context.getResources();
         DisplayMetrics metrics = resources.getDisplayMetrics();

@@ -2,13 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.example.stpl.cameraapp">
 
-
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-
 
     <application
         android:name=".ApplicationClass"
@@ -31,6 +29,8 @@
             android:name=".fullImageView.FullImageActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"/>
         <activity android:name=".activity.PlayVideoActivity"/>
+        <activity android:name=".BaseActivity">
+        </activity>
     </application>
 
 </manifest>

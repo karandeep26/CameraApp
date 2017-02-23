@@ -31,7 +31,6 @@ interface MainView extends FileListener {
 //        void onErrorOccurred();
 //        void onFileAdded(MediaDetails mediaDetails);
 //    }
-    interface Adapter {
-    }
+
 
 }

@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -14,7 +13,6 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
@@ -30,42 +28,49 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.stpl.cameraapp.BaseActivity;
 import com.example.stpl.cameraapp.CustomCamera;
 import com.example.stpl.cameraapp.FileListener;
-import com.example.stpl.cameraapp.GestureDetector;
 import com.example.stpl.cameraapp.ItemOffsetDecoration;
+import com.example.stpl.cameraapp.MyGestureDetector;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.RecyclerItemClickListener;
 import com.example.stpl.cameraapp.ScrollListener;
-import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.activity.PlayVideoActivity;
 import com.example.stpl.cameraapp.adapters.RecyclerViewAdapter;
 import com.example.stpl.cameraapp.fullImageView.FullImageActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
 import com.firebase.ui.auth.AuthUI;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.firebase.ui.auth.ErrorCodes;
+import com.firebase.ui.auth.IdpResponse;
+import com.firebase.ui.auth.ResultCodes;
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import rx.Subscriber;
+import rx.Subscription;
+import rx.subscriptions.CompositeSubscription;
 
+import static com.example.stpl.cameraapp.Utils.ALL;
+import static com.example.stpl.cameraapp.Utils.DELETE_FILES;
+import static com.example.stpl.cameraapp.Utils.IMAGE;
+import static com.example.stpl.cameraapp.Utils.MULTIPLE_PERMISSIONS;
+import static com.example.stpl.cameraapp.Utils.RC_SIGN_IN;
+import static com.example.stpl.cameraapp.Utils.ROTATION_270;
+import static com.example.stpl.cameraapp.Utils.ROTATION_90;
+import static com.example.stpl.cameraapp.Utils.ROTATION_O;
+import static com.example.stpl.cameraapp.Utils.VIDEO;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        FileListener, RecyclerItemClickListener.OnItemClickListener,
-        MainView, MainView.Adapter, MainView.UpdateView {
-    public static boolean isSignedIn;
-    final int MULTIPLE_PERMISSIONS = 123;
+public class MainActivity extends BaseActivity implements View.OnClickListener,
+        FileListener, RecyclerItemClickListener.OnItemClickListener, MainView, MainView.UpdateView,
+        FirebaseLoginView {
+    int previousRotation = -1;
+    CompositeSubscription compositeSubscription;
     boolean recording = false;
     TextView time;
     GestureDetectorCompat imageGestureDetector;
@@ -88,43 +93,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     View bottomSheet;
     boolean safeToTakePicture = true;
     List<AuthUI.IdpConfig> providers;
-    FirebaseAuth firebaseAuth;
-    DatabaseReference databaseReference;
     RecyclerViewAdapter recyclerViewAdapter;
     GridLayoutManager gridLayoutManager;
+    FirebaseLoginPresenter firebaseLoginPresenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        mSdCardInteractorImpl = new SdCardInteractorImpl();
-        mainPresenterImpl = new MainPresenterImpl(this, mSdCardInteractorImpl);
-        mainPresenter = mainPresenterImpl;
-        presenterAdapter = mainPresenterImpl;
-        onItemClick = mainPresenterImpl;
         providers = new ArrayList<>();
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
-        firebaseAuth = FirebaseAuth.getInstance();
-        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
-        databaseReference = firebaseDatabase.getReference().child("users");
-        databaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d("data added", dataSnapshot.getValue().toString());
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-        databaseReference.child("13").child("url").child("2").setValue("google.com");
-
-        if (firebaseAuth.getCurrentUser() != null) {
-            databaseReference.child(firebaseAuth.getCurrentUser().getUid()).child("url");
-        }
-
+        /**
+         * Initialize MVP components
+         */
+        initMVP();
 
         /**
          * Set Window Flags to make app full screen
@@ -134,13 +117,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          * Standard findViewById
          */
         findViewById();
-        mainPresenter.checkForPermissions();
         /**
          * Initialize RecyclerViewAdapter
          * Set GridView
          * Set BottomSheetCallback
+         * Check for permissions
          */
         init();
+
         /**
          * Set button on click listeners
          */
@@ -178,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              */
             case R.id.videos:
                 video.setSelected(true);
-                presenterAdapter.updateAdapter(Utils.VIDEO);
+                presenterAdapter.updateAdapter(VIDEO);
                 if (pictures.isSelected()) {
                     pictures.setSelected(false);
                 }
@@ -187,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Loading pictures thumbnails in a GridView
              */
             case R.id.pictures:
-                presenterAdapter.updateAdapter(Utils.IMAGE);
+                presenterAdapter.updateAdapter(IMAGE);
                 pictures.setSelected(true);
                 if (video.isSelected()) {
                     video.setSelected(false);
@@ -197,8 +181,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * Upload pictures to the Firebase Cloud
              */
             case R.id.upload:
-                startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder()
-                        .setIsSmartLockEnabled(false).setProviders(providers).build(), 321);
+                firebaseLoginPresenter.checkLoginBeforeProceed();
                 break;
             /**
              * Delete pictures/videos from the phone
@@ -209,7 +192,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                  * Restore GridView from the selection mode
                  */
                 recyclerGridView.requestLayout();
-//                recyclerGridView.clearChoices();
                 gridViewButton.setVisibility(View.VISIBLE);
                 menu.setVisibility(View.GONE);
                 break;
@@ -272,7 +254,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onPause();
         if (customCamera != null) {
             customCamera.releaseCamera();
+            compositeSubscription.unsubscribe();
         }
+        Picasso.with(this).cancelTag(this);
     }
 
 
@@ -292,10 +276,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else {
                 customCamera.setCamera();
             }
+
         }
     }
-
-
 
     /**
      * Standard findViewByIds
@@ -313,7 +296,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bottomSheet = $(R.id.design_bottom_sheet);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
         delete = $(R.id.delete);
-        upload = $(R.id.delete);
+        upload = $(R.id.upload);
 
     }
 
@@ -321,6 +304,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Initialise GridView and other items
      */
     private void init() {
+        compositeSubscription = new CompositeSubscription();
         Picasso.with(this).setIndicatorsEnabled(true);
         recyclerViewAdapter = new RecyclerViewAdapter();
         gridLayoutManager = new GridLayoutManager(this, 3);
@@ -373,8 +357,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() ->
                 recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight());
         imageGestureDetector = new GestureDetectorCompat(this,
-                new GestureDetector(gridLayoutManager, bottomSheetBehavior));
-
+                new MyGestureDetector(gridLayoutManager, bottomSheetBehavior));
+        mainPresenter.checkForPermissions();
     }
 
     private void setClickListeners() {
@@ -386,32 +370,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         delete.setOnClickListener(this);
     }
 
-    private void makeFullScreen() {
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-    }
 
     @Override
     public void onBackPressed() {
         /**
          * If GridView is in selection mode,clear the selections
          */
-        Log.d("boolean", onItemClick.isSelectionMode() + "");
         if (onItemClick.isSelectionMode()) {
             mainPresenter.removeSelectedItems();
             for (int i = 0; i < tickView.size(); i++) {
                 tickView.get(tickView.keyAt(i)).findViewById(R.id.tick).setVisibility(View.GONE);
             }
-            /**
-             * Restore gridView from the Selection Mode
-             */
-            recyclerGridView.requestLayout();
-//            recyclerGridView.clearChoices();
             gridViewButton.setVisibility(View.VISIBLE);
             menu.setVisibility(View.GONE);
 
@@ -442,6 +411,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mainPresenter.onDestroy();
             mainPresenter = null;
         }
+        compositeSubscription.unsubscribe();
+        Picasso.with(this).cancelTag(this);
+
     }
 
     /**
@@ -464,11 +436,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
-
     /**
      * Loads the camera and thumbnails from the sdCard.
-     * Hack for nested scrollView and gridView using GestureDetector
+     * Hack for nested scrollView and gridView using MyGestureDetector
      */
     @Override
     public void permissionAvailable() {
@@ -478,24 +448,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          */
         customCamera.setWillNotDraw(false);
         frameLayout.addView(customCamera);
-        mainPresenter.fetchFromSdCard(Utils.ALL);
-
-        customCamera._getRotation().subscribe(rotation -> {
-
-            if (rotation == Utils.ROTATION_O) {
-                captureButton.animate().rotation(0);
-                videoCapture.animate().rotation(0);
-            } else if (rotation == Utils.ROTATION_90) {
-                captureButton.animate().rotation(90).start();
-                videoCapture.animate().rotation(90).start();
-            } else if (rotation == Utils.ROTATION_270) {
-                captureButton.animate().rotation(-90).start();
-                videoCapture.animate().rotation(-90).start();
+        mainPresenter.fetchFromSdCard(ALL);
+        Subscription rotationSubscription = customCamera._getRotation().subscribe(currentRotation
+                -> {
+            if (previousRotation != currentRotation) {
+                if (currentRotation == ROTATION_O) {
+                    captureButton.animate().rotation(0);
+                    videoCapture.animate().rotation(0);
+                } else if (currentRotation == ROTATION_90) {
+                    captureButton.animate().rotation(90).start();
+                    videoCapture.animate().rotation(90).start();
+                } else if (currentRotation == ROTATION_270) {
+                    captureButton.animate().rotation(-90).start();
+                    videoCapture.animate().rotation(-90).start();
+                }
+                previousRotation = currentRotation;
+                Log.d("rotation blocked", "called");
             }
         });
-        customCamera._getTakePictureSubject().subscribe(safeToTakePicture -> {
+        compositeSubscription.add(rotationSubscription);
+        Subscription takePictureSubscriber = customCamera._getTakePictureSubject().subscribe
+                (safeToTakePicture -> {
             this.safeToTakePicture = safeToTakePicture;
         });
+        compositeSubscription.add(takePictureSubscriber);
+
 
     }
 
@@ -527,9 +504,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void updateAdapter(List<MediaDetails> mediaDetails) {
         recyclerViewAdapter.setMediaDetailsList(mediaDetails);
-//        gridViewAdapter.setMediaDetails(mediaDetails);
-//        recyclerGridView.setSmoothScrollbarEnabled(false);
-//        recyclerGridView.post(() -> recyclerGridView.setSelection(0));
     }
 
     @Override
@@ -546,13 +520,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onFileAdded(MediaDetails mediaDetails) {
         findViewById(R.id.design_bottom_sheet).requestLayout();
-        File file = new File(mediaDetails.getFilePath());
-        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        intent.setData(Uri.fromFile(file));
-        sendBroadcast(intent);
-//        if (gridViewAdapter.getMediaType().equals(mediaDetails.getMediaType())) {
-//            gridViewAdapter.addImage(mediaDetails, 0);
-//        }
         if (recyclerViewAdapter.getMediaType().equals(mediaDetails.getMediaType())) {
             recyclerViewAdapter.addItem(mediaDetails, 0);
         }
@@ -576,13 +543,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         height = displayMetrics.heightPixels;
+        recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight();
         switch (newConfig.orientation) {
             case Configuration.ORIENTATION_LANDSCAPE:
-//                recyclerGridView.setNumColumns(5);
+                gridLayoutManager.setSpanCount(5);
                 break;
             default:
-                recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight();
-//                recyclerGridView.setNumColumns(3);
+                gridLayoutManager.setSpanCount(3);
         }
 
 
@@ -591,7 +558,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 123) {
+        if (requestCode == DELETE_FILES) {
             if (data != null) {
                 ArrayList<Integer> indexes = data.getIntegerArrayListExtra("indexes");
                 if (indexes != null && indexes.size() != 0) {
@@ -600,18 +567,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
             }
-        } else if (requestCode == 321) {
-            if (firebaseAuth.getCurrentUser() != null)
-                Log.d("email", firebaseAuth.getCurrentUser().getEmail());
-            if (firebaseAuth.getCurrentUser() != null) {
-                if (databaseReference.getRef().child(firebaseAuth.getCurrentUser().getUid()) ==
-                        null) {
-                    databaseReference.getRef().setValue((firebaseAuth.getCurrentUser().getUid()));
+        }
+        if (requestCode == RC_SIGN_IN) {
+            IdpResponse response = IdpResponse.fromResultIntent(data);
 
+            // Successfully signed in
+            if (resultCode == ResultCodes.OK) {
+
+                return;
+            } else {
+                // Sign in failed
+                if (response == null) {
+                    // User pressed back button
+                    return;
+                }
+
+                if (response.getErrorCode() == ErrorCodes.NO_NETWORK) {
+                    return;
+                }
+
+                if (response.getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
+                    return;
                 }
             }
-        }
 
+        }
     }
 
     public boolean isRotationEnabled() {
@@ -661,7 +641,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          */
         else {
             Intent intent;
-            if (details.getMediaType().equals(Utils.IMAGE)) {
+            if (details.getMediaType().equals(IMAGE)) {
                 intent = new Intent(MainActivity.this, FullImageActivity.class);
                 intent.putExtra("position", position);
 
@@ -676,7 +656,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     /**
      * Handles LongPress on RecyclerViewItem Click
-     * @param view that is long pressed
+     *
+     * @param view     that is long pressed
      * @param position position of the view.
      */
     @Override
@@ -692,6 +673,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             tickView.put(position, view);
         }
     }
+
+    @Override
+    public void moveToLogin() {
+        startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder()
+                .setProviders(providers).build(), 321);
+    }
+
+    @Override
+    public void loggedIn() {
+        Log.d("already logged in", "true");
+    }
+
+    private void initMVP() {
+        mSdCardInteractorImpl = new SdCardInteractorImpl();
+        mainPresenterImpl = new MainPresenterImpl(this, mSdCardInteractorImpl);
+        mainPresenter = mainPresenterImpl;
+        presenterAdapter = mainPresenterImpl;
+        onItemClick = mainPresenterImpl;
+        firebaseLoginPresenter = new FirebaseLoginImpl(this);
+
+    }
+
+
 }
 
 

@@ -29,7 +29,6 @@ public interface MainPresenter {
     }
     interface  Adapter{
         void updateAdapter(String mediaType);
-
     }
 
 

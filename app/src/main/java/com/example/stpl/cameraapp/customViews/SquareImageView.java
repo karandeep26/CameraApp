@@ -24,6 +24,7 @@ public class SquareImageView extends ImageView {
         super.onMeasure(widthMeasureSpec, widthMeasureSpec);
 
         int width = getMeasuredWidth();
+
         int height = getMeasuredHeight();
 
         // Optimization so we don't measure twice unless we need to
@@ -31,5 +32,6 @@ public class SquareImageView extends ImageView {
             setMeasuredDimension(width, width);
         }
     }
+
 
 }
