@@ -8,13 +8,12 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.customViews.SquareImageView;
 import com.example.stpl.cameraapp.models.MediaDetails;
-import com.squareup.picasso.Picasso;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,27 +47,24 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(ViewHolder holder, int position) {
         MediaDetails mediaDetails = this.mediaDetailsList.get(position);
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
-            Picasso.with(mContext).load("file://" + new File(mediaDetails.getFilePath()))
-                    .tag(mContext).centerCrop().fit().placeholder(R.drawable.placeholder)
+//            Picasso.with(mContext).load("file://" + new File(mediaDetails.getFilePath()))
+//                    .tag(mContext).fit()
+//                    .placeholder(R.drawable.placeholder)
+//                    .into(holder.imageView);
+            Glide.with(mContext).load(mediaDetails.getFilePath()).fitCenter().centerCrop()
+                    .placeholder(R.drawable.placeholder)
                     .into(holder.imageView);
             holder.playButton.setVisibility(View.INVISIBLE);
         } else {
-            Picasso.with(mContext).load("video://" + mediaDetails.getFilePath())
-                    .tag(mContext).centerCrop().fit().placeholder(R.drawable.placeholder)
+            Glide.with(mContext).load(mediaDetails.getFilePath()).asBitmap().fitCenter()
+                    .centerCrop()
+                    .placeholder(R.drawable.placeholder)
                     .into(holder.imageView);
+//            Picasso.with(mContext).load("video://" + mediaDetails.getFilePath())
+//                    .tag(mContext).centerCrop().fit().placeholder(R.drawable.placeholder)
+//                    .into(holder.imageView);
             holder.playButton.setVisibility(View.VISIBLE);
         }
-
-//        if(multiMode){
-//            holder.tickView.setVisibility(View.VISIBLE);
-//        }
-//        if (mediaDetails.isChecked()) {
-//            holder.tickView.setVisibility(View.VISIBLE);
-//        } else {
-//            holder.tickView.setVisibility(View.GONE);
-//        }
-
-
     }
 
     @Override

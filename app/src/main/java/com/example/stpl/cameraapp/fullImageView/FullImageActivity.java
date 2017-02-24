@@ -20,7 +20,6 @@ import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
@@ -59,7 +58,6 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
         Intent intent = getIntent();
         position = intent.getIntExtra("position", -1);
         Log.d("position", position + "");
-        mViewPager.setOffscreenPageLimit(2);
         mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
         mViewPager.setOnTouchListener(new View.OnTouchListener() {
             private float pointX;
@@ -103,21 +101,21 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
 
 
-        StorageReference storageRef = FirebaseStorage.getInstance().getReferenceFromUrl
-                ("gs://selfie-geek.appspot.com");
-        uploadReference = storageRef.child("upload.jpg");
-
-        if(firebaseAuth.getCurrentUser()!=null){
-            firebaseAuth.signOut();
-        }
-        if(firebaseAuth.getCurrentUser()==null){
-            startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().
-                    setIsSmartLockEnabled(false).setProviders(providers).build()
-                    ,123);
-        }
-        else{
-            firebaseAuth.getCurrentUser().getEmail();
-        }
+//        StorageReference storageRef = FirebaseStorage.getInstance().getReferenceFromUrl
+//                ("gs://selfie-geek.appspot.com");
+//        uploadReference = storageRef.child("upload.jpg");
+//
+//        if(firebaseAuth.getCurrentUser()!=null){
+//            firebaseAuth.signOut();
+//        }
+//        if(firebaseAuth.getCurrentUser()==null){
+//            startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().
+//                    setIsSmartLockEnabled(false).setProviders(providers).build()
+//                    ,123);
+//        }
+//        else{
+//            firebaseAuth.getCurrentUser().getEmail();
+//        }
 
     }
 

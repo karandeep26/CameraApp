@@ -104,6 +104,25 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         providers = new ArrayList<>();
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
+//        String[] projection={ MediaStore.Images.Media._ID};
+//        Cursor mediaCursor = getContentResolver().query(MediaStore.Files.getContentUri
+//                        ("external"),
+//                projection,
+//                MediaStore.Images.Media.DATA + " like ? ",
+//                new String[]{"%"+ mediaStorageDir+"%"},
+//                null);
+//        if(mediaCursor!=null) {
+//            mediaCursor.getCount();
+//            if (mediaCursor.moveToFirst()) {
+//                do {
+//                    int index = mediaCursor.getColumnIndex(MediaStore.Images.Media._ID);
+//                    ThumbnailUtils.OPTIONS_RECYCLE_INPUT
+//
+//                }
+//                while (mediaCursor.moveToNext());
+//                mediaCursor.close();
+//            }
+//        }
         /**
          * Initialize MVP components
          */
@@ -396,6 +415,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
          * Exit the Activity
          */
         else {
+            Picasso.with(this).cancelTag(this);
             finish();
         }
     }

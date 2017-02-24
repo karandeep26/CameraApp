@@ -11,7 +11,7 @@ import java.io.File;
 
 
 public class Utils {
-    //                static public File mediaStorageDir = new File(
+    //                    static public File mediaStorageDir = new File(
 //            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
 //            "MyCameraApp");
     static public File mediaStorageDir = new File(
@@ -62,8 +62,7 @@ public class Utils {
         return inSampleSize;
     }
 
-    public static Bitmap decodeSampledBitmapFromFile(String fileName,
-                                                     int reqWidth, int reqHeight) {
+    static Bitmap decodeSampledBitmapFromFile(String fileName, int reqWidth, int reqHeight) {
 
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();

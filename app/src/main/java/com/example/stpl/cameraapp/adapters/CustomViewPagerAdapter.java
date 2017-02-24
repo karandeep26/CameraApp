@@ -1,7 +1,11 @@
 package com.example.stpl.cameraapp.adapters;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.support.v4.view.PagerAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +20,7 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.util.ArrayList;
+
 
 
 public class CustomViewPagerAdapter extends PagerAdapter {
@@ -35,9 +40,22 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
         ((View)object).startAnimation(fadeOut);
+        ImageView imageView = (ImageView) ((View) object).findViewById(R.id.image_item);
         container.removeView((View) object);
 
+        BitmapDrawable bmpDrawable = (BitmapDrawable) imageView.getDrawable();
+        if (bmpDrawable != null) {
+            Bitmap bitmap = bmpDrawable.getBitmap();
+            if (bitmap != null && !bitmap.isRecycled()) {
+                // This is the important part
+                bitmap.recycle();
+                bitmap = null;
+                Log.d("on destroy", position + "");
 
+
+            }
+        }
+        object = null;
     }
 
     @Override
@@ -54,8 +72,18 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup container, int position) {
         View itemView = mLayoutInflater.inflate(R.layout.viewpager_item, container, false);
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
+        Drawable drawable = imageView.getDrawable();
+        if (drawable != null) {
+            ((BitmapDrawable) drawable).getBitmap().recycle();
+            Log.d("recycle", "true");
+        }
         Picasso.with(mContext).load("file://" + new File(mediaDetails.get(position)
-                .getFilePath())).resize(Utils.width, 0).into(imageView);
+                .getFilePath())).tag(container.getContext()).centerInside().
+                resize(Utils.width, Utils.height).onlyScaleDown().into(imageView);
+
+//        Glide.with(mContext).load(mediaDetails.get(position).getFilePath())
+//                .override(Utils.width,Utils.height).fitCenter()
+//                .into(imageView);
         container.addView(itemView);
         itemView.setTag("myView" + position);
         return itemView;
