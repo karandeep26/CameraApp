@@ -296,13 +296,8 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             orientationListener.enable();
         }
         if (mSupportedPreviewSizes != null) {
-            if(shouldMeasure) {
                 mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
-                if(height>0 && width>0){
-                    shouldMeasure=false;
-                }
 
-            }
 
         }
 

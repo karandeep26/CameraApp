@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
+import com.bumptech.glide.Glide;
 import com.example.stpl.cameraapp.BaseActivity;
 import com.example.stpl.cameraapp.FileListener;
 import com.example.stpl.cameraapp.R;
@@ -88,12 +89,6 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
                 return false;
             }
         });
-
-
-    }
-
-    @Override
-    protected void onStart() {
         super.onStart();
         visibility = View.INVISIBLE;
         firebaseAuth = FirebaseAuth.getInstance();
@@ -117,6 +112,7 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
 //            firebaseAuth.getCurrentUser().getEmail();
 //        }
 
+
     }
 
     public void toggleTopPanelVisibility() {
@@ -133,6 +129,9 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     @Override
     protected void onPause() {
         super.onPause();
+//        Glide.with(this).pauseRequests();
+
+
     }
 
     @Override
@@ -182,6 +181,7 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
         Intent intent = new Intent();
         intent.putIntegerArrayListExtra("indexes", indexes);
         setResult(123, intent);
+        Glide.with(this).pauseRequests();
         super.onBackPressed();
 
     }
@@ -211,7 +211,14 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
     }
-//    public void makeFullScreen() {
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+
+    }
+    //    public void makeFullScreen() {
 //        getWindow().getDecorView().setSystemUiVisibility(
 //                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
 //                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION

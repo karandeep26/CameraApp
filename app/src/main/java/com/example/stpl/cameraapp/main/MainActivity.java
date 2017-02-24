@@ -28,6 +28,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.example.stpl.cameraapp.BaseActivity;
 import com.example.stpl.cameraapp.CustomCamera;
 import com.example.stpl.cameraapp.FileListener;
@@ -153,8 +154,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
          * Calculate Screen Height
          */
         DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
         height = displayMetrics.heightPixels;
+        Log.d("*********", height + "");
 
     }
 
@@ -275,7 +277,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             customCamera.releaseCamera();
             compositeSubscription.unsubscribe();
         }
-        Picasso.with(this).cancelTag(this);
+        Glide.with(this).pauseRequests();
+//        Picasso.with(this).cancelTag(this);
     }
 
 
@@ -356,6 +359,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
+                    Glide.with(MainActivity.this).resumeRequests();
                     bottomSheet.requestLayout();
                     bottomSheet.invalidate();
                     recyclerGridView.smoothScrollToPosition(0);
@@ -363,8 +367,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
                 } else {
+                    Glide.with(MainActivity.this).pauseRequests();
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
                 }
             }
 
@@ -373,8 +377,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             }
         };
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
-        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() ->
-                recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight());
+        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight();
+            Log.d("recyclerview", recyclerGridView.getLayoutParams().height + "");
+
+        });
         imageGestureDetector = new GestureDetectorCompat(this,
                 new MyGestureDetector(gridLayoutManager, bottomSheetBehavior));
         mainPresenter.checkForPermissions();
@@ -415,7 +422,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
          * Exit the Activity
          */
         else {
-            Picasso.with(this).cancelTag(this);
+            Glide.with(this).pauseRequests();
+//            Picasso.with(this).cancelTag(this);
             finish();
         }
     }
@@ -423,7 +431,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+
         if (customCamera != null && customCamera.getCamera() != null) {
             customCamera.releaseCamera();
         }
@@ -432,7 +440,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             mainPresenter = null;
         }
         compositeSubscription.unsubscribe();
-        Picasso.with(this).cancelTag(this);
+        super.onDestroy();
+//        Picasso.with(this).cancelTag(this);
 
     }
 
