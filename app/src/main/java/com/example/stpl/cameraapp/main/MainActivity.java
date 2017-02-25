@@ -46,7 +46,6 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.ErrorCodes;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.ResultCodes;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -156,7 +155,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
         height = displayMetrics.heightPixels;
-        Log.d("*********", height + "");
 
     }
 
@@ -278,7 +276,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             compositeSubscription.unsubscribe();
         }
         Glide.with(this).pauseRequests();
-//        Picasso.with(this).cancelTag(this);
     }
 
 
@@ -327,7 +324,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
      */
     private void init() {
         compositeSubscription = new CompositeSubscription();
-        Picasso.with(this).setIndicatorsEnabled(true);
         recyclerViewAdapter = new RecyclerViewAdapter();
         gridLayoutManager = new GridLayoutManager(this, 3);
         recyclerGridView.setLayoutManager(gridLayoutManager);
@@ -362,11 +358,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                     Glide.with(MainActivity.this).resumeRequests();
                     bottomSheet.requestLayout();
                     bottomSheet.invalidate();
-                    recyclerGridView.smoothScrollToPosition(0);
                     recyclerGridView.requestLayout();
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
                 } else {
+                    recyclerGridView.scrollToPosition(0);
+
                     Glide.with(MainActivity.this).pauseRequests();
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 }
@@ -377,11 +374,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             }
         };
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
-        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight();
-            Log.d("recyclerview", recyclerGridView.getLayoutParams().height + "");
-
-        });
+        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() ->
+                recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight());
         imageGestureDetector = new GestureDetectorCompat(this,
                 new MyGestureDetector(gridLayoutManager, bottomSheetBehavior));
         mainPresenter.checkForPermissions();
@@ -423,7 +417,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
          */
         else {
             Glide.with(this).pauseRequests();
-//            Picasso.with(this).cancelTag(this);
             finish();
         }
     }
@@ -441,7 +434,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         }
         compositeSubscription.unsubscribe();
         super.onDestroy();
-//        Picasso.with(this).cancelTag(this);
 
     }
 

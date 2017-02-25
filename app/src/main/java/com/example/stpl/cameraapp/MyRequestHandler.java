@@ -3,6 +3,7 @@ package com.example.stpl.cameraapp;
 import android.graphics.Bitmap;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Request;
@@ -18,6 +19,7 @@ class MyRequestHandler extends RequestHandler {
     @Override
     public boolean canHandleRequest(Request data) {
         String scheme = data.uri.getScheme();
+        Log.d("request creator", "called");
         return VIDEO_SCHEME.equals(scheme) || IMAGE_SCHEME.equals(scheme);
     }
 

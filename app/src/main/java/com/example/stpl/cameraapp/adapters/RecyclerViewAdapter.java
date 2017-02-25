@@ -47,10 +47,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(ViewHolder holder, int position) {
         MediaDetails mediaDetails = this.mediaDetailsList.get(position);
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
-//            Picasso.with(mContext).load("file://" + new File(mediaDetails.getFilePath()))
-//                    .tag(mContext).fit()
-//                    .placeholder(R.drawable.placeholder)
-//                    .into(holder.imageView);
             Glide.with(mContext).load(mediaDetails.getFilePath()).fitCenter().centerCrop()
                     .placeholder(R.drawable.placeholder)
                     .into(holder.imageView);
@@ -60,10 +56,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     .centerCrop()
                     .placeholder(R.drawable.placeholder)
                     .into(holder.imageView);
-//            Picasso.with(mContext).load("video://" + mediaDetails.getFilePath())
-//                    .tag(mContext).centerCrop().fit().placeholder(R.drawable.placeholder)
-//                    .into(holder.imageView);
-            holder.playButton.setVisibility(View.VISIBLE);
+
         }
     }
 

@@ -3,7 +3,6 @@ package com.example.stpl.cameraapp.adapters;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.support.v4.view.PagerAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -72,15 +71,6 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup container, int position) {
         View itemView = mLayoutInflater.inflate(R.layout.viewpager_item, container, false);
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
-        Drawable drawable = imageView.getDrawable();
-        if (drawable != null) {
-            ((BitmapDrawable) drawable).getBitmap().recycle();
-            Log.d("recycle", "true");
-        }
-//        Picasso.with(mContext).load("file://" + new File(mediaDetails.get(position)
-//                .getFilePath())).tag(container.getContext()).centerInside().
-//                resize(Utils.width, Utils.height).onlyScaleDown().into(imageView);
-
         Glide.with(mContext).load(mediaDetails.get(position).getFilePath())
                 .override(Utils.width, Utils.height).fitCenter()
                 .into(imageView);
