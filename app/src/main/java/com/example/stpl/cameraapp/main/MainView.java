@@ -16,6 +16,7 @@ interface MainView extends FileListener {
 
 
     }
+
     void permissionAvailable();
 
     boolean addPermission(List<String> permissionsList, String permission);

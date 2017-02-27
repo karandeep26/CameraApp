@@ -22,11 +22,14 @@ public interface SdCardInteractor {
     interface OnFinishedListener {
         void onFinished();
     }
-    interface Selection{
+
+    interface Selection {
         void removeFromSelection(MediaDetails mediaDetails);
 
         void addToSelection(MediaDetails mediaDetails);
+
         boolean isSelectionMode();
+
         void clearAll();
 
         ArrayList<MediaDetails> getSelectedItems();

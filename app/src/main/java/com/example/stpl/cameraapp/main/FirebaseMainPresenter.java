@@ -5,7 +5,7 @@ package com.example.stpl.cameraapp.main;
  */
 
 public interface FirebaseMainPresenter {
-    void uploadToCloud();
+    void uploadToCloud(String filename);
 
     void downloadFromCloud();
 }

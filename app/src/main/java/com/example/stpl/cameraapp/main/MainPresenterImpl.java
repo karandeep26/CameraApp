@@ -107,6 +107,10 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
         }
     }
 
+    public MediaDetails getSelected() {
+        return selection.getSelectedItems().get(0);
+    }
+
     @Override
     public void onDestroy() {
         if (compositeSubscription != null && !compositeSubscription.isUnsubscribed()) {

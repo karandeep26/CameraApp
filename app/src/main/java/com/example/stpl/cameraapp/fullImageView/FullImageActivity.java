@@ -92,25 +92,8 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
         super.onStart();
         visibility = View.INVISIBLE;
         firebaseAuth = FirebaseAuth.getInstance();
-        List<AuthUI.IdpConfig> providers =new ArrayList<>();
+        List<AuthUI.IdpConfig> providers = new ArrayList<>();
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
-
-
-//        StorageReference storageRef = FirebaseStorage.getInstance().getReferenceFromUrl
-//                ("gs://selfie-geek.appspot.com");
-//        uploadReference = storageRef.child("upload.jpg");
-//
-//        if(firebaseAuth.getCurrentUser()!=null){
-//            firebaseAuth.signOut();
-//        }
-//        if(firebaseAuth.getCurrentUser()==null){
-//            startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().
-//                    setIsSmartLockEnabled(false).setProviders(providers).build()
-//                    ,123);
-//        }
-//        else{
-//            firebaseAuth.getCurrentUser().getEmail();
-//        }
 
 
     }
@@ -129,7 +112,6 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     @Override
     protected void onPause() {
         super.onPause();
-//        Glide.with(this).pauseRequests();
 
 
     }
@@ -191,7 +173,7 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
         indexes.add(currentItem);
         deleteClicked = true;
         customViewPagerAdapter.removeItemAt(currentItem);
-        if(mViewPager.getChildCount()==0){
+        if (mViewPager.getChildCount() == 0) {
             onBackPressed();
         }
 

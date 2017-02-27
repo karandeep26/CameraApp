@@ -13,6 +13,7 @@ class FullImagePresenterImpl implements FullImageInterface {
     private FullImageView fullImageView;
     private SdCardInteractor sdCardInteractor;
     private FileListener fileListener;
+
     FullImagePresenterImpl(FullImageView fullImageView, SdCardInteractor sdCardInteractor) {
         this.fullImageView = fullImageView;
         this.sdCardInteractor = sdCardInteractor;

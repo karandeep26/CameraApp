@@ -1,4 +1,4 @@
-package com.example.stpl.cameraapp.main;
+package com.example.stpl.cameraapp.login;
 
 /**
  * Created by stpl on 2/23/2017.
@@ -6,5 +6,5 @@ package com.example.stpl.cameraapp.main;
 public interface FirebaseLoginView {
     void moveToLogin();
 
-    void loggedIn();
+    void loggedIn(String user);
 }

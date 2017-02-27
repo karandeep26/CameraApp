@@ -20,12 +20,11 @@ import com.example.stpl.cameraapp.models.MediaDetails;
 import java.util.ArrayList;
 
 
-
 public class CustomViewPagerAdapter extends PagerAdapter {
     private Context mContext;
     private LayoutInflater mLayoutInflater;
     private ArrayList<MediaDetails> mediaDetails;
-    private Animation  fadeOut;
+    private Animation fadeOut;
 
     public CustomViewPagerAdapter(Context mContext, ArrayList<MediaDetails> mediaDetails) {
         this.mediaDetails = mediaDetails;
@@ -37,7 +36,7 @@ public class CustomViewPagerAdapter extends PagerAdapter {
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        ((View)object).startAnimation(fadeOut);
+        ((View) object).startAnimation(fadeOut);
         ImageView imageView = (ImageView) ((View) object).findViewById(R.id.image_item);
         container.removeView((View) object);
         imageView.setImageDrawable(null);

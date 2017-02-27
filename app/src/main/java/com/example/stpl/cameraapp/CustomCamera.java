@@ -48,7 +48,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     private List<Camera.Size> mSupportedPreviewSizes;
     public Camera.Size mPreviewSize;
     private int camId;
-    PublishSubject<Boolean> takePictureSubject= PublishSubject.create();
+    PublishSubject<Boolean> takePictureSubject = PublishSubject.create();
     MainPresenter mainPresenter;
     int rotation;
     int correctOrientation;
@@ -56,7 +56,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     Camera.Parameters parameters;
     boolean isCameraSet = false;
     Configuration configuration;
-    boolean shouldMeasure=true;
+    boolean shouldMeasure = true;
     PublishSubject<Integer> rotationSubject = PublishSubject.create();
 
     public Observable<Integer> _getRotation() {
@@ -64,7 +64,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     }
 
 
-    public Observable<Boolean> _getTakePictureSubject(){
+    public Observable<Boolean> _getTakePictureSubject() {
         return takePictureSubject;
     }
 
@@ -88,32 +88,32 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     }
 
 
-
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         if (camera == null) {
             camera = openFrontFacingCameraGingerbread();
         }
-            try {
-                camera.setPreviewDisplay(holder);
+        try {
+            camera.setPreviewDisplay(holder);
 
-                if(((MainActivity)activity).bottomSheetBehavior.getState()==
-                        BottomSheetBehavior.STATE_EXPANDED && ((MainActivity)activity).isRotationEnabled()){
-                        if(orientationListener.getRotation()==Utils.ROTATION_O){
-                            setCamera();
-                        }
-                    }
-                else {
-                    ((Activity) activity).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            if (((MainActivity) activity).bottomSheetBehavior.getState() ==
+                    BottomSheetBehavior.STATE_EXPANDED && ((MainActivity) activity)
+                    .isRotationEnabled()) {
+                if (orientationListener.getRotation() == Utils.ROTATION_O) {
                     setCamera();
                 }
-                Log.d("surface created","true");
+            } else {
+                ((Activity) activity).setRequestedOrientation(ActivityInfo
+                        .SCREEN_ORIENTATION_PORTRAIT);
+                setCamera();
+            }
+            Log.d("surface created", "true");
 //            for (Camera.Size size : mSupportedPreviewSizes) {
 //                Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
 //            }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
     }
@@ -122,20 +122,21 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 
         try {
-            if(camera!=null)
-            camera.setPreviewDisplay(holder);
+            if (camera != null)
+                camera.setPreviewDisplay(holder);
 
-            if(((MainActivity)activity).bottomSheetBehavior.getState()==
-                    BottomSheetBehavior.STATE_EXPANDED && ((MainActivity)activity).isRotationEnabled()){
-                if(orientationListener.getRotation()==Utils.ROTATION_O){
+            if (((MainActivity) activity).bottomSheetBehavior.getState() ==
+                    BottomSheetBehavior.STATE_EXPANDED && ((MainActivity) activity)
+                    .isRotationEnabled()) {
+                if (orientationListener.getRotation() == Utils.ROTATION_O) {
                     setCamera();
                 }
-            }
-            else {
-                ((Activity) activity).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            } else {
+                ((Activity) activity).setRequestedOrientation(ActivityInfo
+                        .SCREEN_ORIENTATION_PORTRAIT);
                 setCamera();
             }
-            Log.d("surface created","true");
+            Log.d("surface created", "true");
 //            for (Camera.Size size : mSupportedPreviewSizes) {
 //                Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
 //            }
@@ -229,15 +230,15 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
                     e.printStackTrace();
                 }
             }
-                camera1.stopPreview();
-                TimerTask task = new TimerTask() {
-                    @Override
-                    public void run() {
-                        camera1.startPreview();
-                        takePictureSubject.onNext(true);
-                    }
-                };
-                Timer timer = new Timer();
+            camera1.stopPreview();
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    camera1.startPreview();
+                    takePictureSubject.onNext(true);
+                }
+            };
+            Timer timer = new Timer();
             timer.schedule(task, 500);
         });
     }
@@ -291,12 +292,12 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
 
         setMeasuredDimension(width, height);
 
-        if(orientationListener==null){
-            orientationListener=new OrientationListener(activity);
+        if (orientationListener == null) {
+            orientationListener = new OrientationListener(activity);
             orientationListener.enable();
         }
         if (mSupportedPreviewSizes != null) {
-                mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
+            mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
 
 
         }
@@ -357,7 +358,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             surfaceCreated = true;
             parameters = camera.getParameters();
             correctOrientation = getCorrectCameraOrientation(cameraInfo);
-            Log.d("mHeight",mPreviewSize.height+"");
+            Log.d("mHeight", mPreviewSize.height + "");
             parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
             parameters.setPictureSize(mPreviewSize.width, mPreviewSize.height);
             camera.setDisplayOrientation(correctOrientation);
@@ -377,7 +378,6 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
     }
 
 
-
     public Camera getCamera() {
         return camera;
     }
@@ -387,6 +387,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         super.onConfigurationChanged(newConfig);
         configuration = newConfig;
     }
+
     class OrientationListener extends OrientationEventListener {
         private int rotation = 0;
 

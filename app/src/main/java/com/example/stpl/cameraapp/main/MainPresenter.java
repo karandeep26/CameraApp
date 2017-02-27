@@ -12,6 +12,8 @@ public interface MainPresenter {
 
     void deleteFromSdCard();
 
+    public MediaDetails getSelected();
+
     void onDestroy();
 
     Subscriber startTimer();
@@ -23,11 +25,14 @@ public interface MainPresenter {
     void getCurrentSavedVideo(String fileName);
 
     void removeSelectedItems();
+
     boolean modifySelection(MediaDetails mediaDetail);
-    interface OnItemClick{
+
+    interface OnItemClick {
         boolean isSelectionMode();
     }
-    interface  Adapter{
+
+    interface Adapter {
         void updateAdapter(String mediaType);
     }
 

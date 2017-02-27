@@ -18,6 +18,7 @@ public class MyGestureDetector extends android.view.GestureDetector.SimpleOnGest
         this.gridLayoutManager = gridLayoutManager;
         this.bottomSheetBehavior = bottomSheetBehavior;
     }
+
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
         float diffY = e2.getY() - e1.getY();

@@ -9,6 +9,7 @@ public class MediaDetails {
         this.filePath = filePath;
         mediaType = type;
     }
+
     public String getFilePath() {
         return filePath;
     }

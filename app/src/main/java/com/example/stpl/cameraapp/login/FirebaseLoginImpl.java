@@ -1,13 +1,13 @@
-package com.example.stpl.cameraapp.main;
+package com.example.stpl.cameraapp.login;
 
 import com.google.firebase.auth.FirebaseAuth;
 
 
-class FirebaseLoginImpl implements FirebaseLoginPresenter {
+public class FirebaseLoginImpl implements FirebaseLoginPresenter {
     private FirebaseAuth firebaseAuth;
     private FirebaseLoginView firebaseLoginView;
 
-    FirebaseLoginImpl(FirebaseLoginView firebaseLoginView) {
+    public FirebaseLoginImpl(FirebaseLoginView firebaseLoginView) {
         firebaseAuth = FirebaseAuth.getInstance();
         this.firebaseLoginView = firebaseLoginView;
     }
@@ -17,7 +17,7 @@ class FirebaseLoginImpl implements FirebaseLoginPresenter {
         if (firebaseAuth.getCurrentUser() == null) {
             firebaseLoginView.moveToLogin();
         } else {
-            firebaseLoginView.loggedIn();
+            firebaseLoginView.loggedIn(firebaseAuth.getCurrentUser().getEmail());
         }
 
     }

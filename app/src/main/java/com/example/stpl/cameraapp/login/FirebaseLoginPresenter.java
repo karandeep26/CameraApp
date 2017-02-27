@@ -1,4 +1,4 @@
-package com.example.stpl.cameraapp.main;
+package com.example.stpl.cameraapp.login;
 
 /**
  * Created by stpl on 2/23/2017.

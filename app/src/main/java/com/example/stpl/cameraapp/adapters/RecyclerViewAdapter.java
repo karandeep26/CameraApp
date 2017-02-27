@@ -52,10 +52,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     .into(holder.imageView);
             holder.playButton.setVisibility(View.INVISIBLE);
         } else {
-            Glide.with(mContext).load(mediaDetails.getFilePath()).asBitmap().fitCenter()
+            Glide.with(mContext).load(mediaDetails.getFilePath()).fitCenter()
                     .centerCrop()
                     .placeholder(R.drawable.placeholder)
                     .into(holder.imageView);
+            holder.playButton.setVisibility(View.VISIBLE);
+
 
         }
     }
@@ -126,4 +128,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return mediaDetailsList.get(position);
     }
 
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+//    @Override
+//    public void onViewRecycled(ViewHolder holder) {
+//        holder.imageView.setImageDrawable(null);
+//    }
 }

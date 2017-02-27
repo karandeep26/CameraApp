@@ -1,16 +1,12 @@
 package com.example.stpl.cameraapp.activity;
 
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 
 import com.example.stpl.cameraapp.R;
-import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.customViews.CustomVideoView;
-
-import java.io.File;
 
 public class PlayVideoActivity extends AppCompatActivity {
 
