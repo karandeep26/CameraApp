@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
+import com.example.stpl.cameraapp.fullImageView.FullImageActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 
 import java.util.ArrayList;
@@ -70,7 +71,7 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup container, int position) {
         View itemView = mLayoutInflater.inflate(R.layout.viewpager_item, container, false);
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
-        Glide.with(mContext).load(mediaDetails.get(position).getFilePath())
+        Glide.with(((FullImageActivity) mContext)).load(mediaDetails.get(position).getFilePath())
                 .override(Utils.width, Utils.height).fitCenter()
                 .into(imageView);
         container.addView(itemView);

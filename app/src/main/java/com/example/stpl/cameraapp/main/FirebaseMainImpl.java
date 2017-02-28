@@ -28,8 +28,9 @@ public class FirebaseMainImpl implements FirebaseMainPresenter {
             StorageReference imageRef = storageRef.child(fileName);
 
             UploadTask uploadTask = imageRef.putStream(inputStream);
-            uploadTask.addOnSuccessListener(taskSnapshot ->
-                    Log.d("URL", "**" + taskSnapshot.getDownloadUrl()));
+            uploadTask.addOnSuccessListener(taskSnapshot -> {
+                Log.d("URL", "**" + taskSnapshot.getDownloadUrl());
+            });
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

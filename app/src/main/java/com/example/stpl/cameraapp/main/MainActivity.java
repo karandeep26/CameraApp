@@ -216,7 +216,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                 /**
                  * Restore GridView from the selection mode
                  */
-                recyclerGridView.requestLayout();
                 gridViewButton.setVisibility(View.VISIBLE);
                 menu.setVisibility(View.GONE);
                 break;
@@ -642,7 +641,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     public void onItemClick(View view, int position) {
 
         MediaDetails details = recyclerViewAdapter.getItemAt(position);
-        details.getFilePath();
+
+
         ImageView tick = (ImageView) view.findViewById(R.id.tick);
         /**
          * if items are in selection mode,show/hide display the tick icon

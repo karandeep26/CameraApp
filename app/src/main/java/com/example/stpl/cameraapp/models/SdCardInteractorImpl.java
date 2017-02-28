@@ -1,6 +1,7 @@
 package com.example.stpl.cameraapp.models;
 
 
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 import com.example.stpl.cameraapp.Utils;
@@ -24,12 +25,14 @@ import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
 public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.GetMediaList,
         SdCardInteractor.Selection {
     private ArrayList<MediaDetails> selected;
+    private ArrayList<String> selectedFiles;
 
     public SdCardInteractorImpl() {
 
         selected = new ArrayList<>();
     }
 
+    @SuppressLint("NewApi")
     @Override
     public Observable<List<MediaDetails>> getFromSdCard(String type) {
         File file = new File(mediaStorageDir.getPath());
@@ -160,6 +163,10 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
     @Override
     public ArrayList<MediaDetails> getSelectedItems() {
         return selected;
+    }
+
+    public ArrayList<String> getSelectedFiles() {
+        return selectedFiles;
     }
 }
 
