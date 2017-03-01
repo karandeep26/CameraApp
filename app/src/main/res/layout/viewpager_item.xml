@@ -2,6 +2,8 @@
 
 
 <ImageView
+    android:transitionName="image"
+
     android:adjustViewBounds="true"
     android:id="@+id/image_item"
     android:layout_width="match_parent"

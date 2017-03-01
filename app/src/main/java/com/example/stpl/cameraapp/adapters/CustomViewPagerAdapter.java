@@ -3,6 +3,8 @@ package com.example.stpl.cameraapp.adapters;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.support.v4.view.PagerAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -67,13 +69,16 @@ public class CustomViewPagerAdapter extends PagerAdapter {
         return view == object;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         View itemView = mLayoutInflater.inflate(R.layout.viewpager_item, container, false);
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
+        imageView.setTransitionName(imageView.getTransitionName() + position);
         Glide.with(((FullImageActivity) mContext)).load(mediaDetails.get(position).getFilePath())
                 .override(Utils.width, Utils.height).fitCenter()
                 .into(imageView);
+
         container.addView(itemView);
         itemView.setTag("myView" + position);
         return itemView;

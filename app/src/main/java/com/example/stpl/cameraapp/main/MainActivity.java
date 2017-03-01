@@ -7,12 +7,15 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
@@ -75,6 +78,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         FileListener, RecyclerItemClickListener.OnItemClickListener, MainView, MainView.UpdateView,
         FirebaseLoginView {
     int previousRotation = -1;
+    boolean visible = false;
     CompositeSubscription compositeSubscription;
     boolean recording = false;
     TextView time;
@@ -102,6 +106,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     GridLayoutManager gridLayoutManager;
     FirebaseLoginPresenter firebaseLoginPresenter;
     FirebaseMainPresenter firebaseMainPresenter;
+    private View previousView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -637,13 +642,17 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
      * @param position of the clicked View
      */
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void onItemClick(View view, int position) {
+    public void onItemClick(View view, int position, float x, float y) {
 
         MediaDetails details = recyclerViewAdapter.getItemAt(position);
 
 
         ImageView tick = (ImageView) view.findViewById(R.id.tick);
+        ActivityOptionsCompat options = null;
+
+
         /**
          * if items are in selection mode,show/hide display the tick icon
          */
@@ -660,6 +669,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                 gridViewButton.setVisibility(View.VISIBLE);
                 menu.setVisibility(View.GONE);
             }
+
+
         }
 
 
@@ -671,13 +682,20 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             if (details.getMediaType().equals(IMAGE)) {
                 intent = new Intent(MainActivity.this, FullImageActivity.class);
                 intent.putExtra("position", position);
+                ImageView image = (ImageView) view.findViewById(R.id.image);
+                options = ActivityOptionsCompat.
+                        makeSceneTransitionAnimation(this, image, image.getTransitionName() +
+                                position);
+                Log.d("animation name", image.getTransitionName() + position);
 
             } else {
                 intent = new Intent(MainActivity.this, PlayVideoActivity.class);
                 intent.putExtra("path", details.getFilePath());
             }
+            overridePendingTransition(0, 0);
 
-            startActivityForResult(intent, 123);
+            assert options != null;
+            ActivityCompat.startActivityForResult(this, intent, 123, options.toBundle());
         }
     }
 

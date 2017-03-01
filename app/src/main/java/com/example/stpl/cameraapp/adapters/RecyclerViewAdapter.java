@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Environment;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,8 +19,6 @@ import com.example.stpl.cameraapp.main.MainActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -63,11 +60,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     getExternalStoragePublicDirectory
                             (Environment.DIRECTORY_PICTURES) +
                     File.separator + new File(mediaDetails.getFilePath()).getName());
-            if (thumbnailFile.exists()) {
-                Glide.with(((MainActivity) mContext)).load(thumbnailFile).asBitmap()
-                        .placeholder(R.drawable.placeholder).fitCenter().centerCrop()
-                        .into(holder.imageView);
-            } else {
+//            if (thumbnailFile.exists()) {
+//                Log.d("file exist",thumbnailFile.getPath());
+//                Glide.with(((MainActivity) mContext)).load(thumbnailFile).asBitmap()
+//                        .placeholder(R.drawable.placeholder).fitCenter().centerCrop()
+//                        .into(holder.imageView);
+//            } else {
                 Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).asBitmap()
                         .placeholder(R.drawable.placeholder).fitCenter().centerCrop()
                         .into(new BitmapImageViewTarget(holder.imageView) {
@@ -77,33 +75,39 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                 new Thread() {
                                     @Override
                                     public void run() {
-                                        FileOutputStream out = null;
-                                        try {
-                                            out = new FileOutputStream(thumbnailFile);
-                                            resource.compress(Bitmap.CompressFormat.JPEG, 100,
-                                                    out); // bmp is your Bitmap instance
-                                            // PNG is a lossless format, the compression factor
-                                            // (100)
-                                            // is ignored
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        } finally {
-                                            try {
-                                                if (out != null) {
-                                                    Log.d("thumbnail for file", "" + position);
-
-                                                    out.close();
-                                                }
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
+//                                        if (!thumbnailFile.exists()) {
+//                                            FileOutputStream out = null;
+//                                            try {
+//                                                Log.d("thumbnail exist before", thumbnailFile
+// .exists() + "");
+//                                                out = new FileOutputStream(thumbnailFile);
+//                                                resource.compress(Bitmap.CompressFormat.JPEG, 100,
+//                                                        out);
+//                                            } catch (Exception e) {
+//                                                e.printStackTrace();
+//                                            } finally {
+//                                                try {
+//                                                    if (out != null) {
+//                                                        out.close();
+//                                                        Log.d("thumbnail created for",
+//                                                                thumbnailFile.getName());
+//                                                        Log.d("thumbnail exist after",
+//                                                                thumbnailFile.exists() + "");
+//
+//                                                    }
+//                                                } catch (IOException e) {
+//                                                    e.printStackTrace();
+//                                                }
+//                                            }
+//                                        }
                                     }
                                 }.start();
+
                             }
                         });
-            }
+
             holder.playButton.setVisibility(View.INVISIBLE);
+            //}
         } else {
             Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).fitCenter()
                     .centerCrop()
