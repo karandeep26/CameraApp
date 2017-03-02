@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<ImageView
-    android:transitionName="image"
-
+<com.example.stpl.cameraapp.customViews.CircleRectView
     android:adjustViewBounds="true"
     android:id="@+id/image_item"
     android:layout_width="match_parent"

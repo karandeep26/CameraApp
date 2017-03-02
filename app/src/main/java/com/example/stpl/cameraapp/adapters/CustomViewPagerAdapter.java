@@ -1,22 +1,22 @@
 package com.example.stpl.cameraapp.adapters;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.PagerAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.example.stpl.cameraapp.R;
-import com.example.stpl.cameraapp.Utils;
+import com.example.stpl.cameraapp.customViews.CircleRectView;
 import com.example.stpl.cameraapp.fullImageView.FullImageActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 
@@ -28,6 +28,7 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     private LayoutInflater mLayoutInflater;
     private ArrayList<MediaDetails> mediaDetails;
     private Animation fadeOut;
+    boolean animate = true;
 
     public CustomViewPagerAdapter(Context mContext, ArrayList<MediaDetails> mediaDetails) {
         this.mediaDetails = mediaDetails;
@@ -43,20 +44,6 @@ public class CustomViewPagerAdapter extends PagerAdapter {
         ImageView imageView = (ImageView) ((View) object).findViewById(R.id.image_item);
         container.removeView((View) object);
         imageView.setImageDrawable(null);
-
-        BitmapDrawable bmpDrawable = (BitmapDrawable) imageView.getDrawable();
-        if (bmpDrawable != null) {
-            Bitmap bitmap = bmpDrawable.getBitmap();
-            if (bitmap != null && !bitmap.isRecycled()) {
-                // This is the important part
-
-                bitmap = null;
-                Log.d("on destroy", position + "");
-
-
-            }
-        }
-        object = null;
     }
 
     @Override
@@ -73,11 +60,27 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         View itemView = mLayoutInflater.inflate(R.layout.viewpager_item, container, false);
-        ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
-        imageView.setTransitionName(imageView.getTransitionName() + position);
+        CircleRectView imageView = (CircleRectView) itemView.findViewById(R.id.image_item);
+//        imageView.isFullScreen(true);
+        if (imageView.getTransitionName() == null) {
+            imageView.setTransitionName(position + "");
+        }
         Glide.with(((FullImageActivity) mContext)).load(mediaDetails.get(position).getFilePath())
-                .override(Utils.width, Utils.height).fitCenter()
-                .into(imageView);
+                .fitCenter().into(imageView);
+
+
+        imageView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver
+                .OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                imageView.getViewTreeObserver().removeOnPreDrawListener(this);
+                ActivityCompat.startPostponedEnterTransition(((FullImageActivity) mContext));
+                animate = false;
+                String n = imageView.getTransitionName();
+                Log.d("ViewPager Transition", n);
+                return true;
+            }
+        });
 
         container.addView(itemView);
         itemView.setTag("myView" + position);

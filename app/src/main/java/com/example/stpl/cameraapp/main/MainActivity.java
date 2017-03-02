@@ -26,6 +26,7 @@ import android.util.SparseArray;
 import android.view.Display;
 import android.view.HapticFeedbackConstants;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -42,6 +43,7 @@ import com.example.stpl.cameraapp.MyGestureDetector;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.RecyclerItemClickListener;
 import com.example.stpl.cameraapp.ScrollListener;
+import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.activity.PlayVideoActivity;
 import com.example.stpl.cameraapp.adapters.RecyclerViewAdapter;
 import com.example.stpl.cameraapp.fullImageView.FullImageActivity;
@@ -64,7 +66,6 @@ import rx.Subscriber;
 import rx.Subscription;
 import rx.subscriptions.CompositeSubscription;
 
-import static com.example.stpl.cameraapp.Utils.ALL;
 import static com.example.stpl.cameraapp.Utils.DELETE_FILES;
 import static com.example.stpl.cameraapp.Utils.IMAGE;
 import static com.example.stpl.cameraapp.Utils.MULTIPLE_PERMISSIONS;
@@ -113,8 +114,15 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         providers = new ArrayList<>();
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
+        /**
+         * Calculate Screen Height
+         */
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+        height = displayMetrics.heightPixels;
 //        String[] projection={ MediaStore.Images.Media._ID};
 //        Cursor mediaCursor = getContentResolver().query(MediaStore.Files.getContentUri
 //                        ("external"),
@@ -160,12 +168,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
          */
         setClickListeners();
 
-        /**
-         * Calculate Screen Height
-         */
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
-        height = displayMetrics.heightPixels;
+
 
     }
 
@@ -339,6 +342,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         recyclerGridView.setLayoutManager(gridLayoutManager);
         recyclerGridView.setAdapter(recyclerViewAdapter);
         recyclerGridView.addOnScrollListener(new ScrollListener(this));
+        recyclerGridView.setHasFixedSize(true);
+        recyclerGridView.getLayoutParams().height = height;
         ItemOffsetDecoration itemDecoration = new ItemOffsetDecoration(this, R.dimen.item_offset);
         recyclerGridView.addItemDecoration(itemDecoration);
         pictures.setSelected(true);
@@ -384,8 +389,18 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             }
         };
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
-        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(() ->
-                recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight());
+        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver
+                .OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight();
+                if (gridViewButton.getHeight() > 0) {
+                    gridViewButton.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                }
+            }
+        });
+
+
         imageGestureDetector = new GestureDetectorCompat(this,
                 new MyGestureDetector(gridLayoutManager, bottomSheetBehavior));
         mainPresenter.checkForPermissions();
@@ -479,7 +494,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
          */
         customCamera.setWillNotDraw(false);
         frameLayout.addView(customCamera);
-        mainPresenter.fetchFromSdCard(ALL);
+        presenterAdapter.updateAdapter(Utils.IMAGE);
         Subscription rotationSubscription = customCamera._getRotation().subscribe(currentRotation
                 -> {
             if (previousRotation != currentRotation) {
@@ -684,18 +699,20 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                 intent.putExtra("position", position);
                 ImageView image = (ImageView) view.findViewById(R.id.image);
                 options = ActivityOptionsCompat.
-                        makeSceneTransitionAnimation(this, image, image.getTransitionName() +
-                                position);
-                Log.d("animation name", image.getTransitionName() + position);
+                        makeSceneTransitionAnimation(this, image, position + "");
+                String n = image.getTransitionName();
+                Log.d("MainActivity transition", n);
 
             } else {
                 intent = new Intent(MainActivity.this, PlayVideoActivity.class);
                 intent.putExtra("path", details.getFilePath());
+
             }
-            overridePendingTransition(0, 0);
+
 
             assert options != null;
-            ActivityCompat.startActivityForResult(this, intent, 123, options.toBundle());
+            ActivityCompat.startActivity(this, intent, options.toBundle());
+
         }
     }
 

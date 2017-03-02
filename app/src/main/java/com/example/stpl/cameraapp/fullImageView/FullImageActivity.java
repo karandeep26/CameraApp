@@ -5,6 +5,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.support.v4.view.ViewPager;
+import android.transition.Transition;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -21,6 +22,7 @@ import com.example.stpl.cameraapp.ZoomOutPageTransformer;
 import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
+import com.example.stpl.cameraapp.support.CircleToRectTransition;
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.StorageReference;
@@ -44,9 +46,22 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     int currentItem = -1;
     boolean deleteClicked = false;
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        TransitionSet transitionSet = new TransitionSet();
+//        transitionSet.addTransition(new ChangeImageTransform());
+//        transitionSet.addTransition(new android.transition.ChangeBounds());
+//        transitionSet.addTransition(new ChangeTransform());
+//        transitionSet.setDuration(300);
+        Transition transitionSet = new CircleToRectTransition();
+        transitionSet.setDuration(1500);
+        getWindow().setSharedElementEnterTransition(transitionSet);
+        getWindow().setSharedElementExitTransition(new CircleToRectTransition().setDuration(1500));
+        getWindow().setSharedElementEnterTransition(transitionSet);
+        getWindow().setSharedElementExitTransition(transitionSet);
+        postponeEnterTransition();
         makeFullScreen();
         setContentView(R.layout.activity_full_image);
         findViewById();
@@ -91,7 +106,6 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
                 return false;
             }
         });
-        super.onStart();
         visibility = View.INVISIBLE;
         firebaseAuth = FirebaseAuth.getInstance();
         List<AuthUI.IdpConfig> providers = new ArrayList<>();
@@ -155,7 +169,6 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     public void updateAdapter(ArrayList<MediaDetails> mediaDetails) {
         customViewPagerAdapter = new CustomViewPagerAdapter(this, mediaDetails);
         mViewPager.setAdapter(customViewPagerAdapter);
-        mediaDetails.get(position).getFilePath();
         mViewPager.setCurrentItem(position);
 
     }
@@ -190,11 +203,6 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     @Override
     public void onFileAdded(MediaDetails mediaDetails) {
 
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
     }
 
 

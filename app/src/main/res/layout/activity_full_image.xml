@@ -4,20 +4,24 @@
                 android:id="@+id/activity_full_image"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:animateLayoutChanges="true"
-                android:background="#000"
+                android:clipChildren="false"
+                android:clipToPadding="false"
                 tools:context="com.example.stpl.cameraapp.fullImageView.FullImageActivity">
 
 
     <LinearLayout
+
         android:id="@+id/pager_layout"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
         <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
                                            android:id="@+id/pager"
+                                           android:clipChildren="false"
+
+                                           android:clipToPadding="false"
                                            android:layout_width="match_parent"
-                                           android:layout_height="match_parent"/>
+                                           android:layout_height="wrap_content"/>
 
     </LinearLayout>
 
@@ -26,8 +30,7 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_alignTop="@+id/pager_layout"
-        android:background="#66000000"
-        android:visibility="invisible">
+        android:visibility="gone">
 
         <ImageButton
             android:id="@+id/upload"

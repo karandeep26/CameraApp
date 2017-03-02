@@ -2,8 +2,11 @@ package com.example.stpl.cameraapp.adapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Environment;
+import android.support.annotation.RequiresApi;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +17,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
-import com.example.stpl.cameraapp.customViews.SquareImageView;
+import com.example.stpl.cameraapp.customViews.CircleRectView;
 import com.example.stpl.cameraapp.main.MainActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 
@@ -52,22 +55,30 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return new ViewHolder(itemView);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         MediaDetails mediaDetails = this.mediaDetailsList.get(position);
+
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
+            Log.d("position", "" + position);
+            if (holder.imageView.getTransitionName() == null) {
+                holder.imageView.setTransitionName(position + "");
+            }
             thumbnailFile = new File(Environment.
                     getExternalStoragePublicDirectory
                             (Environment.DIRECTORY_PICTURES) +
                     File.separator + new File(mediaDetails.getFilePath()).getName());
-//            if (thumbnailFile.exists()) {
-//                Log.d("file exist",thumbnailFile.getPath());
-//                Glide.with(((MainActivity) mContext)).load(thumbnailFile).asBitmap()
-//                        .placeholder(R.drawable.placeholder).fitCenter().centerCrop()
-//                        .into(holder.imageView);
-//            } else {
+            if (thumbnailFile.exists()) {
+                Log.d("file exist", thumbnailFile.getPath());
+                Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath())
+                        .placeholder(R.drawable.placeholder).fitCenter().centerCrop().override
+                        (300, 300)
+                        .into(holder.imageView);
+
+            } else {
                 Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).asBitmap()
-                        .placeholder(R.drawable.placeholder).fitCenter().centerCrop()
+                        .placeholder(R.drawable.placeholder).fitCenter().override(300, 300)
                         .into(new BitmapImageViewTarget(holder.imageView) {
                             @Override
                             protected void setResource(final Bitmap resource) {
@@ -107,7 +118,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                         });
 
             holder.playButton.setVisibility(View.INVISIBLE);
-            //}
+            }
         } else {
             Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).fitCenter()
                     .centerCrop()
@@ -151,7 +162,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        SquareImageView imageView;
+        CircleRectView imageView;
         ImageView tickView, playButton;
         FrameLayout rootLayout;
         View itemView;
@@ -160,7 +171,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             super(itemView);
             this.itemView = itemView;
             rootLayout = (FrameLayout) itemView.findViewById(R.id.root_layout);
-            imageView = (SquareImageView) itemView.findViewById(R.id.image);
+            imageView = (CircleRectView) itemView.findViewById(R.id.image);
             tickView = (ImageView) itemView.findViewById(R.id.tick);
             playButton = (ImageView) itemView.findViewById(R.id.play);
 
