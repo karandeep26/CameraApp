@@ -6,6 +6,7 @@
                 android:layout_height="match_parent"
                 android:clipChildren="false"
                 android:clipToPadding="false"
+                android:background="@color/transparent"
                 tools:context="com.example.stpl.cameraapp.fullImageView.FullImageActivity">
 
 
@@ -18,7 +19,6 @@
         <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
                                            android:id="@+id/pager"
                                            android:clipChildren="false"
-
                                            android:clipToPadding="false"
                                            android:layout_width="match_parent"
                                            android:layout_height="wrap_content"/>

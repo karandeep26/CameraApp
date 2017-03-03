@@ -6,11 +6,21 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:windowContentTransitions" tools:targetApi="lollipop">true</item>
-        <item name="android:windowSharedElementsUseOverlay" tools:targetApi="lollipop">false</item>
+        <!--<item name="android:windowContentTransitions" tools:targetApi="lollipop">true</item>-->
+        <!--<item name="android:windowSharedElementsUseOverlay" tools:targetApi="lollipop">false</item>-->
         <item name="android:windowBackground">@color/black</item>
-        <item name="android:colorBackground">@color/black</item>
+        <!--<item name="android:colorBackground">@color/transparent</item>-->
 
     </style>
 
+
+    <style name="AppTheme.FullImageView" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowAllowEnterTransitionOverlap">false</item>
+        <item name="android:windowEnterTransition">@transition/detail_enter</item>
+        <item name="android:windowContentTransitions" tools:targetApi="lollipop">true</item>
+        <item name="android:windowSharedElementsUseOverlay" tools:targetApi="lollipop">false</item>
+        <item name="android:windowBackground">@color/black</item>
+        <item name="android:colorBackground">@color/transparent</item>
+    </style>
 </resources>

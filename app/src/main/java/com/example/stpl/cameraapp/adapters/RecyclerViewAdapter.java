@@ -17,7 +17,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
-import com.example.stpl.cameraapp.customViews.CircleRectView;
+import com.example.stpl.cameraapp.customViews.SquareImageView;
 import com.example.stpl.cameraapp.main.MainActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 
@@ -69,16 +69,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     getExternalStoragePublicDirectory
                             (Environment.DIRECTORY_PICTURES) +
                     File.separator + new File(mediaDetails.getFilePath()).getName());
-            if (thumbnailFile.exists()) {
-                Log.d("file exist", thumbnailFile.getPath());
-                Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath())
-                        .placeholder(R.drawable.placeholder).fitCenter().centerCrop().override
-                        (300, 300)
-                        .into(holder.imageView);
-
-            } else {
+//            if (thumbnailFile.exists()) {
+//                Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath())
+//                        .placeholder(R.drawable.placeholder).fitCenter().centerCrop()
+//                        .into(holder.imageView);
+//
+//            } else {
                 Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).asBitmap()
-                        .placeholder(R.drawable.placeholder).fitCenter().override(300, 300)
+                        .placeholder(R.drawable.placeholder).fitCenter()
                         .into(new BitmapImageViewTarget(holder.imageView) {
                             @Override
                             protected void setResource(final Bitmap resource) {
@@ -118,7 +116,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                         });
 
             holder.playButton.setVisibility(View.INVISIBLE);
-            }
+
+
+            //  }
         } else {
             Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).fitCenter()
                     .centerCrop()
@@ -162,7 +162,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        CircleRectView imageView;
+        SquareImageView imageView;
         ImageView tickView, playButton;
         FrameLayout rootLayout;
         View itemView;
@@ -171,7 +171,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             super(itemView);
             this.itemView = itemView;
             rootLayout = (FrameLayout) itemView.findViewById(R.id.root_layout);
-            imageView = (CircleRectView) itemView.findViewById(R.id.image);
+            imageView = (SquareImageView) itemView.findViewById(R.id.image);
             tickView = (ImageView) itemView.findViewById(R.id.tick);
             playButton = (ImageView) itemView.findViewById(R.id.play);
 

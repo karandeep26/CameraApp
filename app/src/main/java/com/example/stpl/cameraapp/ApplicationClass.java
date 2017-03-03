@@ -1,7 +1,6 @@
 package com.example.stpl.cameraapp;
 
 import android.app.Application;
-import android.support.multidex.MultiDex;
 
 import com.squareup.leakcanary.LeakCanary;
 import com.squareup.picasso.Picasso;
@@ -27,7 +26,6 @@ public class ApplicationClass extends Application {
         Picasso picasso = builder.build();
 
         Picasso.setSingletonInstance(picasso);
-        MultiDex.install(this);
 
     }
 

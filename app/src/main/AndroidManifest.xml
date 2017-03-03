@@ -17,7 +17,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".main.MainActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize">
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <action android:name="android.intent.action.VIEW"/>
@@ -27,7 +28,8 @@
         </activity>
         <activity
             android:name=".fullImageView.FullImageActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"/>
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            />
         <activity android:name=".activity.PlayVideoActivity"/>
         <activity android:name=".BaseActivity">
         </activity>

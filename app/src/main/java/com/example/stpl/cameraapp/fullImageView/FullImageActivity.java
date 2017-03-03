@@ -5,12 +5,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.support.v4.view.ViewPager;
+import android.transition.Fade;
 import android.transition.Transition;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.bumptech.glide.Glide;
@@ -22,13 +23,13 @@ import com.example.stpl.cameraapp.ZoomOutPageTransformer;
 import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
-import com.example.stpl.cameraapp.support.CircleToRectTransition;
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class FullImageActivity extends BaseActivity implements View.OnClickListener,
         FullImageView, FileListener {
@@ -45,25 +46,23 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     ArrayList<Integer> indexes = new ArrayList<>();
     int currentItem = -1;
     boolean deleteClicked = false;
+    boolean exiting;
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        TransitionSet transitionSet = new TransitionSet();
-//        transitionSet.addTransition(new ChangeImageTransform());
-//        transitionSet.addTransition(new android.transition.ChangeBounds());
-//        transitionSet.addTransition(new ChangeTransform());
-//        transitionSet.setDuration(300);
-        Transition transitionSet = new CircleToRectTransition();
-        transitionSet.setDuration(1500);
-        getWindow().setSharedElementEnterTransition(transitionSet);
-        getWindow().setSharedElementExitTransition(new CircleToRectTransition().setDuration(1500));
-        getWindow().setSharedElementEnterTransition(transitionSet);
-        getWindow().setSharedElementExitTransition(transitionSet);
+        Transition fade = new Fade();
+        fade.excludeTarget(android.R.id.statusBarBackground, true);
+        fade.excludeTarget(android.R.id.navigationBarBackground, true);
+        getWindow().setEnterTransition(null);
+
         postponeEnterTransition();
         makeFullScreen();
         setContentView(R.layout.activity_full_image);
+        fade.excludeTarget(R.id.pager, true);
+        getWindow().setEnterTransition(fade);
+        setEnterSharedElementCallback(sharedElementCallback());
         findViewById();
         setOnClickListeners();
         DisplayMetrics displaymetrics = new DisplayMetrics();
@@ -75,8 +74,8 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
         fullImageInterface.fetchImages();
         Intent intent = getIntent();
         position = intent.getIntExtra("position", -1);
-        Log.d("position", position + "");
         mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
+
         mViewPager.setOnTouchListener(new View.OnTouchListener() {
             private float pointX;
             private float pointY;
@@ -125,12 +124,7 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
 
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
 
-
-    }
 
     @Override
     protected void onResume() {
@@ -167,7 +161,7 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
 
     @Override
     public void updateAdapter(ArrayList<MediaDetails> mediaDetails) {
-        customViewPagerAdapter = new CustomViewPagerAdapter(this, mediaDetails);
+        customViewPagerAdapter = new CustomViewPagerAdapter(this, mediaDetails, position);
         mViewPager.setAdapter(customViewPagerAdapter);
         mViewPager.setCurrentItem(position);
 
@@ -176,10 +170,7 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent();
-        intent.putIntegerArrayListExtra("indexes", indexes);
-        setResult(123, intent);
-        Glide.with(this).pauseRequests();
+
         finishAfterTransition();
 
     }
@@ -205,16 +196,32 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
 
     }
 
+    private android.app.SharedElementCallback sharedElementCallback() {
+        return new android.app.SharedElementCallback() {
+            @Override
+            public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
+                if (exiting) {
+                    names.clear();
+                    sharedElements.clear();
+                    int index = mViewPager.getCurrentItem();
+                    View view = mViewPager.findViewWithTag("myView" + index);
+                    ImageView imageView = (ImageView) view.findViewById(R.id.image_item);
+                    names.add(imageView.getTransitionName());
+                    sharedElements.put(imageView.getTransitionName(), imageView);
+                    exiting = false;
+                }
+            }
+        };
+    }
 
-    //    public void makeFullScreen() {
-//        getWindow().getDecorView().setSystemUiVisibility(
-//                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-//                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-//                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-//                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-//                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-//                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-//    }
-
-
+    @Override
+    public void finishAfterTransition() {
+        exiting = true;
+        Intent intent = new Intent();
+        intent.putIntegerArrayListExtra("indexes", indexes);
+        intent.putExtra("position", mViewPager.getCurrentItem());
+        setResult(RESULT_OK, intent);
+        Glide.with(this).pauseRequests();
+        super.finishAfterTransition();
+    }
 }
