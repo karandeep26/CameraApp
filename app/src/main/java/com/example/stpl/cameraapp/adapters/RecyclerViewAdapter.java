@@ -60,6 +60,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(ViewHolder holder, int position) {
         MediaDetails mediaDetails = this.mediaDetailsList.get(position);
 
+
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
             Log.d("position", "" + position);
             if (holder.imageView.getTransitionName() == null) {

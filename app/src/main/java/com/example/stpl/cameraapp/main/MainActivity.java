@@ -113,7 +113,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setEnterSharedElementCallback(sharedElementCallback());
+        setExitSharedElementCallback(sharedElementCallback());
 
         providers = new ArrayList<>();
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
@@ -756,6 +756,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                 if (bundle != null) {
                     int position = bundle.getInt("position");
                     View view = recyclerGridView.getChildAt(position);
+                    Log.d("view name T", view.getTransitionName());
                     names.clear();
                     names.add(view.getTransitionName());
                     sharedElements.clear();
@@ -776,8 +777,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         postponeEnterTransition();
         recyclerGridView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver
                 .OnPreDrawListener() {
-
-
             @Override
             public boolean onPreDraw() {
                 recyclerGridView.getViewTreeObserver().removeOnPreDrawListener(this);
