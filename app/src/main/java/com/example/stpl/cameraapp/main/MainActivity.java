@@ -54,6 +54,9 @@ import com.example.stpl.cameraapp.login.FirebaseLoginView;
 import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractorImpl;
 import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.ErrorCodes;
+import com.firebase.ui.auth.IdpResponse;
+import com.firebase.ui.auth.ResultCodes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,15 +69,18 @@ import rx.subscriptions.CompositeSubscription;
 
 import static com.example.stpl.cameraapp.Utils.IMAGE;
 import static com.example.stpl.cameraapp.Utils.MULTIPLE_PERMISSIONS;
+import static com.example.stpl.cameraapp.Utils.RC_SIGN_IN;
 import static com.example.stpl.cameraapp.Utils.ROTATION_270;
 import static com.example.stpl.cameraapp.Utils.ROTATION_90;
 import static com.example.stpl.cameraapp.Utils.ROTATION_O;
 import static com.example.stpl.cameraapp.Utils.VIDEO;
 
+
 public class MainActivity extends BaseActivity implements View.OnClickListener,
         FileListener, RecyclerItemClickListener.OnItemClickListener, MainView, MainView.UpdateView,
         FirebaseLoginView {
     int previousRotation = -1;
+    int positionReturned;
     boolean visible = false;
     CompositeSubscription compositeSubscription;
     boolean recording = false;
@@ -592,40 +598,30 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
 
     }
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if (requestCode == DELETE_FILES) {
-//            if (data != null) {
-//                ArrayList<Integer> indexes = data.getIntegerArrayListExtra("indexes");
-//                if (indexes != null && indexes.size() != 0) {
-//                    for (Integer index : indexes) {
-//                        recyclerViewAdapter.removeItemAt(index);
-//                    }
-//                }
-//            }
-//        }
-//        if (requestCode == RC_SIGN_IN) {
-//            IdpResponse response = IdpResponse.fromResultIntent(data);
-//
-//            // Successfully signed in
-//            if (resultCode == ResultCodes.OK) {
-//                loggedIn(response != null ? response.getEmail() : null);
-//
-//            } else {
-//                // Sign in failed
-//                if (response == null) {
-//                    // User pressed back button
-//
-//                } else if (response.getErrorCode() == ErrorCodes.NO_NETWORK) {
-//
-//                } else if (response.getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
-//
-//                }
-//            }
-//
-//        }
-//    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_SIGN_IN) {
+            IdpResponse response = IdpResponse.fromResultIntent(data);
+
+            // Successfully signed in
+            if (resultCode == ResultCodes.OK) {
+                loggedIn(response != null ? response.getEmail() : null);
+
+            } else {
+                // Sign in failed
+                if (response == null) {
+                    // User pressed back button
+
+                } else if (response.getErrorCode() == ErrorCodes.NO_NETWORK) {
+
+                } else if (response.getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
+
+                }
+            }
+
+        }
+    }
 
     public boolean isRotationEnabled() {
         return Settings.System.getInt(getContentResolver(),
@@ -685,8 +681,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                 ImageView image = (ImageView) view.findViewById(R.id.image);
                 options = ActivityOptionsCompat.
                         makeSceneTransitionAnimation(this, image, position + "");
-                String n = image.getTransitionName();
-                Log.d("MainActivity transition", n);
 
             } else {
                 intent = new Intent(MainActivity.this, PlayVideoActivity.class);
@@ -754,14 +748,35 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             @Override
             public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
                 if (bundle != null) {
+                    View view;
                     int position = bundle.getInt("position");
-                    View view = recyclerGridView.getChildAt(position);
-                    Log.d("view name T", view.getTransitionName());
-                    names.clear();
-                    names.add(view.getTransitionName());
-                    sharedElements.clear();
-                    sharedElements.put(view.getTransitionName(), view);
+                    int correctPosition = position - gridLayoutManager
+                            .findFirstVisibleItemPosition();
+                    view = recyclerGridView.getChildAt(correctPosition);
+//                    RecyclerView.ViewHolder viewHolder=recyclerGridView.
+//                            findViewHolderForAdapterPosition(position);
+//                    view=viewHolder.itemView;
+                    if (view != null) {
+                        ImageView imageView = (ImageView) view.findViewById(R.id.image);
+                        if (imageView != null) {
+                            if (imageView.getTransitionName() != null) {
+                                names.clear();
+                                names.add(imageView.getTransitionName());
+                                sharedElements.clear();
+                                sharedElements.put(imageView.getTransitionName(), imageView);
+                            } else {
+                                Log.d("transition name is null", "true");
+                            }
+                        } else {
+                            Log.d("imageview is null", "true");
+                        }
+
+                    } else {
+                        Log.d("View is null", "true");
+                    }
                 }
+                bundle = null;
+
 
             }
         };
@@ -770,22 +785,31 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     @Override
     public void onActivityReenter(int resultCode, Intent data) {
         super.onActivityReenter(resultCode, data);
-        bundle = new Bundle(data.getExtras());
-        int position = bundle.getInt("position");
-        recyclerGridView.scrollToPosition(position);
-
-        postponeEnterTransition();
-        recyclerGridView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver
-                .OnPreDrawListener() {
-            @Override
-            public boolean onPreDraw() {
-                recyclerGridView.getViewTreeObserver().removeOnPreDrawListener(this);
-                recyclerGridView.requestLayout();
-                startPostponedEnterTransition();
-                return true;
+        if (data != null) {
+            bundle = new Bundle(data.getExtras());
+            positionReturned = bundle.getInt("position");
+            gridLayoutManager.scrollToPosition(positionReturned);
+            ArrayList<Integer> indexes = bundle.getIntegerArrayList("indexes");
+            if (indexes != null && indexes.size() > 0) {
+                for (Integer i : indexes) {
+                    recyclerViewAdapter.removeItemAt(i);
+                }
             }
-        });
-
+            int fistVisiblePos = gridLayoutManager.findFirstVisibleItemPosition();
+            if (recyclerGridView.getChildAt(positionReturned - fistVisiblePos) == null) {
+                postponeEnterTransition();
+                recyclerGridView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver
+                        .OnPreDrawListener() {
+                    @Override
+                    public boolean onPreDraw() {
+                        recyclerGridView.getViewTreeObserver().removeOnPreDrawListener(this);
+                        recyclerGridView.requestLayout();
+                        startPostponedEnterTransition();
+                        return true;
+                    }
+                });
+            }
+        }
     }
 }
 

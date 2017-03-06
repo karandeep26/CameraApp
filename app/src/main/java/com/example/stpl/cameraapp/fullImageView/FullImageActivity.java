@@ -170,7 +170,7 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onBackPressed() {
-
+        exiting = true;
         finishAfterTransition();
 
     }
@@ -216,11 +216,12 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
 
     @Override
     public void finishAfterTransition() {
-        exiting = true;
+
         Intent intent = new Intent();
         intent.putIntegerArrayListExtra("indexes", indexes);
         intent.putExtra("position", mViewPager.getCurrentItem());
         setResult(RESULT_OK, intent);
+
         Glide.with(this).pauseRequests();
         super.finishAfterTransition();
     }

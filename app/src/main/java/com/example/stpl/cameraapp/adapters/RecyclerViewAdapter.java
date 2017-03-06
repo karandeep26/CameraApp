@@ -3,15 +3,13 @@ package com.example.stpl.cameraapp.adapters;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
-import android.os.Environment;
 import android.support.annotation.RequiresApi;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
@@ -59,23 +57,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         MediaDetails mediaDetails = this.mediaDetailsList.get(position);
-
-
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
-            Log.d("position", "" + position);
-            if (holder.imageView.getTransitionName() == null) {
-                holder.imageView.setTransitionName(position + "");
-            }
-            thumbnailFile = new File(Environment.
-                    getExternalStoragePublicDirectory
-                            (Environment.DIRECTORY_PICTURES) +
-                    File.separator + new File(mediaDetails.getFilePath()).getName());
-//            if (thumbnailFile.exists()) {
-//                Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath())
-//                        .placeholder(R.drawable.placeholder).fitCenter().centerCrop()
-//                        .into(holder.imageView);
-//
-//            } else {
+            holder.imageView.setTransitionName(holder.getAdapterPosition() + "");
+
+//            thumbnailFile = new File(Environment.
+//                    getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) +
+//                    File.separator + new File(mediaDetails.getFilePath()).getName());
+
                 Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).asBitmap()
                         .placeholder(R.drawable.placeholder).fitCenter()
                         .into(new BitmapImageViewTarget(holder.imageView) {
@@ -165,13 +153,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     class ViewHolder extends RecyclerView.ViewHolder {
         SquareImageView imageView;
         ImageView tickView, playButton;
-        FrameLayout rootLayout;
+        RelativeLayout rootLayout;
         View itemView;
 
         ViewHolder(View itemView) {
             super(itemView);
             this.itemView = itemView;
-            rootLayout = (FrameLayout) itemView.findViewById(R.id.root_layout);
+            rootLayout = (RelativeLayout) itemView.findViewById(R.id.root_layout);
             imageView = (SquareImageView) itemView.findViewById(R.id.image);
             tickView = (ImageView) itemView.findViewById(R.id.tick);
             playButton = (ImageView) itemView.findViewById(R.id.play);

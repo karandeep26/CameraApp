@@ -65,13 +65,14 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup container, int position) {
         View itemView = mLayoutInflater.inflate(R.layout.viewpager_item, container, false);
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
-        if (imageView.getTransitionName() == null) {
+
             imageView.setTransitionName(position + "");
-        }
+
 
         Glide.with(((FullImageActivity) mContext)).load(mediaDetails.get(position).getFilePath())
                 .asBitmap()
-                .override(Utils.width, Utils.height).dontAnimate().listener(new RequestListener<String, Bitmap>() {
+                .override(Utils.width, Utils.height).listener(new RequestListener<String, Bitmap>
+                () {
 
             @Override
             public boolean onException(Exception e, String model, Target<Bitmap> target, boolean
@@ -89,20 +90,6 @@ public class CustomViewPagerAdapter extends PagerAdapter {
         }).into(imageView);
 
 
-//        if(position==this.position) {
-//            imageView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver
-//                    .OnPreDrawListener() {
-//                @Override
-//                public boolean onPreDraw() {
-//                    imageView.getViewTreeObserver().removeOnPreDrawListener(this);
-//                    ActivityCompat.startPostponedEnterTransition(((FullImageActivity) mContext));
-//                    animate = false;
-//                    String n = imageView.getTransitionName();
-//                    Log.d("ViewPager Transition", n);
-//                    return true;
-//                }
-//            });
-//        }
         container.addView(itemView);
         itemView.setTag("myView" + position);
         return itemView;
