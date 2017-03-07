@@ -8,11 +8,9 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -113,7 +111,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     Bundle bundle;
 
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -640,7 +637,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
      * @param position of the clicked View
      */
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onItemClick(View view, int position, float x, float y) {
 
@@ -753,9 +749,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                     int correctPosition = position - gridLayoutManager
                             .findFirstVisibleItemPosition();
                     view = recyclerGridView.getChildAt(correctPosition);
-//                    RecyclerView.ViewHolder viewHolder=recyclerGridView.
-//                            findViewHolderForAdapterPosition(position);
-//                    view=viewHolder.itemView;
                     if (view != null) {
                         ImageView imageView = (ImageView) view.findViewById(R.id.image);
                         if (imageView != null) {

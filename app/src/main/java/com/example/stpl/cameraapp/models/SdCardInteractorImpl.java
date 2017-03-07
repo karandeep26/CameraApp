@@ -16,8 +16,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import rx.Observable;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Single;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 
 import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
 
@@ -34,7 +37,7 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
 
     @SuppressLint("NewApi")
     @Override
-    public Observable<List<MediaDetails>> getFromSdCard(String type) {
+    public Single<List<MediaDetails>> getFromSdCard(String type) {
         File file = new File(mediaStorageDir.getPath());
         File[] listFile;
 
@@ -52,11 +55,14 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
         }
 
         Arrays.sort(listFile, (o1, o2) -> Long.compare(o1.lastModified(), o2.lastModified()));
-        Observable<File> fileObservable = Observable.from(listFile);
-        return fileObservable.flatMap(Observable::just)
-                .subscribeOn(Schedulers.io())
-                .map(this::getMediaDetails).toList();
+        Observable<File> fileObservable = Observable.fromArray(listFile);
+        return fileObservable.flatMap(new Function<File, ObservableSource<File>>() {
+            @Override
+            public ObservableSource<File> apply(File file) throws Exception {
 
+                return Observable.just(file);
+            }
+        }).subscribeOn(Schedulers.io()).map(this::getMediaDetails).toList();
     }
 
     @Override

@@ -4,11 +4,11 @@ package com.example.stpl.cameraapp.models;
 import java.util.ArrayList;
 import java.util.List;
 
-import rx.Observable;
+import io.reactivex.Single;
 
 
 public interface SdCardInteractor {
-    Observable<List<MediaDetails>> getFromSdCard(String type);
+    Single<List<MediaDetails>> getFromSdCard(String type);
 
     boolean deleteFromSdCard(MediaDetails mediaDetails);
 

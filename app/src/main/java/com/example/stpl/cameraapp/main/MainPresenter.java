@@ -2,7 +2,7 @@ package com.example.stpl.cameraapp.main;
 
 import com.example.stpl.cameraapp.models.MediaDetails;
 
-import rx.Subscriber;
+import io.reactivex.SingleObserver;
 
 
 public interface MainPresenter {
@@ -16,7 +16,7 @@ public interface MainPresenter {
 
     void onDestroy();
 
-    Subscriber startTimer();
+    SingleObserver startTimer();
 
     int getMediaSize(String mediaType);
 

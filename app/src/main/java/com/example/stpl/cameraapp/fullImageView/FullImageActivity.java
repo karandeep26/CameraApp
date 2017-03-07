@@ -216,7 +216,6 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
 
     @Override
     public void finishAfterTransition() {
-
         Intent intent = new Intent();
         intent.putIntegerArrayListExtra("indexes", indexes);
         intent.putExtra("position", mViewPager.getCurrentItem());

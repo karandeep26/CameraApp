@@ -12,12 +12,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-import rx.Observable;
-import rx.Subscriber;
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
-import rx.subscriptions.CompositeSubscription;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 
 
 class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedListener,
@@ -26,16 +23,16 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
     private MainView.UpdateView updateView;
     private FileListener fileListener;
     private SdCardInteractor sdCardInteractor;
-    private CompositeSubscription compositeSubscription;
+    private CompositeDisposable compositeSubscription;
     private int minutes = 0;
-    private Subscription subscription;
+    private Disposable subscription;
     private SdCardInteractor.GetMediaList getMediaList;
     private SdCardInteractor.Selection selection;
     private String mediaType = "image";
 
 
     MainPresenterImpl(MainView mainView, SdCardInteractor sdCardInteractor) {
-        compositeSubscription = new CompositeSubscription();
+        compositeSubscription = new CompositeDisposable();
         this.sdCardInteractor = sdCardInteractor;
         fileListener = mainView;
         this.updateView = (MainView.UpdateView) mainView;
@@ -70,24 +67,35 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
         Log.d("start time", startTime + "");
 
         subscription = sdCardInteractor.getFromSdCard(mediaType).
-                observeOn(AndroidSchedulers.mainThread())
-                .subscribe(mediaDetails -> {
-                            if (mediaDetails != null) {
-                                Collections.reverse(mediaDetails);
-                                for (MediaDetails temp : mediaDetails) {
-                                    if (temp.getMediaType().equals(Utils.IMAGE)) {
-                                        mainView.itemAdd(temp);
-                                    }
-                                }
-                            }
-                        },
-                        throwable -> Log.d("debug", throwable.getMessage()),
-                        () -> {
-                            subscription.unsubscribe();
-                            float endTime = System.currentTimeMillis();
-                            float totalTime = endTime - startTime;
-                            Log.d("total time", endTime + "");
-                        });
+                observeOn(AndroidSchedulers.mainThread()).subscribe((mediaDetails) -> {
+            if (mediaDetails != null) {
+                Collections.reverse(mediaDetails);
+                for (MediaDetails temp : mediaDetails) {
+                    if (temp.getMediaType().equals(Utils.IMAGE)) {
+                        mainView.itemAdd(temp);
+                    }
+                }
+            }
+        }, throwable -> {
+
+        });
+//                .subscribe(mediaDetails -> {
+//                            if (mediaDetails != null) {
+//                                Collections.reverse(mediaDetails);
+//                                for (MediaDetails temp : mediaDetails) {
+//                                    if (temp.getMediaType().equals(Utils.IMAGE)) {
+//                                        mainView.itemAdd(temp);
+//                                    }
+//                                }
+//                            }
+//                        },
+//                        throwable -> Log.d("debug", throwable.getMessage()),
+//                        () -> {
+//                            subscription.unsubscribe();
+//                            float endTime = System.currentTimeMillis();
+//                            float totalTime = endTime - startTime;
+//                            Log.d("total time", endTime + "");
+//                        });
         compositeSubscription.add(subscription);
 
     }
@@ -113,8 +121,8 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
 
     @Override
     public void onDestroy() {
-        if (compositeSubscription != null && !compositeSubscription.isUnsubscribed()) {
-            compositeSubscription.unsubscribe();
+        if (compositeSubscription != null && !compositeSubscription.isDisposed()) {
+            compositeSubscription.dispose();
         }
         sdCardInteractor = null;
     }
