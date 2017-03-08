@@ -212,6 +212,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
 
     public void takePicture() {
         camera.takePicture(null, null, (data, camera1) -> {
+            takePictureSubject.onNext(false);
             String fileName = mainPresenter.savePhotoSdCard(data);
             if (fileName != null) {
                 try {

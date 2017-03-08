@@ -181,7 +181,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             case R.id.capture:
                 if (safeToTakePicture) {
                     customCamera.takePicture();
-                    safeToTakePicture = false;
                 }
                 break;
 
@@ -663,7 +662,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                 ImageView image = (ImageView) view.findViewById(R.id.image);
                 Log.d("transition name", image.getTransitionName());
                 options = ActivityOptionsCompat.
-                        makeSceneTransitionAnimation(this, image, position + "");
+                        makeSceneTransitionAnimation(this, image, details.getFilePath() + "");
                 ActivityCompat.startActivity(this, intent, options.toBundle());
             } else {
                 intent = new Intent(MainActivity.this, PlayVideoActivity.class);
@@ -673,12 +672,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             }
 
 
-
         }
     }
 
     /**
      * Handles LongPress on RecyclerViewItem Click
+     *
      * @param view     that is long pressed
      * @param position position of the view.
      */
@@ -718,7 +717,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         presenterAdapter = mainPresenterImpl;
         onItemClick = mainPresenterImpl;
         firebaseLoginPresenter = new FirebaseLoginImpl(this);
-        firebaseLoginPresenter.checkLoginBeforeProceed();
         firebaseMainPresenter = new FirebaseMainImpl();
 
 
@@ -741,6 +739,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                                 names.clear();
                                 names.add(imageView.getTransitionName());
                                 sharedElements.clear();
+                                Log.d("****",imageView.getTransitionName());
                                 sharedElements.put(imageView.getTransitionName(), imageView);
                             } else {
                                 Log.d("transition name is null", "true");
@@ -764,29 +763,29 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     public void onActivityReenter(int resultCode, Intent data) {
         super.onActivityReenter(resultCode, data);
         if (data != null) {
+            postponeEnterTransition();
             bundle = new Bundle(data.getExtras());
             positionReturned = bundle.getInt("position");
-            gridLayoutManager.scrollToPosition(positionReturned);
             ArrayList<Integer> indexes = bundle.getIntegerArrayList("indexes");
             if (indexes != null && indexes.size() > 0) {
                 for (Integer i : indexes) {
                     recyclerViewAdapter.removeItemAt(i);
                 }
             }
-            int fistVisiblePos = gridLayoutManager.findFirstVisibleItemPosition();
-            if (recyclerGridView.getChildAt(positionReturned - fistVisiblePos) == null) {
-                postponeEnterTransition();
-                recyclerGridView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver
-                        .OnPreDrawListener() {
-                    @Override
-                    public boolean onPreDraw() {
-                        recyclerGridView.getViewTreeObserver().removeOnPreDrawListener(this);
-                        recyclerGridView.requestLayout();
-                        startPostponedEnterTransition();
-                        return true;
-                    }
-                });
-            }
+            gridLayoutManager.scrollToPosition(positionReturned);
+
+            recyclerGridView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver
+                    .OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    recyclerGridView.getViewTreeObserver().removeOnPreDrawListener(this);
+                    recyclerGridView.requestLayout();
+                    startPostponedEnterTransition();
+                    return true;
+                }
+            });
+
+
         }
     }
 

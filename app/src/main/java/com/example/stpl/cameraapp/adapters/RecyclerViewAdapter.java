@@ -62,7 +62,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(ViewHolder holder, int position) {
         MediaDetails mediaDetails = this.mediaDetailsList.get(position);
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
-            holder.imageView.setTransitionName(holder.getAdapterPosition() + "");
+            holder.imageView.setTransitionName(mediaDetails.getFilePath());
 
             thumbnailFile = new File(Environment.
                     getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) +
@@ -77,40 +77,41 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).asBitmap()
                         .placeholder(R.drawable.placeholder).fitCenter()
                         .into(new BitmapImageViewTarget(holder.imageView) {
+
                             @Override
                             protected void setResource(final Bitmap resource) {
                                 super.setResource(resource);
-                                new Thread() {
-                                    @Override
-                                    public void run() {
-                                        if (!thumbnailFile.exists()) {
-                                            FileOutputStream out = null;
-                                            try {
-                                                Log.d("thumbnail exist before",
-                                                        thumbnailFile.exists() + "");
-                                                out = new FileOutputStream(thumbnailFile);
-                                                resource.compress(Bitmap.CompressFormat.JPEG, 100,
-                                                        out);
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                            } finally {
-                                                try {
-                                                    if (out != null) {
-                                                        out.close();
-                                                        Log.d("thumbnail created for",
-                                                                thumbnailFile.getName());
-                                                        Log.d("thumbnail exist after",
-                                                                thumbnailFile.exists() + "");
 
-                                                    }
-                                                } catch (IOException e) {
-                                                    e.printStackTrace();
+                                Thread thread=new Thread(() -> {
+                                    if (!thumbnailFile.exists()) {
+                                        FileOutputStream out = null;
+                                        try {
+                                            Log.d("thumbnail exist before",
+                                                    thumbnailFile.exists() + "");
+                                            out = new FileOutputStream(thumbnailFile);
+                                            resource.compress(Bitmap.CompressFormat.JPEG, 100,
+                                                    out);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        } finally {
+                                            try {
+                                                if (out != null) {
+                                                    out.close();
+                                                    Log.d("thumbnail created for",
+                                                            thumbnailFile.getName());
+                                                    Log.d("thumbnail exist after",
+                                                            thumbnailFile.exists() + "");
+                                                    Thread.currentThread().interrupt();
                                                 }
-                                                Thread.currentThread().interrupt();
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
                                             }
                                         }
                                     }
-                                }.start();
+                                });
+                                thread.start();
+
+
 
                             }
                         });
@@ -148,7 +149,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         int position = mediaDetailsList.indexOf(mediaDetails);
         if (position != -1) {
             mediaDetailsList.remove(position);
-            notifyDataSetChanged();
+            notifyItemRemoved(position);
         }
 
     }
@@ -178,12 +179,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     public void addItem(MediaDetails mediaDetails) {
         mediaDetailsList.add(mediaDetails);
-        notifyDataSetChanged();
+        notifyItemInserted(mediaDetailsList.size()-1);
     }
 
     public void addItem(MediaDetails mediaDetails, int index) {
         mediaDetailsList.add(index, mediaDetails);
-        notifyDataSetChanged();
+        notifyItemInserted(index);
     }
 
 

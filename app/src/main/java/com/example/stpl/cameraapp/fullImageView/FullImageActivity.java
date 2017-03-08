@@ -203,7 +203,8 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
                     names.clear();
                     sharedElements.clear();
                     int index = mViewPager.getCurrentItem();
-                    View view = mViewPager.findViewWithTag("myView" + index);
+                    View view = mViewPager.findViewWithTag(customViewPagerAdapter.
+                            getObjectAt(index).getFilePath());
                     ImageView imageView = (ImageView) view.findViewById(R.id.image_item);
                     names.add(imageView.getTransitionName());
                     sharedElements.put(imageView.getTransitionName(), imageView);

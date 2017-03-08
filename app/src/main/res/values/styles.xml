@@ -17,7 +17,6 @@
     <style name="AppTheme.FullImageView" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowAllowEnterTransitionOverlap">false</item>
-        <item name="android:windowEnterTransition">@transition/detail_enter</item>
         <item name="android:windowContentTransitions" tools:targetApi="lollipop">true</item>
         <item name="android:windowSharedElementsUseOverlay" tools:targetApi="lollipop">false</item>
         <item name="android:windowBackground">@color/black</item>

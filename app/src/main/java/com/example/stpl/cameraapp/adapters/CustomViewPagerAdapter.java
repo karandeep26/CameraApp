@@ -65,7 +65,7 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup container, int position) {
         View itemView = mLayoutInflater.inflate(R.layout.viewpager_item, container, false);
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
-        imageView.setTransitionName(position + "");
+        imageView.setTransitionName(mediaDetails.get(position).getFilePath() + "");
 
 
         Glide.with(((FullImageActivity) mContext)).load(mediaDetails.get(position).getFilePath())
@@ -90,7 +90,7 @@ public class CustomViewPagerAdapter extends PagerAdapter {
 
 
         container.addView(itemView);
-        itemView.setTag("myView" + position);
+        itemView.setTag(mediaDetails.get(position).getFilePath());
         return itemView;
     }
 

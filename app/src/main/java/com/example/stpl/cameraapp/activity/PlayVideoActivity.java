@@ -8,6 +8,7 @@ import android.util.DisplayMetrics;
 
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.customViews.CustomVideoView;
+import com.squareup.picasso.Picasso;
 
 public class PlayVideoActivity extends AppCompatActivity {
 
