@@ -6,7 +6,6 @@ import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractor;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 
 class FullImagePresenterImpl implements FullImageInterface {
@@ -23,7 +22,6 @@ class FullImagePresenterImpl implements FullImageInterface {
     @Override
     public void fetchImages() {
         sdCardInteractor.getFromSdCard(Utils.IMAGE).subscribe(mediaDetails -> {
-            Collections.reverse(mediaDetails);
             fullImageView.updateAdapter((ArrayList<MediaDetails>) mediaDetails);
         });
     }

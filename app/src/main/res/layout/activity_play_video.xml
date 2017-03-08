@@ -4,11 +4,11 @@
                 android:id="@+id/activity_play_video"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-
                 tools:context="com.example.stpl.cameraapp.activity.PlayVideoActivity">
 
     <com.example.stpl.cameraapp.customViews.CustomVideoView
         android:id="@+id/videoView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_centerInParent="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 </RelativeLayout>

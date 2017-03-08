@@ -61,9 +61,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import rx.Subscriber;
-import rx.Subscription;
-import rx.subscriptions.CompositeSubscription;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.observers.DisposableObserver;
 
 import static com.example.stpl.cameraapp.Utils.IMAGE;
 import static com.example.stpl.cameraapp.Utils.MULTIPLE_PERMISSIONS;
@@ -79,13 +79,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         FirebaseLoginView {
     int previousRotation = -1;
     int positionReturned;
-    boolean visible = false;
-    CompositeSubscription compositeSubscription;
+    CompositeDisposable compositeDisposable;
     boolean recording = false;
     TextView time;
     GestureDetectorCompat imageGestureDetector;
     int height;
-    Subscriber subscription;
+    DisposableObserver<Integer> timerObserver;
     MainPresenter mainPresenter;
     private FrameLayout frameLayout;
     private CustomCamera customCamera;
@@ -107,7 +106,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     GridLayoutManager gridLayoutManager;
     FirebaseLoginPresenter firebaseLoginPresenter;
     FirebaseMainPresenter firebaseMainPresenter;
-    private View previousView;
     Bundle bundle;
 
 
@@ -117,7 +115,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setExitSharedElementCallback(sharedElementCallback());
-
         providers = new ArrayList<>();
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
 
@@ -283,7 +280,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         super.onPause();
         if (customCamera != null) {
             customCamera.releaseCamera();
-            compositeSubscription.unsubscribe();
+            compositeDisposable.dispose();
         }
         Glide.with(this).pauseRequests();
     }
@@ -295,6 +292,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         makeFullScreen();
 
         if (customCamera != null && customCamera.getCamera() == null) {
+            compositeDisposable = new CompositeDisposable();
             if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                 Display getOrient = getWindowManager().getDefaultDisplay();
@@ -305,6 +303,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             } else {
                 customCamera.setCamera();
             }
+
+            boolean flag = compositeDisposable.add(getTakePictureDisposable());
+            Log.d("take picture", flag + "");
+            flag = compositeDisposable.add(getRotationDisposable());
+            Log.d("rotation", flag + "");
+
 
         }
     }
@@ -333,7 +337,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     //Initialise GridView and other items
 
     private void init() {
-        compositeSubscription = new CompositeSubscription();
+        compositeDisposable = new CompositeDisposable();
         recyclerViewAdapter = new RecyclerViewAdapter();
         gridLayoutManager = new GridLayoutManager(this, 3);
         recyclerGridView.setLayoutManager(gridLayoutManager);
@@ -453,27 +457,30 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             mainPresenter.onDestroy();
             mainPresenter = null;
         }
-        compositeSubscription.unsubscribe();
+        compositeDisposable.clear();
         super.onDestroy();
 
     }
 
 
-    // Start/Stop recording the video
+    /**
+     * Start/Stop recording the video
+     */
 
     private void recordVideo() {
         if (!recording) {
             recording = true;
             time.setVisibility(View.VISIBLE);
             customCamera.recordVideo();
-            subscription = mainPresenter.startTimer();
+            timerObserver = mainPresenter.startTimer();
         } else {
             time.setVisibility(View.GONE);
             customCamera.stopVideo();
             recording = false;
-            if (subscription != null && !subscription.isUnsubscribed()) {
-                subscription.onCompleted();
-                subscription.unsubscribe();
+
+            if (timerObserver != null && !timerObserver.isDisposed()) {
+                timerObserver.onComplete();
+                timerObserver.dispose();
             }
         }
     }
@@ -491,28 +498,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         customCamera.setWillNotDraw(false);
         frameLayout.addView(customCamera);
         presenterAdapter.updateAdapter(Utils.IMAGE);
-        Subscription rotationSubscription = customCamera._getRotation().subscribe(currentRotation
-                -> {
-            if (previousRotation != currentRotation) {
-                if (currentRotation == ROTATION_O) {
-                    captureButton.animate().rotation(0);
-                    videoCapture.animate().rotation(0);
-                } else if (currentRotation == ROTATION_90) {
-                    captureButton.animate().rotation(90).start();
-                    videoCapture.animate().rotation(90).start();
-                } else if (currentRotation == ROTATION_270) {
-                    captureButton.animate().rotation(-90).start();
-                    videoCapture.animate().rotation(-90).start();
-                }
-                previousRotation = currentRotation;
-                Log.d("rotation blocked", "called");
-            }
-        });
-        compositeSubscription.add(rotationSubscription);
-        Subscription takePictureSubscriber = customCamera._getTakePictureSubject().subscribe
-                (safeToTakePicture -> this.safeToTakePicture = safeToTakePicture);
-        compositeSubscription.add(takePictureSubscriber);
-
+        compositeDisposable.add(getRotationDisposable());
+        compositeDisposable.add(getTakePictureDisposable());
 
     }
 
@@ -542,8 +529,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
 
 
     @Override
-    public void updateAdapter(List<MediaDetails> mediaDetails) {
-        recyclerViewAdapter.setMediaDetailsList(mediaDetails);
+    public void updateAdapter(List<MediaDetails> mediaDetails, String type) {
+        recyclerGridView.scrollToPosition(0);
+        recyclerViewAdapter.setMediaDetailsList(mediaDetails, type);
     }
 
     @Override
@@ -644,7 +632,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
 
 
         ImageView tick = (ImageView) view.findViewById(R.id.tick);
-        ActivityOptionsCompat options = null;
+        ActivityOptionsCompat options;
 
 
         //if items are in selection mode,show/hide display the tick icon
@@ -665,8 +653,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
 
 
         }
-
-
         // If not in selection mode,fire an Intent to display Fullscreen video/picture
         else {
             Intent intent;
@@ -675,25 +661,24 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                 intent.putExtra("position", position);
                 intent.putExtra("path", details.getFilePath());
                 ImageView image = (ImageView) view.findViewById(R.id.image);
+                Log.d("transition name", image.getTransitionName());
                 options = ActivityOptionsCompat.
                         makeSceneTransitionAnimation(this, image, position + "");
-
+                ActivityCompat.startActivity(this, intent, options.toBundle());
             } else {
                 intent = new Intent(MainActivity.this, PlayVideoActivity.class);
                 intent.putExtra("path", details.getFilePath());
+                startActivity(intent);
 
             }
 
 
-            assert options != null;
-            ActivityCompat.startActivity(this, intent, options.toBundle());
 
         }
     }
 
     /**
      * Handles LongPress on RecyclerViewItem Click
-     *
      * @param view     that is long pressed
      * @param position position of the view.
      */
@@ -804,6 +789,31 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             }
         }
     }
+
+    private Disposable getRotationDisposable() {
+        return customCamera._getRotation().subscribe(currentRotation -> {
+            if (previousRotation != currentRotation) {
+                if (currentRotation == ROTATION_O) {
+                    captureButton.animate().rotation(0);
+                    videoCapture.animate().rotation(0);
+                } else if (currentRotation == ROTATION_90) {
+                    captureButton.animate().rotation(90).start();
+                    videoCapture.animate().rotation(90).start();
+                } else if (currentRotation == ROTATION_270) {
+                    captureButton.animate().rotation(-90).start();
+                    videoCapture.animate().rotation(-90).start();
+                }
+                previousRotation = currentRotation;
+                Log.d("rotation blocked", "called");
+            }
+        });
+    }
+
+    private Disposable getTakePictureDisposable() {
+        return customCamera._getTakePictureSubject()
+                .subscribe(safeToTakePicture -> this.safeToTakePicture = safeToTakePicture);
+    }
+
 }
 
 

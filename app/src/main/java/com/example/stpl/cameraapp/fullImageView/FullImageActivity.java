@@ -125,7 +125,6 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     }
 
 
-
     @Override
     protected void onResume() {
         super.onResume();

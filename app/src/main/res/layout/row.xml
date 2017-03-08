@@ -23,6 +23,7 @@
         android:background="@drawable/circle"
         android:src="@drawable/ic_done_white_24dp"
         android:visibility="invisible"/>
+
     <ImageView
         android:visibility="invisible"
         android:src="@drawable/ic_play_circle_outline_lime_50_36dp"

@@ -2,14 +2,14 @@ package com.example.stpl.cameraapp.adapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.os.Build;
-import android.support.annotation.RequiresApi;
+import android.os.Environment;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
@@ -20,6 +20,8 @@ import com.example.stpl.cameraapp.main.MainActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -34,14 +36,17 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private boolean multiMode;
     private HashSet<Integer> selectedIndex;
     private File thumbnailFile;
+    private String mediaType;
+
     public RecyclerViewAdapter() {
         mediaDetailsList = new ArrayList<>();
         selectedIndex = new HashSet<>();
 
     }
 
-    public void setMediaDetailsList(List<MediaDetails> mediaDetailsList) {
+    public void setMediaDetailsList(List<MediaDetails> mediaDetailsList, String type) {
         this.mediaDetailsList = mediaDetailsList;
+        mediaType = type;
         notifyDataSetChanged();
     }
 
@@ -53,17 +58,22 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return new ViewHolder(itemView);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         MediaDetails mediaDetails = this.mediaDetailsList.get(position);
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
             holder.imageView.setTransitionName(holder.getAdapterPosition() + "");
 
-//            thumbnailFile = new File(Environment.
-//                    getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) +
-//                    File.separator + new File(mediaDetails.getFilePath()).getName());
-
+            thumbnailFile = new File(Environment.
+                    getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) +
+                    File.separator + "thumbnails" + File.separator +
+                    new File(mediaDetails.getFilePath()).getName());
+//            if(thumbnailFile.exists()){
+//                Log.d("file exist","true");
+//                Glide.with(((MainActivity)mContext)).load(thumbnailFile).asBitmap()
+//                        .placeholder(R.drawable.placeholder).fitCenter().into(holder.imageView);
+//            }
+//            else {
                 Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).asBitmap()
                         .placeholder(R.drawable.placeholder).fitCenter()
                         .into(new BitmapImageViewTarget(holder.imageView) {
@@ -73,36 +83,38 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                 new Thread() {
                                     @Override
                                     public void run() {
-//                                        if (!thumbnailFile.exists()) {
-//                                            FileOutputStream out = null;
-//                                            try {
-//                                                Log.d("thumbnail exist before", thumbnailFile
-// .exists() + "");
-//                                                out = new FileOutputStream(thumbnailFile);
-//                                                resource.compress(Bitmap.CompressFormat.JPEG, 100,
-//                                                        out);
-//                                            } catch (Exception e) {
-//                                                e.printStackTrace();
-//                                            } finally {
-//                                                try {
-//                                                    if (out != null) {
-//                                                        out.close();
-//                                                        Log.d("thumbnail created for",
-//                                                                thumbnailFile.getName());
-//                                                        Log.d("thumbnail exist after",
-//                                                                thumbnailFile.exists() + "");
-//
-//                                                    }
-//                                                } catch (IOException e) {
-//                                                    e.printStackTrace();
-//                                                }
-//                                            }
-//                                        }
+                                        if (!thumbnailFile.exists()) {
+                                            FileOutputStream out = null;
+                                            try {
+                                                Log.d("thumbnail exist before",
+                                                        thumbnailFile.exists() + "");
+                                                out = new FileOutputStream(thumbnailFile);
+                                                resource.compress(Bitmap.CompressFormat.JPEG, 100,
+                                                        out);
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            } finally {
+                                                try {
+                                                    if (out != null) {
+                                                        out.close();
+                                                        Log.d("thumbnail created for",
+                                                                thumbnailFile.getName());
+                                                        Log.d("thumbnail exist after",
+                                                                thumbnailFile.exists() + "");
+
+                                                    }
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
+                                                }
+                                                Thread.currentThread().interrupt();
+                                            }
+                                        }
                                     }
                                 }.start();
 
                             }
                         });
+            //}
 
             holder.playButton.setVisibility(View.INVISIBLE);
 
@@ -129,17 +141,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
     public String getMediaType() {
-        if (mediaDetailsList.size() != 0) {
-            return mediaDetailsList.get(0).getMediaType();
-        }
-        return null;
+        return mediaType;
     }
 
     public void remove(MediaDetails mediaDetails) {
         int position = mediaDetailsList.indexOf(mediaDetails);
         if (position != -1) {
             mediaDetailsList.remove(position);
-            notifyItemRemoved(position);
+            notifyDataSetChanged();
         }
 
     }
@@ -153,13 +162,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     class ViewHolder extends RecyclerView.ViewHolder {
         SquareImageView imageView;
         ImageView tickView, playButton;
-        RelativeLayout rootLayout;
+        FrameLayout rootLayout;
         View itemView;
 
         ViewHolder(View itemView) {
             super(itemView);
             this.itemView = itemView;
-            rootLayout = (RelativeLayout) itemView.findViewById(R.id.root_layout);
+            rootLayout = (FrameLayout) itemView.findViewById(R.id.root_layout);
             imageView = (SquareImageView) itemView.findViewById(R.id.image);
             tickView = (ImageView) itemView.findViewById(R.id.tick);
             playButton = (ImageView) itemView.findViewById(R.id.play);
@@ -169,12 +178,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     public void addItem(MediaDetails mediaDetails) {
         mediaDetailsList.add(mediaDetails);
-        notifyItemInserted(mediaDetailsList.size() - 1);
+        notifyDataSetChanged();
     }
 
     public void addItem(MediaDetails mediaDetails, int index) {
         mediaDetailsList.add(index, mediaDetails);
-        notifyItemInserted(index);
+        notifyDataSetChanged();
     }
 
 

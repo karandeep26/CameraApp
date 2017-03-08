@@ -27,8 +27,8 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import rx.Observable;
-import rx.subjects.PublishSubject;
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
 
 import static android.content.ContentValues.TAG;
 import static com.example.stpl.cameraapp.Utils.ROTATION_180;
@@ -388,7 +388,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
         configuration = newConfig;
     }
 
-    class OrientationListener extends OrientationEventListener {
+    private class OrientationListener extends OrientationEventListener {
         private int rotation = 0;
 
         OrientationListener(Context context) {

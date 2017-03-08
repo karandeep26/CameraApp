@@ -9,12 +9,14 @@ import com.example.stpl.cameraapp.models.MediaDetails;
 import com.example.stpl.cameraapp.models.SdCardInteractor;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
 
 
 class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedListener,
@@ -23,22 +25,23 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
     private MainView.UpdateView updateView;
     private FileListener fileListener;
     private SdCardInteractor sdCardInteractor;
-    private CompositeDisposable compositeSubscription;
+    private CompositeDisposable compositeDisposable;
     private int minutes = 0;
-    private Disposable subscription;
     private SdCardInteractor.GetMediaList getMediaList;
     private SdCardInteractor.Selection selection;
     private String mediaType = "image";
 
 
     MainPresenterImpl(MainView mainView, SdCardInteractor sdCardInteractor) {
-        compositeSubscription = new CompositeDisposable();
+        compositeDisposable = new CompositeDisposable();
         this.sdCardInteractor = sdCardInteractor;
         fileListener = mainView;
         this.updateView = (MainView.UpdateView) mainView;
         getMediaList = (SdCardInteractor.GetMediaList) sdCardInteractor;
         this.mainView = mainView;
         selection = (SdCardInteractor.Selection) sdCardInteractor;
+
+
     }
 
     @Override
@@ -66,10 +69,9 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
         float startTime = System.currentTimeMillis();
         Log.d("start time", startTime + "");
 
-        subscription = sdCardInteractor.getFromSdCard(mediaType).
+        Disposable subscription = sdCardInteractor.getFromSdCard(mediaType).
                 observeOn(AndroidSchedulers.mainThread()).subscribe((mediaDetails) -> {
             if (mediaDetails != null) {
-                Collections.reverse(mediaDetails);
                 for (MediaDetails temp : mediaDetails) {
                     if (temp.getMediaType().equals(Utils.IMAGE)) {
                         mainView.itemAdd(temp);
@@ -77,7 +79,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
                 }
             }
         }, throwable -> {
-
+            Log.d("Debug", "error");
         });
 //                .subscribe(mediaDetails -> {
 //                            if (mediaDetails != null) {
@@ -96,7 +98,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
 //                            float totalTime = endTime - startTime;
 //                            Log.d("total time", endTime + "");
 //                        });
-        compositeSubscription.add(subscription);
+        compositeDisposable.add(subscription);
 
     }
 
@@ -121,24 +123,15 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
 
     @Override
     public void onDestroy() {
-        if (compositeSubscription != null && !compositeSubscription.isDisposed()) {
-            compositeSubscription.dispose();
+        if (compositeDisposable != null && !compositeDisposable.isDisposed()) {
+            compositeDisposable.dispose();
         }
         sdCardInteractor = null;
     }
 
     @Override
-    public Subscriber<Integer> startTimer() {
-        Subscriber<Integer> subscriber = new Subscriber<Integer>() {
-            @Override
-            public void onCompleted() {
-                updateView.setTimerValue("");
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
+    public DisposableObserver<Integer> startTimer() {
+        DisposableObserver<Integer> integerObserver = new DisposableObserver<Integer>() {
 
             @Override
             public void onNext(Integer seconds) {
@@ -153,13 +146,25 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
                 Log.d("seconds", seconds + "");
 
             }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+
         };
+
         Observable.zip(Observable.range(0, 60),
                 Observable.interval(1, TimeUnit.SECONDS), (integer, aLong) -> integer).repeat()
-                .observeOn(AndroidSchedulers.mainThread()).subscribe(subscriber);
+                .observeOn(AndroidSchedulers.mainThread()).subscribe(integerObserver);
+        compositeDisposable.add(integerObserver);
 
-        compositeSubscription.add(subscriber);
-        return subscriber;
+        return integerObserver;
     }
 
     @Override
@@ -196,8 +201,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
         this.mediaType = mediaType;
         sdCardInteractor.getFromSdCard(mediaType).subscribeOn(Schedulers.io()).
                 observeOn(AndroidSchedulers.mainThread()).subscribe(mediaDetails -> {
-            Collections.reverse(mediaDetails);
-            updateView.updateAdapter(mediaDetails);
+            updateView.updateAdapter(mediaDetails, mediaType);
         });
 
     }

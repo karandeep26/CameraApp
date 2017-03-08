@@ -1,11 +1,18 @@
 package com.example.stpl.cameraapp.customViews;
 
 import android.content.Context;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.VideoView;
 
 
 public class CustomVideoView extends VideoView {
+    private int mVideoWidth;
+    private int mVideoHeight;
+    int orientation;
+
     public CustomVideoView(Context context) {
         super(context);
     }
@@ -23,8 +30,54 @@ public class CustomVideoView extends VideoView {
     }
 
     @Override
+    public void setVideoURI(Uri uri) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(this.getContext(), uri);
+        orientation = Integer.
+                parseInt(retriever.extractMetadata(MediaMetadataRetriever
+                        .METADATA_KEY_VIDEO_ROTATION));
+        Log.d("orientation", "" + orientation);
+        mVideoWidth = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever
+                .METADATA_KEY_VIDEO_WIDTH));
+        mVideoHeight = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever
+                .METADATA_KEY_VIDEO_HEIGHT));
+        super.setVideoURI(uri);
+    }
+
+    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        setMeasuredDimension(widthMeasureSpec, heightMeasureSpec);
+        // Log.i("@@@", "onMeasure");
+        int width = getDefaultSize(mVideoWidth, widthMeasureSpec);
+        int height = getDefaultSize(mVideoHeight, heightMeasureSpec);
+        Log.d("**height", mVideoHeight + "width" + mVideoWidth);
+
+        if (mVideoWidth > 0 && mVideoHeight > 0) {
+            float temp = (float) mVideoHeight / mVideoWidth;
+            if (orientation == 0 || orientation == 180)
+                height = Math.round(temp * width);
+            Log.d("**", "" + height);
+//            width  = (mVideoWidth/mVideoHeight) * height;
+        }
+
+
+//        if (mVideoWidth > 0 && mVideoHeight > 0) {
+//            if (mVideoWidth * height > width * mVideoHeight) {
+//                 Log.i("@@@", "image too tall, correcting");
+//                height = width * mVideoHeight / mVideoWidth;
+//            } else if (mVideoWidth * height < width * mVideoHeight) {
+//                 Log.i("@@@", "image too wide, correcting");
+//                width = height * mVideoWidth / mVideoHeight;
+//            } else {
+//                 Log.i("@@@", "aspect ratio is correct: " +
+//                 width+"/"+height+"="+
+//                 mVideoWidth+"/"+mVideoHeight);
+//            }
+//        }
+        Log.i("@@@", "setting size: " + width + 'x' + height);
+
+//        setMeasuredDimension(width, getDefaultSize(mVideoHeight, heightMeasureSpec));
+        setMeasuredDimension(width, height);
+
     }
 }
+

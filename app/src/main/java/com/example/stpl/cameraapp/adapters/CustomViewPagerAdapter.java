@@ -44,8 +44,8 @@ public class CustomViewPagerAdapter extends PagerAdapter {
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        ((View) object).startAnimation(fadeOut);
         ImageView imageView = (ImageView) ((View) object).findViewById(R.id.image_item);
+        imageView.startAnimation(fadeOut);
         container.removeView((View) object);
         imageView.setImageDrawable(null);
     }

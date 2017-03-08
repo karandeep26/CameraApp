@@ -1,7 +1,6 @@
 package com.example.stpl.cameraapp.models;
 
 
-import android.annotation.SuppressLint;
 import android.util.Log;
 
 import com.example.stpl.cameraapp.Utils;
@@ -35,7 +34,6 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
         selected = new ArrayList<>();
     }
 
-    @SuppressLint("NewApi")
     @Override
     public Single<List<MediaDetails>> getFromSdCard(String type) {
         File file = new File(mediaStorageDir.getPath());
@@ -53,8 +51,7 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
         if (listFile == null || listFile.length == 0) {
             listFile = new File[0];
         }
-
-        Arrays.sort(listFile, (o1, o2) -> Long.compare(o1.lastModified(), o2.lastModified()));
+        Arrays.sort(listFile, (o1, o2) -> o2.getName().compareTo(o1.getName()));
         Observable<File> fileObservable = Observable.fromArray(listFile);
         return fileObservable.flatMap(new Function<File, ObservableSource<File>>() {
             @Override
@@ -76,9 +73,7 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
     @Override
     public int getMediaCount(String type) {
         File file = new File(mediaStorageDir.getPath());
-        File[] imageFile = file.listFiles(pathname -> {
-            return pathname.getAbsolutePath().contains(type);
-        });
+        File[] imageFile = file.listFiles(pathname -> pathname.getAbsolutePath().contains(type));
         return imageFile.length;
     }
 

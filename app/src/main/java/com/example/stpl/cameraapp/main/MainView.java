@@ -12,7 +12,7 @@ interface MainView extends FileListener {
     interface UpdateView {
         void setTimerValue(String timer);
 
-        void updateAdapter(List<MediaDetails> mediaDetails);
+        void updateAdapter(List<MediaDetails> mediaDetails, String type);
 
 
     }

@@ -85,6 +85,7 @@
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="0dp"
                 app:cardElevation="8dp">
+
                 <LinearLayout
                     android:id="@+id/gridViewButtons"
                     android:layout_width="match_parent"
