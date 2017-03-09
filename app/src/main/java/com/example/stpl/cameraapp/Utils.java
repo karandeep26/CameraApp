@@ -11,12 +11,12 @@ import java.io.File;
 
 
 public class Utils {
-//    static public File mediaStorageDir = new File(
-//            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-//            "MyCameraApp");
-            static public File mediaStorageDir = new File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
-            "Camera");
+    static public File mediaStorageDir = new File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+            "MyCameraApp");
+    //            static public File mediaStorageDir = new File(
+//            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
+//            "Camera");
     static public int height;
     public static int width;
     public static int ROTATION_O = 1;

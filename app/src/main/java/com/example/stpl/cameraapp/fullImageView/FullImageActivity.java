@@ -18,6 +18,7 @@ import com.bumptech.glide.Glide;
 import com.example.stpl.cameraapp.BaseActivity;
 import com.example.stpl.cameraapp.FileListener;
 import com.example.stpl.cameraapp.R;
+import com.example.stpl.cameraapp.RxBus;
 import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.ZoomOutPageTransformer;
 import com.example.stpl.cameraapp.adapters.CustomViewPagerAdapter;
@@ -176,7 +177,7 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
 
     @Override
     public void onFileDeleted(MediaDetails mediaDetails) {
-        indexes.add(currentItem);
+        RxBus.getInstance().send(currentItem);
         deleteClicked = true;
         customViewPagerAdapter.removeItemAt(currentItem);
         if (mViewPager.getChildCount() == 0) {
@@ -199,15 +200,17 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
         return new android.app.SharedElementCallback() {
             @Override
             public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
-                if (exiting) {
+                if (exiting && customViewPagerAdapter.getCount() > 0) {
                     names.clear();
                     sharedElements.clear();
                     int index = mViewPager.getCurrentItem();
-                    View view = mViewPager.findViewWithTag(customViewPagerAdapter.
-                            getObjectAt(index).getFilePath());
-                    ImageView imageView = (ImageView) view.findViewById(R.id.image_item);
-                    names.add(imageView.getTransitionName());
-                    sharedElements.put(imageView.getTransitionName(), imageView);
+                    if (index >= 0) {
+                        View view = mViewPager.findViewWithTag(customViewPagerAdapter.
+                                getObjectAt(index).getFilePath());
+                        ImageView imageView = (ImageView) view.findViewById(R.id.image_item);
+                        names.add(imageView.getTransitionName());
+                        sharedElements.put(imageView.getTransitionName(), imageView);
+                    }
                     exiting = false;
                 }
             }
@@ -217,10 +220,8 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     @Override
     public void finishAfterTransition() {
         Intent intent = new Intent();
-        intent.putIntegerArrayListExtra("indexes", indexes);
         intent.putExtra("position", mViewPager.getCurrentItem());
         setResult(RESULT_OK, intent);
-
         Glide.with(this).pauseRequests();
         super.finishAfterTransition();
     }

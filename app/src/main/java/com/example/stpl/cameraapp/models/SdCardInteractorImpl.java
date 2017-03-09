@@ -27,7 +27,6 @@ import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
 public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.GetMediaList,
         SdCardInteractor.Selection {
     private ArrayList<MediaDetails> selected;
-    private ArrayList<String> selectedFiles;
 
     public SdCardInteractorImpl() {
 
@@ -65,6 +64,9 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
     @Override
     public boolean deleteFromSdCard(MediaDetails mediaDetails) {
         File deleteFile = new File(mediaDetails.getFilePath());
+        if (selected.size() > 0) {
+            removeFromSelection(mediaDetails);
+        }
         return deleteFile.delete();
 
     }
@@ -166,8 +168,5 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
         return selected;
     }
 
-    public ArrayList<String> getSelectedFiles() {
-        return selectedFiles;
-    }
 }
 

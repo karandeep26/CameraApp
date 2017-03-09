@@ -41,6 +41,7 @@ import com.example.stpl.cameraapp.ItemOffsetDecoration;
 import com.example.stpl.cameraapp.MyGestureDetector;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.RecyclerItemClickListener;
+import com.example.stpl.cameraapp.RxBus;
 import com.example.stpl.cameraapp.ScrollListener;
 import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.activity.PlayVideoActivity;
@@ -63,6 +64,7 @@ import java.util.Map;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import io.reactivex.observers.DisposableObserver;
 
 import static com.example.stpl.cameraapp.Utils.IMAGE;
@@ -107,6 +109,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     FirebaseLoginPresenter firebaseLoginPresenter;
     FirebaseMainPresenter firebaseMainPresenter;
     Bundle bundle;
+    ArrayList<Disposable> disposables;
+    Disposable bus;
 
 
     @Override
@@ -116,6 +120,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setExitSharedElementCallback(sharedElementCallback());
         providers = new ArrayList<>();
+        bus = getRxBusDisposable();
+
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
 
         // Calculate Screen Height
@@ -170,6 +176,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         // Set button on click listeners
 
         setClickListeners();
+
 
 
     }
@@ -291,7 +298,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         makeFullScreen();
 
         if (customCamera != null && customCamera.getCamera() == null) {
-            compositeDisposable = new CompositeDisposable();
             if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                 Display getOrient = getWindowManager().getDefaultDisplay();
@@ -303,13 +309,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                 customCamera.setCamera();
             }
 
-            boolean flag = compositeDisposable.add(getTakePictureDisposable());
-            Log.d("take picture", flag + "");
-            flag = compositeDisposable.add(getRotationDisposable());
-            Log.d("rotation", flag + "");
-
-
         }
+        compositeDisposable = new CompositeDisposable();
+        boolean flag = compositeDisposable.addAll(createDisposableArray());
+        Log.d("disposables added", flag + "");
+
     }
 
 
@@ -337,6 +341,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
 
     private void init() {
         compositeDisposable = new CompositeDisposable();
+        disposables = new ArrayList<>();
         recyclerViewAdapter = new RecyclerViewAdapter();
         gridLayoutManager = new GridLayoutManager(this, 3);
         recyclerGridView.setLayoutManager(gridLayoutManager);
@@ -457,6 +462,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             mainPresenter = null;
         }
         compositeDisposable.clear();
+        bus.dispose();
         super.onDestroy();
 
     }
@@ -497,9 +503,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         customCamera.setWillNotDraw(false);
         frameLayout.addView(customCamera);
         presenterAdapter.updateAdapter(Utils.IMAGE);
-        compositeDisposable.add(getRotationDisposable());
-        compositeDisposable.add(getTakePictureDisposable());
-
+        boolean flag = compositeDisposable.addAll(createDisposableArray());
+        Log.d("add all", flag + "");
     }
 
     @Override
@@ -766,14 +771,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
             postponeEnterTransition();
             bundle = new Bundle(data.getExtras());
             positionReturned = bundle.getInt("position");
-            ArrayList<Integer> indexes = bundle.getIntegerArrayList("indexes");
-            if (indexes != null && indexes.size() > 0) {
-                for (Integer i : indexes) {
-                    recyclerViewAdapter.removeItemAt(i);
-                }
-            }
             gridLayoutManager.scrollToPosition(positionReturned);
-
             recyclerGridView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver
                     .OnPreDrawListener() {
                 @Override
@@ -811,6 +809,25 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     private Disposable getTakePictureDisposable() {
         return customCamera._getTakePictureSubject()
                 .subscribe(safeToTakePicture -> this.safeToTakePicture = safeToTakePicture);
+    }
+
+    private Disposable getRxBusDisposable() {
+        return RxBus.getInstance().getBus().subscribe(new Consumer<Integer>() {
+            @Override
+            public void accept(Integer integer) throws Exception {
+                recyclerViewAdapter.removeItemAt(integer);
+            }
+        });
+    }
+
+
+    private Disposable[] createDisposableArray() {
+        disposables.add(getRotationDisposable());
+        disposables.add(getTakePictureDisposable());
+        Disposable[] disposableArray = new Disposable[disposables.size()];
+        disposableArray = disposables.toArray(disposableArray);
+        return disposableArray;
+
     }
 
 }

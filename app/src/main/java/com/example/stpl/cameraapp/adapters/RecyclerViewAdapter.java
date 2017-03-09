@@ -60,6 +60,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
+        final boolean isThumbnailCreated = false;
         MediaDetails mediaDetails = this.mediaDetailsList.get(position);
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
             holder.imageView.setTransitionName(mediaDetails.getFilePath());
@@ -77,7 +78,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).asBitmap()
                         .placeholder(R.drawable.placeholder).fitCenter()
                         .into(new BitmapImageViewTarget(holder.imageView) {
-
                             @Override
                             protected void setResource(final Bitmap resource) {
                                 super.setResource(resource);
@@ -109,7 +109,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                         }
                                     }
                                 });
-                                thread.start();
+//                                thread.start();
+//                               while (!thumbnailFile.exists());
 
 
 
@@ -120,7 +121,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             holder.playButton.setVisibility(View.INVISIBLE);
 
 
-            //  }
+            // }
         } else {
             Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).fitCenter()
                     .centerCrop()

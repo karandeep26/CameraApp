@@ -110,6 +110,7 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
             boolean isDeletionSuccessful;
             isDeletionSuccessful = sdCardInteractor.deleteFromSdCard(details);
             if (isDeletionSuccessful) {
+
                 fileListener.onFileDeleted(details);
             } else {
                 fileListener.onErrorOccurred();

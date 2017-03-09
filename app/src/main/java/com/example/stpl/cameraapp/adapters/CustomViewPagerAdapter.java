@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestListener;
@@ -36,7 +37,24 @@ public class CustomViewPagerAdapter extends PagerAdapter {
             position) {
         this.mediaDetails = mediaDetails;
         this.mContext = mContext;
-        fadeOut = AnimationUtils.loadAnimation(mContext, R.anim.fade_out);
+        fadeOut = AnimationUtils.loadAnimation(mContext, android.R.anim.fade_out);
+        fadeOut.setAnimationListener(new Animation.AnimationListener() {
+
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
         this.mLayoutInflater = (LayoutInflater) mContext.getSystemService(Context
                 .LAYOUT_INFLATER_SERVICE);
         this.position = position;
@@ -44,10 +62,28 @@ public class CustomViewPagerAdapter extends PagerAdapter {
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        ImageView imageView = (ImageView) ((View) object).findViewById(R.id.image_item);
+        View itemView = (View) object;
+        ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
         imageView.startAnimation(fadeOut);
-        container.removeView((View) object);
-        imageView.setImageDrawable(null);
+        imageView.getAnimation().setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                imageView.setImageDrawable(null);
+                container.removeView((View) object);
+
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
     }
 
     @Override
@@ -63,7 +99,9 @@ public class CustomViewPagerAdapter extends PagerAdapter {
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
-        View itemView = mLayoutInflater.inflate(R.layout.viewpager_item, container, false);
+        ViewGroup itemView = (ViewGroup) mLayoutInflater.inflate(R.layout.viewpager_item,
+                container, false);
+        RelativeLayout relativeLayout = (RelativeLayout) itemView.findViewById(R.id.parent_layout);
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
         imageView.setTransitionName(mediaDetails.get(position).getFilePath() + "");
 
