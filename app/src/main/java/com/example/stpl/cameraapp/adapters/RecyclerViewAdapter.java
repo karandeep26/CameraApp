@@ -1,30 +1,24 @@
 package com.example.stpl.cameraapp.adapters;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.os.Environment;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.customViews.SquareImageView;
 import com.example.stpl.cameraapp.main.MainActivity;
 import com.example.stpl.cameraapp.models.MediaDetails;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Created by stpl on 2/22/2017.
@@ -34,14 +28,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private List<MediaDetails> mediaDetailsList;
     private Context mContext;
     private boolean multiMode;
-    private HashSet<Integer> selectedIndex;
-    private File thumbnailFile;
+
     private String mediaType;
 
     public RecyclerViewAdapter() {
         mediaDetailsList = new ArrayList<>();
-        selectedIndex = new HashSet<>();
-
     }
 
     public void setMediaDetailsList(List<MediaDetails> mediaDetailsList, String type) {
@@ -60,68 +51,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        final boolean isThumbnailCreated = false;
         MediaDetails mediaDetails = this.mediaDetailsList.get(position);
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
             holder.imageView.setTransitionName(mediaDetails.getFilePath());
-
-            thumbnailFile = new File(Environment.
-                    getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) +
-                    File.separator + "thumbnails" + File.separator +
-                    new File(mediaDetails.getFilePath()).getName());
-//            if(thumbnailFile.exists()){
-//                Log.d("file exist","true");
-//                Glide.with(((MainActivity)mContext)).load(thumbnailFile).asBitmap()
-//                        .placeholder(R.drawable.placeholder).fitCenter().into(holder.imageView);
-//            }
-//            else {
-                Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).asBitmap()
-                        .placeholder(R.drawable.placeholder).fitCenter()
-                        .into(new BitmapImageViewTarget(holder.imageView) {
-                            @Override
-                            protected void setResource(final Bitmap resource) {
-                                super.setResource(resource);
-
-                                Thread thread=new Thread(() -> {
-                                    if (!thumbnailFile.exists()) {
-                                        FileOutputStream out = null;
-                                        try {
-                                            Log.d("thumbnail exist before",
-                                                    thumbnailFile.exists() + "");
-                                            out = new FileOutputStream(thumbnailFile);
-                                            resource.compress(Bitmap.CompressFormat.JPEG, 100,
-                                                    out);
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        } finally {
-                                            try {
-                                                if (out != null) {
-                                                    out.close();
-                                                    Log.d("thumbnail created for",
-                                                            thumbnailFile.getName());
-                                                    Log.d("thumbnail exist after",
-                                                            thumbnailFile.exists() + "");
-                                                    Thread.currentThread().interrupt();
-                                                }
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                    }
-                                });
-//                                thread.start();
-//                               while (!thumbnailFile.exists());
-
-
-
-                            }
-                        });
-            //}
-
+            Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).fitCenter()
+                    .centerCrop().placeholder(R.drawable.placeholder).into(holder.imageView);
             holder.playButton.setVisibility(View.INVISIBLE);
-
-
-            // }
         } else {
             Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).fitCenter()
                     .centerCrop()
@@ -162,18 +97,15 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
 
     class ViewHolder extends RecyclerView.ViewHolder {
+        @BindView(R.id.image)
         SquareImageView imageView;
-        ImageView tickView, playButton;
-        FrameLayout rootLayout;
-        View itemView;
-
+        @BindView(R.id.tick)
+        ImageView tickView;
+        @BindView(R.id.play)
+        ImageView playButton;
         ViewHolder(View itemView) {
             super(itemView);
-            this.itemView = itemView;
-            rootLayout = (FrameLayout) itemView.findViewById(R.id.root_layout);
-            imageView = (SquareImageView) itemView.findViewById(R.id.image);
-            tickView = (ImageView) itemView.findViewById(R.id.tick);
-            playButton = (ImageView) itemView.findViewById(R.id.play);
+            ButterKnife.bind(this, itemView);
 
         }
     }

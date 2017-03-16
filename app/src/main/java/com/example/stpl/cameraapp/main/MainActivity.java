@@ -24,6 +24,7 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
 import android.view.HapticFeedbackConstants;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
@@ -62,9 +63,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnTouch;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
 import io.reactivex.observers.DisposableObserver;
 
 import static com.example.stpl.cameraapp.Utils.IMAGE;
@@ -76,8 +80,8 @@ import static com.example.stpl.cameraapp.Utils.ROTATION_O;
 import static com.example.stpl.cameraapp.Utils.VIDEO;
 
 
-public class MainActivity extends BaseActivity implements View.OnClickListener,
-        FileListener, RecyclerItemClickListener.OnItemClickListener, MainView, MainView.UpdateView,
+public class MainActivity extends BaseActivity implements FileListener,
+        RecyclerItemClickListener.OnItemClickListener, MainView, MainView.UpdateView,
         FirebaseLoginView {
     int previousRotation = -1;
     int positionReturned;
@@ -88,19 +92,34 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     int height;
     DisposableObserver<Integer> timerObserver;
     MainPresenter mainPresenter;
-    private FrameLayout frameLayout;
+    @BindView(R.id.frame_layout)
+    FrameLayout frameLayout;
     private CustomCamera customCamera;
-    private ImageButton captureButton;
-    private RecyclerView recyclerGridView;
-    private ImageButton videoCapture;
+    @BindView(R.id.capture)
+    ImageButton captureButton;
+    @BindView(R.id.recycler_grid)
+    RecyclerView recyclerGridView;
+    @BindView(R.id.record_video)
+    ImageButton videoCapture;
     public BottomSheetBehavior bottomSheetBehavior;
-    private ImageButton pictures, video, delete, upload;
-    private LinearLayout gridViewButton, menu;
+    @BindView(R.id.pictures)
+    ImageButton pictures;
+    @BindView(R.id.videos)
+    ImageButton video;
+    @BindView(R.id.delete)
+    ImageButton delete;
+    @BindView(R.id.upload)
+    ImageButton upload;
+    @BindView(R.id.gridViewButtons)
+    LinearLayout gridViewButton;
+    @BindView(R.id.menu)
+    LinearLayout menu;
     private SparseArray<View> tickView = new SparseArray<>();
     SdCardInteractorImpl mSdCardInteractorImpl;
     MainPresenter.OnItemClick onItemClick;
     MainPresenterImpl mainPresenterImpl;
     MainPresenter.Adapter presenterAdapter;
+    @BindView(R.id.bottom_sheet)
     View bottomSheet;
     boolean safeToTakePicture = true;
     List<AuthUI.IdpConfig> providers;
@@ -117,6 +136,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setExitSharedElementCallback(sharedElementCallback());
         providers = new ArrayList<>();
@@ -131,25 +151,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         height = displayMetrics.heightPixels;
         Utils.height = this.height;
         Utils.width = displayMetrics.widthPixels;
-//        String[] projection={ MediaStore.Images.Media._ID};
-//        Cursor mediaCursor = getContentResolver().query(MediaStore.Files.getContentUri
-//                        ("external"),
-//                projection,
-//                MediaStore.Images.Media.DATA + " like ? ",
-//                new String[]{"%"+ mediaStorageDir+"%"},
-//                null);
-//        if(mediaCursor!=null) {
-//            mediaCursor.getCount();
-//            if (mediaCursor.moveToFirst()) {
-//                do {
-//                    int index = mediaCursor.getColumnIndex(MediaStore.Images.Media._ID);
-//                    ThumbnailUtils.OPTIONS_RECYCLE_INPUT
-//
-//                }
-//                while (mediaCursor.moveToNext());
-//                mediaCursor.close();
-//            }
-//        }
 
         // Initialize MVP components
 
@@ -160,9 +161,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
 
         makeFullScreen();
 
-        // Standard findViewById
 
-        findViewById();
         /*
         Initialize RecyclerViewAdapter
         Set GridView
@@ -173,64 +172,70 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         init();
 
 
-        // Set button on click listeners
-
-        setClickListeners();
-
-
-
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            //Take photo
-            case R.id.capture:
-                if (safeToTakePicture) {
-                    customCamera.takePicture();
-                }
-                break;
-
-            // Record Video
-
-            case R.id.record_video:
-                recordVideo();
-                break;
-
-            //Load Video thumbnails in GridView
-
-            case R.id.videos:
-                video.setSelected(true);
-                presenterAdapter.updateAdapter(VIDEO);
-                if (pictures.isSelected()) {
-                    pictures.setSelected(false);
-                }
-                break;
-
-            // Loading pictures thumbnails in a GridView
-
-            case R.id.pictures:
-                presenterAdapter.updateAdapter(IMAGE);
-                pictures.setSelected(true);
-                if (video.isSelected()) {
-                    video.setSelected(false);
-                }
-                break;
-
-            // Upload pictures to the Firebase Cloud
-
-            case R.id.upload:
-                firebaseMainPresenter.uploadToCloud(mainPresenter.getSelected().getFilePath());
-                break;
-            //Delete pictures/videos from the phone
-            case R.id.delete:
-                mainPresenter.deleteFromSdCard();
-                //Restore GridView from the selection mode
-                gridViewButton.setVisibility(View.VISIBLE);
-                menu.setVisibility(View.GONE);
-                break;
+    @OnClick(R.id.capture)
+    void takePicture() {
+        if (safeToTakePicture) {
+            customCamera.takePicture();
         }
     }
+
+    /**
+     * Start/Stop recording the video
+     */
+    @OnClick(R.id.record_video)
+    void recordVideo() {
+        if (!recording) {
+            recording = true;
+            time.setVisibility(View.VISIBLE);
+            customCamera.recordVideo();
+            timerObserver = mainPresenter.startTimer();
+        } else {
+            time.setVisibility(View.GONE);
+            customCamera.stopVideo();
+            recording = false;
+
+            if (timerObserver != null && !timerObserver.isDisposed()) {
+                timerObserver.onComplete();
+                timerObserver.dispose();
+            }
+        }
+    }
+
+    @OnClick(R.id.videos)
+    void loadVideos() {
+        video.setSelected(true);
+        presenterAdapter.updateAdapter(VIDEO);
+        if (pictures.isSelected()) {
+            pictures.setSelected(false);
+        }
+    }
+
+    @OnClick(R.id.pictures)
+    void loadPictures() {
+        presenterAdapter.updateAdapter(IMAGE);
+        pictures.setSelected(true);
+        if (video.isSelected()) {
+            video.setSelected(false);
+        }
+    }
+
+    @OnClick(R.id.upload)
+    void upload() {
+        firebaseMainPresenter.uploadToCloud(mainPresenter.getSelected().getFilePath());
+
+    }
+
+    @OnClick(R.id.delete)
+    void delete() {
+        mainPresenter.deleteFromSdCard();
+        //Restore GridView from the selection mode
+        gridViewButton.setVisibility(View.VISIBLE);
+        menu.setVisibility(View.GONE);
+    }
+
+
 
 
     @Override
@@ -317,29 +322,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     }
 
 
-    // Standard findViewByIds
-
-    private void findViewById() {
-        gridViewButton = $(R.id.gridViewButtons);
-        menu = $(R.id.menu);
-        recyclerGridView = $(R.id.recycler_grid);
-        frameLayout = $(R.id.frame_layout);
-        captureButton = $(R.id.capture);
-        time = $(R.id.timer);
-        videoCapture = $(R.id.record_video);
-        pictures = $(R.id.pictures);
-        video = $(R.id.videos);
-        bottomSheet = $(R.id.design_bottom_sheet);
-        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        delete = $(R.id.delete);
-        upload = $(R.id.upload);
-
-    }
-
-
     //Initialise GridView and other items
 
     private void init() {
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
         compositeDisposable = new CompositeDisposable();
         disposables = new ArrayList<>();
         recyclerViewAdapter = new RecyclerViewAdapter();
@@ -352,20 +338,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         ItemOffsetDecoration itemDecoration = new ItemOffsetDecoration(this, R.dimen.item_offset);
         recyclerGridView.addItemDecoration(itemDecoration);
         pictures.setSelected(true);
-
-        // If first item of GridView is Visible,Disable GridView Scrolling top to bottom.
-        // If first item is not visible,continue with gridView scroll scrolling
-
-        recyclerGridView.setOnTouchListener((v, event) -> {
-
-            v.getParent().requestDisallowInterceptTouchEvent(true);
-            recyclerGridView.setNestedScrollingEnabled(false);
-            int position = gridLayoutManager.findFirstCompletelyVisibleItemPosition();
-            if (position == 0) {
-                imageGestureDetector.onTouchEvent(event);
-            }
-            return false;
-        });
         recyclerGridView.addOnItemTouchListener(new RecyclerItemClickListener(this,
                 this, recyclerGridView));
 
@@ -411,14 +383,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         mainPresenter.checkForPermissions();
     }
 
-    private void setClickListeners() {
-        videoCapture.setOnClickListener(this);
-        captureButton.setOnClickListener(this);
-        pictures.setOnClickListener(this);
-        video.setOnClickListener(this);
-        upload.setOnClickListener(this);
-        delete.setOnClickListener(this);
-    }
 
 
     @Override
@@ -465,29 +429,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         bus.dispose();
         super.onDestroy();
 
-    }
-
-
-    /**
-     * Start/Stop recording the video
-     */
-
-    private void recordVideo() {
-        if (!recording) {
-            recording = true;
-            time.setVisibility(View.VISIBLE);
-            customCamera.recordVideo();
-            timerObserver = mainPresenter.startTimer();
-        } else {
-            time.setVisibility(View.GONE);
-            customCamera.stopVideo();
-            recording = false;
-
-            if (timerObserver != null && !timerObserver.isDisposed()) {
-                timerObserver.onComplete();
-                timerObserver.dispose();
-            }
-        }
     }
 
     /**
@@ -551,7 +492,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
 
     @Override
     public void onFileAdded(MediaDetails mediaDetails) {
-        findViewById(R.id.design_bottom_sheet).requestLayout();
+        findViewById(R.id.bottom_sheet).requestLayout();
         if (recyclerViewAdapter.getMediaType().equals(mediaDetails.getMediaType())) {
             recyclerViewAdapter.addItem(mediaDetails, 0);
         }
@@ -617,10 +558,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                 Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends View> T $(int id) {
-        return (T) findViewById(id);
-    }
 
     /**
      * Handles RecyclerViewItem OnClick
@@ -744,7 +681,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
                                 names.clear();
                                 names.add(imageView.getTransitionName());
                                 sharedElements.clear();
-                                Log.d("****",imageView.getTransitionName());
+                                Log.d("****", imageView.getTransitionName());
                                 sharedElements.put(imageView.getTransitionName(), imageView);
                             } else {
                                 Log.d("transition name is null", "true");
@@ -812,12 +749,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
     }
 
     private Disposable getRxBusDisposable() {
-        return RxBus.getInstance().getBus().subscribe(new Consumer<Integer>() {
-            @Override
-            public void accept(Integer integer) throws Exception {
-                recyclerViewAdapter.removeItemAt(integer);
-            }
-        });
+        return RxBus.getInstance().getBus().subscribe(integer -> recyclerViewAdapter.removeItemAt(integer));
     }
 
 
@@ -829,6 +761,20 @@ public class MainActivity extends BaseActivity implements View.OnClickListener,
         return disposableArray;
 
     }
+
+    // If first item of GridView is Visible,Disable GridView Scrolling top to bottom.
+    // If first item is not visible,continue with gridView scroll scrolling
+    @OnTouch(R.id.recycler_grid)
+    boolean onTouch(View view, MotionEvent event) {
+        view.getParent().requestDisallowInterceptTouchEvent(true);
+        recyclerGridView.setNestedScrollingEnabled(false);
+        int position = gridLayoutManager.findFirstCompletelyVisibleItemPosition();
+        if (position <= 0) {
+            imageGestureDetector.onTouchEvent(event);
+        }
+        return false;
+    }
+
 
 }
 

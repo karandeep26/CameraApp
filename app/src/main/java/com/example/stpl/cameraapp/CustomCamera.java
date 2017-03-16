@@ -216,7 +216,6 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             String fileName = mainPresenter.savePhotoSdCard(data);
             if (fileName != null) {
                 try {
-
                     ExifInterface exifInterface = new ExifInterface(fileName);
                     if (orientationListener.getRotation() == ROTATION_O) {
                         exifInterface.setAttribute(ExifInterface.TAG_ORIENTATION,

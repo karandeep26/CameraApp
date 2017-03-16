@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.stpl.cameraapp.main.MainActivity;
 
 
 public class ScrollListener extends RecyclerView.OnScrollListener {
@@ -18,9 +19,9 @@ public class ScrollListener extends RecyclerView.OnScrollListener {
         super.onScrollStateChanged(recyclerView, newState);
 
         if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-            Glide.with(context).resumeRequests();
+            Glide.with(((MainActivity) context)).resumeRequests();
         } else {
-            Glide.with(context).pauseRequests();
+            Glide.with(((MainActivity) context)).pauseRequests();
         }
 
     }

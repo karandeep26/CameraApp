@@ -2,17 +2,14 @@ package com.example.stpl.cameraapp.adapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestListener;
@@ -28,62 +25,26 @@ import java.util.ArrayList;
 public class CustomViewPagerAdapter extends PagerAdapter {
     private Context mContext;
     private LayoutInflater mLayoutInflater;
-    private int position;
     private ArrayList<MediaDetails> mediaDetails;
-    private Animation fadeOut;
-    boolean animate = true;
+    private Animation fadeIn;
+    private boolean fileDeleted;
 
-    public CustomViewPagerAdapter(Context mContext, ArrayList<MediaDetails> mediaDetails, int
-            position) {
+    public CustomViewPagerAdapter(Context mContext, ArrayList<MediaDetails> mediaDetails) {
         this.mediaDetails = mediaDetails;
         this.mContext = mContext;
-        fadeOut = AnimationUtils.loadAnimation(mContext, android.R.anim.fade_out);
-        fadeOut.setAnimationListener(new Animation.AnimationListener() {
-
-            @Override
-            public void onAnimationStart(Animation animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
         this.mLayoutInflater = (LayoutInflater) mContext.getSystemService(Context
                 .LAYOUT_INFLATER_SERVICE);
-        this.position = position;
+        fadeIn = new AlphaAnimation(0.7f, 1);
+        fadeIn.setDuration(500);
     }
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        View itemView = (View) object;
+        ViewGroup itemView = (ViewGroup) object;
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
-        imageView.startAnimation(fadeOut);
-        imageView.getAnimation().setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
+        imageView.setImageDrawable(null);
+        container.removeView(itemView);
 
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                imageView.setImageDrawable(null);
-                container.removeView((View) object);
-
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
     }
 
     @Override
@@ -96,21 +57,16 @@ public class CustomViewPagerAdapter extends PagerAdapter {
         return view == object;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         ViewGroup itemView = (ViewGroup) mLayoutInflater.inflate(R.layout.viewpager_item,
                 container, false);
-        RelativeLayout relativeLayout = (RelativeLayout) itemView.findViewById(R.id.parent_layout);
         ImageView imageView = (ImageView) itemView.findViewById(R.id.image_item);
         imageView.setTransitionName(mediaDetails.get(position).getFilePath() + "");
-
-
         Glide.with(((FullImageActivity) mContext)).load(mediaDetails.get(position).getFilePath())
                 .asBitmap()
                 .override(Utils.width, Utils.height).listener(new RequestListener<String, Bitmap>
                 () {
-
             @Override
             public boolean onException(Exception e, String model, Target<Bitmap> target, boolean
                     isFirstResource) {
@@ -121,12 +77,14 @@ public class CustomViewPagerAdapter extends PagerAdapter {
             public boolean onResourceReady(Bitmap resource, String model, Target<Bitmap> target,
                                            boolean isFromMemoryCache, boolean isFirstResource) {
                 ActivityCompat.startPostponedEnterTransition(((FullImageActivity) mContext));
+                if (fileDeleted) {
+                    imageView.startAnimation(fadeIn);
+                    fileDeleted = false;
+                }
 
                 return false;
             }
         }).into(imageView);
-
-
         container.addView(itemView);
         itemView.setTag(mediaDetails.get(position).getFilePath());
         return itemView;
@@ -138,6 +96,7 @@ public class CustomViewPagerAdapter extends PagerAdapter {
 
     public void removeItemAt(int i) {
         mediaDetails.remove(i);
+        fileDeleted = true;
         notifyDataSetChanged();
     }
 

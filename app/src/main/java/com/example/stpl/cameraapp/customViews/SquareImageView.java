@@ -6,7 +6,6 @@ import android.widget.ImageView;
 
 
 public class SquareImageView extends ImageView {
-    boolean fullScreen = false;
 
     public SquareImageView(Context context) {
         super(context);
@@ -20,33 +19,23 @@ public class SquareImageView extends ImageView {
         super(context, attrs, defStyle);
     }
 
-    public void isFullScreen(boolean flag) {
-        fullScreen = false;
-    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (!fullScreen) {
-            super.onMeasure(widthMeasureSpec, widthMeasureSpec);
-        } else {
-            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
 
         int width = getMeasuredWidth();
 
         int height = getMeasuredHeight();
 
         // Optimization so we don't measure twice unless we need to
-        if (!fullScreen) {
-            if (width != height) {
-                setMeasuredDimension(width, width);
-            }
-        } else {
-            if (width != height) {
-                setMeasuredDimension(width, height);
-            }
+        if (width != height) {
+            setMeasuredDimension(width, width);
         }
+
     }
-
-
 }
+
+
+

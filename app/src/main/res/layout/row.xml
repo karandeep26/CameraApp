@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
              android:id="@+id/root_layout"
              android:background="@android:color/transparent"
              android:layout_width="match_parent"
              android:animateLayoutChanges="true"
              android:layout_height="wrap_content">
-
     <com.example.stpl.cameraapp.customViews.SquareImageView
         android:id="@+id/image"
-        android:scaleType="centerCrop"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:scaleType="centerCrop"
         android:src="@drawable/placeholder"
-        tools:targetApi="lollipop"/>
+        />
 
     <ImageView
         android:id="@+id/tick"
@@ -40,6 +38,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
         android:src="@drawable/ic_cloud_off_white_24dp"/>
+
+
 </FrameLayout>
 
 

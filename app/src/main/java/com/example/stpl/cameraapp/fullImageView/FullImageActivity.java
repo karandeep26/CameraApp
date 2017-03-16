@@ -10,6 +10,9 @@ import android.transition.Transition;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -32,14 +35,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class FullImageActivity extends BaseActivity implements View.OnClickListener,
-        FullImageView, FileListener {
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnTouch;
+
+import static butterknife.ButterKnife.findById;
+
+public class FullImageActivity extends BaseActivity implements FullImageView, FileListener {
     int position;
+    @BindView(R.id.pager)
     ViewPager mViewPager;
     FirebaseAuth firebaseAuth;
+    @BindView(R.id.topPanel)
     LinearLayout topPanel;
     int visibility;
-    ImageButton upload, delete;
+    @BindView(R.id.upload)
+    ImageButton upload;
+    @BindView(R.id.delete)
+    ImageButton delete;
     StorageReference uploadReference;
     FullImagePresenterImpl fullImagePresenterImpl;
     FullImageInterface fullImageInterface;
@@ -48,24 +62,47 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     int currentItem = -1;
     boolean deleteClicked = false;
     boolean exiting;
+    Animation fadeOut;
+    private float pointX, pointY;
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Transition fade = new Fade();
-        fade.excludeTarget(android.R.id.statusBarBackground, true);
-        fade.excludeTarget(android.R.id.navigationBarBackground, true);
         getWindow().setEnterTransition(null);
-
         postponeEnterTransition();
         makeFullScreen();
         setContentView(R.layout.activity_full_image);
+        ButterKnife.bind(this);
+        Transition fade = new Fade();
+        fadeOut = new AlphaAnimation(1, 0);
+        fadeOut.setInterpolator(new AccelerateDecelerateInterpolator());
+        fadeOut.setDuration(500);
+        fadeOut.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                customViewPagerAdapter.removeItemAt(currentItem);
+                if (mViewPager.getChildCount() == 0) {
+                    onBackPressed();
+                }
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        fade.excludeTarget(android.R.id.statusBarBackground, true);
+        fade.excludeTarget(android.R.id.navigationBarBackground, true);
         fade.excludeTarget(R.id.pager, true);
         getWindow().setEnterTransition(fade);
         setEnterSharedElementCallback(sharedElementCallback());
-        findViewById();
-        setOnClickListeners();
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
         Utils.height = displaymetrics.heightPixels;
@@ -76,36 +113,6 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
         Intent intent = getIntent();
         position = intent.getIntExtra("position", -1);
         mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
-
-        mViewPager.setOnTouchListener(new View.OnTouchListener() {
-            private float pointX;
-            private float pointY;
-            private int tolerance = 50;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_MOVE:
-                        return false; //This is important, if you return TRUE the action of swipe
-                    // will not take place.
-                    case MotionEvent.ACTION_DOWN:
-                        pointX = event.getX();
-                        pointY = event.getY();
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        boolean sameX = pointX + tolerance > event.getX() && pointX - tolerance <
-                                event.getX();
-                        boolean sameY = pointY + tolerance > event.getY() && pointY - tolerance <
-                                event.getY();
-                        if (sameX && sameY) {
-                            toggleTopPanelVisibility();
-                            //The user "clicked" certain point in the screen or just returned to
-                            // the same position an raised the finger
-                        }
-                }
-                return false;
-            }
-        });
         visibility = View.INVISIBLE;
         firebaseAuth = FirebaseAuth.getInstance();
         List<AuthUI.IdpConfig> providers = new ArrayList<>();
@@ -132,36 +139,22 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
         makeFullScreen();
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.delete:
-                currentItem = mViewPager.getCurrentItem();
-                MediaDetails mediaDetails = customViewPagerAdapter.getObjectAt(currentItem);
-                fullImageInterface.deleteFile(mediaDetails);
-
-            case R.id.upload:
-
-
-        }
-
+    @OnClick(R.id.delete)
+    void delete() {
+        currentItem = mViewPager.getCurrentItem();
+        MediaDetails mediaDetails = customViewPagerAdapter.getObjectAt(currentItem);
+        fullImageInterface.deleteFile(mediaDetails);
     }
 
-    private void findViewById() {
-        mViewPager = (ViewPager) findViewById(R.id.pager);
-        topPanel = (LinearLayout) findViewById(R.id.topPanel);
-        upload = (ImageButton) findViewById(R.id.upload);
-        delete = (ImageButton) findViewById(R.id.delete);
+    @OnClick(R.id.upload)
+    void upload() {
+        //TODO: upload file to fire base
     }
 
-    private void setOnClickListeners() {
-        upload.setOnClickListener(this);
-        delete.setOnClickListener(this);
-    }
 
     @Override
     public void updateAdapter(ArrayList<MediaDetails> mediaDetails) {
-        customViewPagerAdapter = new CustomViewPagerAdapter(this, mediaDetails, position);
+        customViewPagerAdapter = new CustomViewPagerAdapter(this, mediaDetails);
         mViewPager.setAdapter(customViewPagerAdapter);
         mViewPager.setCurrentItem(position);
 
@@ -179,9 +172,12 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
     public void onFileDeleted(MediaDetails mediaDetails) {
         RxBus.getInstance().send(currentItem);
         deleteClicked = true;
-        customViewPagerAdapter.removeItemAt(currentItem);
-        if (mViewPager.getChildCount() == 0) {
-            onBackPressed();
+        int index = mViewPager.getCurrentItem();
+        if (index >= 0) {
+            View view = mViewPager.findViewWithTag(customViewPagerAdapter.
+                    getObjectAt(index).getFilePath());
+            ImageView imageView = findById(view, R.id.image_item);
+            imageView.startAnimation(fadeOut);
         }
 
     }
@@ -207,7 +203,7 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
                     if (index >= 0) {
                         View view = mViewPager.findViewWithTag(customViewPagerAdapter.
                                 getObjectAt(index).getFilePath());
-                        ImageView imageView = (ImageView) view.findViewById(R.id.image_item);
+                        ImageView imageView = findById(view, R.id.image_item);
                         names.add(imageView.getTransitionName());
                         sharedElements.put(imageView.getTransitionName(), imageView);
                     }
@@ -225,4 +221,36 @@ public class FullImageActivity extends BaseActivity implements View.OnClickListe
         Glide.with(this).pauseRequests();
         super.finishAfterTransition();
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @OnTouch(R.id.pager)
+    boolean onViewPagerTouch(MotionEvent event) {
+        int tolerance = 50;
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_MOVE:
+                return false; //This is important, if you return TRUE the action of swipe
+            // will not take place.
+            case MotionEvent.ACTION_DOWN:
+                pointX = event.getX();
+                pointY = event.getY();
+                break;
+            case MotionEvent.ACTION_UP:
+                boolean sameX = pointX + tolerance > event.getX() && pointX - tolerance <
+                        event.getX();
+                boolean sameY = pointY + tolerance > event.getY() && pointY - tolerance <
+                        event.getY();
+                if (sameX && sameY) {
+                    toggleTopPanelVisibility();
+                    //The user "clicked" certain point in the screen or just returned to
+                    // the same position an raised the finger
+                }
+        }
+        return false;
+    }
+
 }
+

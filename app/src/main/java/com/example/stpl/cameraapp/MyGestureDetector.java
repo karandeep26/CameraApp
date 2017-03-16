@@ -27,7 +27,7 @@ public class MyGestureDetector extends android.view.GestureDetector.SimpleOnGest
             if (diffY > 0) {
                 //SwipeDown
 
-                if (gridLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
+                if (gridLayoutManager.findFirstCompletelyVisibleItemPosition() <= 0) {
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 }
             }
