@@ -464,7 +464,7 @@ public class MainActivity extends BaseActivity implements FileListener,
     @Override
     public void itemAdd(MediaDetails mediaDetails) {
         recyclerViewAdapter.addItem(mediaDetails);
-
+        bottomSheet.requestLayout();
     }
 
     @Override
@@ -492,7 +492,7 @@ public class MainActivity extends BaseActivity implements FileListener,
 
     @Override
     public void onFileAdded(MediaDetails mediaDetails) {
-        findViewById(R.id.bottom_sheet).requestLayout();
+        bottomSheet.requestLayout();
         if (recyclerViewAdapter.getMediaType().equals(mediaDetails.getMediaType())) {
             recyclerViewAdapter.addItem(mediaDetails, 0);
         }
