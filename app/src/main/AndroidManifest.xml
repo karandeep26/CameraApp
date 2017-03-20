@@ -33,6 +33,10 @@
         <activity android:name=".activity.PlayVideoActivity"/>
         <activity android:name=".BaseActivity">
         </activity>
+
+        <provider
+            android:name="com.example.stpl.cameraapp.models.MyContentProvider"
+            android:authorities="com.example.stpl.cameraapp.models.MyContentProvider"/>
     </application>
 
 </manifest>

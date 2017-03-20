@@ -57,6 +57,8 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.ErrorCodes;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.ResultCodes;
+import com.squareup.sqlbrite.BriteContentResolver;
+import com.squareup.sqlbrite.SqlBrite;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,6 +72,7 @@ import butterknife.OnTouch;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
+import rx.plugins.RxJavaSchedulersHook;
 
 import static com.example.stpl.cameraapp.Utils.IMAGE;
 import static com.example.stpl.cameraapp.Utils.MULTIPLE_PERMISSIONS;
@@ -160,8 +163,6 @@ public class MainActivity extends BaseActivity implements FileListener,
         // Set Window Flags to make app full screen
 
         makeFullScreen();
-
-
         /*
         Initialize RecyclerViewAdapter
         Set GridView
@@ -326,6 +327,9 @@ public class MainActivity extends BaseActivity implements FileListener,
     //Initialise GridView and other items
 
     private void init() {
+        SqlBrite sqlBrite = new SqlBrite.Builder().build();
+        BriteContentResolver briteContentResolver = sqlBrite.wrapContentProvider
+                (getContentResolver(), RxJavaSchedulersHook.createIoScheduler());
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
         compositeDisposable = new CompositeDisposable();
         disposables = new ArrayList<>();
@@ -341,7 +345,6 @@ public class MainActivity extends BaseActivity implements FileListener,
         pictures.setSelected(true);
         recyclerGridView.addOnItemTouchListener(new RecyclerItemClickListener(this,
                 this, recyclerGridView));
-
 
         BottomSheetBehavior.BottomSheetCallback bottomSheetCallback = new BottomSheetBehavior
                 .BottomSheetCallback() {
@@ -378,6 +381,7 @@ public class MainActivity extends BaseActivity implements FileListener,
         imageGestureDetector = new GestureDetectorCompat(this,
                 new MyGestureDetector(gridLayoutManager, bottomSheetBehavior));
         mainPresenter.checkForPermissions();
+        firebaseLoginPresenter.checkLoginBeforeProceed();
     }
 
 
@@ -435,9 +439,7 @@ public class MainActivity extends BaseActivity implements FileListener,
     @Override
     public void permissionAvailable() {
         customCamera = new CustomCamera(this, mainPresenter);
-
         // To overlay capture button
-
         customCamera.setWillNotDraw(false);
         frameLayout.addView(customCamera);
         gridViewButton.requestLayout();
@@ -475,6 +477,7 @@ public class MainActivity extends BaseActivity implements FileListener,
     public void updateAdapter(List<MediaDetails> mediaDetails, String type) {
         recyclerGridView.scrollToPosition(0);
         recyclerViewAdapter.setMediaDetailsList(mediaDetails, type);
+//        Utils.getPath(getContentResolver(),mediaDetails);
     }
 
     @Override

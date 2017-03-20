@@ -2,7 +2,6 @@ package com.example.stpl.cameraapp.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,11 +53,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(ViewHolder holder, int position) {
         MediaDetails mediaDetails = this.mediaDetailsList.get(position);
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
+
             holder.imageView.setTransitionName(mediaDetails.getFilePath());
-            Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).fitCenter()
+//            String path=Utils.getPath(mContext.getContentResolver(),mediaDetails.getFilePath());
+//            Log.d("path",path);
+            Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).
+                    load(mediaDetails.getFilePath()).fitCenter()
                     .centerCrop().placeholder(R.drawable.placeholder).into(holder.imageView);
             holder.playButton.setVisibility(View.INVISIBLE);
-            Log.d("count", "" + position);
         } else {
             Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).fitCenter()
                     .centerCrop()

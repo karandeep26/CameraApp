@@ -201,9 +201,8 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
     public void updateAdapter(String mediaType) {
         this.mediaType = mediaType;
         sdCardInteractor.getFromSdCard(mediaType).subscribeOn(Schedulers.io()).
-                observeOn(AndroidSchedulers.mainThread()).subscribe(mediaDetails -> {
-            updateView.updateAdapter(mediaDetails, mediaType);
-        });
+                observeOn(AndroidSchedulers.mainThread()).subscribe(mediaDetails ->
+                updateView.updateAdapter(mediaDetails, mediaType));
 
     }
 

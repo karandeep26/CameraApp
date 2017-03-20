@@ -4,6 +4,7 @@ package com.example.stpl.cameraapp.models;
 import android.util.Log;
 
 import com.example.stpl.cameraapp.Utils;
+import com.squareup.sqlbrite.BriteContentResolver;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,9 +17,7 @@ import java.util.List;
 import java.util.Locale;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.Single;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
@@ -27,9 +26,11 @@ import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
 public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.GetMediaList,
         SdCardInteractor.Selection {
     private ArrayList<MediaDetails> selected;
+    MyContentProvider contentProvider;
 
     public SdCardInteractorImpl() {
-
+        contentProvider = new MyContentProvider();
+        contentProvider.onCreate();
         selected = new ArrayList<>();
     }
 
@@ -52,13 +53,8 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
         }
         Arrays.sort(listFile, (o1, o2) -> o2.getName().compareTo(o1.getName()));
         Observable<File> fileObservable = Observable.fromArray(listFile);
-        return fileObservable.flatMap(new Function<File, ObservableSource<File>>() {
-            @Override
-            public ObservableSource<File> apply(File file) throws Exception {
-
-                return Observable.just(file);
-            }
-        }).subscribeOn(Schedulers.io()).map(this::getMediaDetails).toList();
+        return fileObservable.flatMap(Observable::just).subscribeOn(Schedulers.io())
+                .map(this::getMediaDetails).toList();
     }
 
     @Override
@@ -84,7 +80,19 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
         MediaDetails mediaDetails;
         String path = file.getAbsolutePath();
 
+
         if (path.contains("jpg")) {
+            BriteContentResolver briteContentResolver;
+
+//            Cursor cursor= contentProvider.query(null,null,null,new String[]{path},null);
+//            if (cursor != null) {
+//                cursor.moveToFirst();//**EDIT**
+//                String newPath= cursor.getString(cursor.getColumnIndex(MediaStore.Images
+// .Thumbnails.DATA));
+//                cursor.close();
+//                Log.d("path",newPath);
+//            }
+
             mediaDetails = new MediaDetails(path, "image");
 
         } else {
