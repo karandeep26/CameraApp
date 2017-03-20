@@ -313,11 +313,12 @@ public class MainActivity extends BaseActivity implements FileListener,
             } else {
                 customCamera.setCamera();
             }
+            compositeDisposable = new CompositeDisposable();
+            boolean flag = compositeDisposable.addAll(createDisposableArray());
+            Log.d("disposables added", flag + "");
 
         }
-        compositeDisposable = new CompositeDisposable();
-        boolean flag = compositeDisposable.addAll(createDisposableArray());
-        Log.d("disposables added", flag + "");
+
 
     }
 
@@ -366,17 +367,13 @@ public class MainActivity extends BaseActivity implements FileListener,
             }
         };
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
-        gridViewButton.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver
-                .OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                recyclerGridView.getLayoutParams().height = height - gridViewButton.getHeight();
-                if (gridViewButton.getHeight() > 0) {
-                    gridViewButton.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                }
-            }
+        gridViewButton.post(() -> {
+            recyclerGridView.getLayoutParams()
+                    .height = height - gridViewButton.getHeight();
+            bottomSheet.requestLayout();
+            bottomSheet.invalidate();
+            recyclerGridView.requestLayout();
         });
-
 
         imageGestureDetector = new GestureDetectorCompat(this,
                 new MyGestureDetector(gridLayoutManager, bottomSheetBehavior));
@@ -443,6 +440,7 @@ public class MainActivity extends BaseActivity implements FileListener,
 
         customCamera.setWillNotDraw(false);
         frameLayout.addView(customCamera);
+        gridViewButton.requestLayout();
         presenterAdapter.updateAdapter(Utils.IMAGE);
         boolean flag = compositeDisposable.addAll(createDisposableArray());
         Log.d("add all", flag + "");
