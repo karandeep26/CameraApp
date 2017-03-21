@@ -57,8 +57,6 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.ErrorCodes;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.ResultCodes;
-import com.squareup.sqlbrite.BriteContentResolver;
-import com.squareup.sqlbrite.SqlBrite;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,7 +70,6 @@ import butterknife.OnTouch;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
-import rx.plugins.RxJavaSchedulersHook;
 
 import static com.example.stpl.cameraapp.Utils.IMAGE;
 import static com.example.stpl.cameraapp.Utils.MULTIPLE_PERMISSIONS;
@@ -86,6 +83,7 @@ import static com.example.stpl.cameraapp.Utils.VIDEO;
 public class MainActivity extends BaseActivity implements FileListener,
         RecyclerItemClickListener.OnItemClickListener, MainView, MainView.UpdateView,
         FirebaseLoginView {
+    int i = 0;
     int previousRotation = -1;
     int positionReturned;
     CompositeDisposable compositeDisposable;
@@ -146,6 +144,7 @@ public class MainActivity extends BaseActivity implements FileListener,
         bus = getRxBusDisposable();
 
         providers.add(new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
+        providers.add(new AuthUI.IdpConfig.Builder(AuthUI.EMAIL_PROVIDER).build());
 
         // Calculate Screen Height
 
@@ -327,9 +326,6 @@ public class MainActivity extends BaseActivity implements FileListener,
     //Initialise GridView and other items
 
     private void init() {
-        SqlBrite sqlBrite = new SqlBrite.Builder().build();
-        BriteContentResolver briteContentResolver = sqlBrite.wrapContentProvider
-                (getContentResolver(), RxJavaSchedulersHook.createIoScheduler());
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
         compositeDisposable = new CompositeDisposable();
         disposables = new ArrayList<>();
@@ -381,7 +377,7 @@ public class MainActivity extends BaseActivity implements FileListener,
         imageGestureDetector = new GestureDetectorCompat(this,
                 new MyGestureDetector(gridLayoutManager, bottomSheetBehavior));
         mainPresenter.checkForPermissions();
-        firebaseLoginPresenter.checkLoginBeforeProceed();
+        //  firebaseLoginPresenter.checkLoginBeforeProceed();
     }
 
 
@@ -477,7 +473,42 @@ public class MainActivity extends BaseActivity implements FileListener,
     public void updateAdapter(List<MediaDetails> mediaDetails, String type) {
         recyclerGridView.scrollToPosition(0);
         recyclerViewAdapter.setMediaDetailsList(mediaDetails, type);
-//        Utils.getPath(getContentResolver(),mediaDetails);
+//     Observable<MediaDetails> arrayListObservable=Observable.fromArray(mediaDetails
+//                .toArray(new MediaDetails[mediaDetails.size()]));
+//        arrayListObservable.subscribeOn(Schedulers.io()).flatMap(mediaDetails1 -> {
+//                Cursor ca = getContentResolver().query(MediaStore.Images.Media
+// .EXTERNAL_CONTENT_URI, new String[]
+//                        {MediaStore.MediaColumns._ID}, MediaStore.MediaColumns.DATA + "=?", new
+//                        String[]{mediaDetails1.getFilePath()}, null);
+//                int id = -1;
+//                if (ca != null && ca.moveToFirst()) {
+//                    id = ca.getInt(ca.getColumnIndex(MediaStore.MediaColumns._ID));
+//                    ca.close();
+//                    return Observable.just(id);
+//                }
+//                return null;
+//
+//        }).flatMap((id)->{
+//            Cursor cursor = MediaStore.Images.Thumbnails.queryMiniThumbnail(
+//                    getContentResolver(), id,
+//                    MediaStore.Images.Thumbnails.MINI_KIND,
+//                    null);
+//            if (cursor != null && cursor.getCount() > 0) {
+//                cursor.moveToFirst();//**EDIT**
+//                String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Thumbnails
+//                        .DATA));
+//                return Observable.just(path);
+//            }
+//            return null;
+//        }).map(s -> s).observeOn(AndroidSchedulers.mainThread()).subscribe(s -> {
+//                 mediaDetails.get(i).setFilePath(s);
+//
+//            File file=new File(s);
+//            Log.d("path",s);
+//
+//            recyclerViewAdapter.addItem(mediaDetails.get(i));
+//            i++;
+//        });
     }
 
     @Override

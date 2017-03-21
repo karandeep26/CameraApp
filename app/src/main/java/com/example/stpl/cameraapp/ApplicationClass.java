@@ -17,10 +17,9 @@ public class ApplicationClass extends Application {
         }
         LeakCanary.install(this);
 
-
         // Normal app init code...
 
-
     }
+
 
 }

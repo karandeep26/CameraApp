@@ -4,7 +4,6 @@ package com.example.stpl.cameraapp.models;
 import android.util.Log;
 
 import com.example.stpl.cameraapp.Utils;
-import com.squareup.sqlbrite.BriteContentResolver;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,11 +25,8 @@ import static com.example.stpl.cameraapp.Utils.mediaStorageDir;
 public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.GetMediaList,
         SdCardInteractor.Selection {
     private ArrayList<MediaDetails> selected;
-    MyContentProvider contentProvider;
 
     public SdCardInteractorImpl() {
-        contentProvider = new MyContentProvider();
-        contentProvider.onCreate();
         selected = new ArrayList<>();
     }
 
@@ -82,16 +78,6 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
 
 
         if (path.contains("jpg")) {
-            BriteContentResolver briteContentResolver;
-
-//            Cursor cursor= contentProvider.query(null,null,null,new String[]{path},null);
-//            if (cursor != null) {
-//                cursor.moveToFirst();//**EDIT**
-//                String newPath= cursor.getString(cursor.getColumnIndex(MediaStore.Images
-// .Thumbnails.DATA));
-//                cursor.close();
-//                Log.d("path",newPath);
-//            }
 
             mediaDetails = new MediaDetails(path, "image");
 

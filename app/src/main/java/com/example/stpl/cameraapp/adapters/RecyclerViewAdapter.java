@@ -7,7 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.bumptech.glide.DrawableRequestBuilder;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.target.ImageViewTarget;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.customViews.SquareImageView;
@@ -33,6 +37,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     public RecyclerViewAdapter() {
         mediaDetailsList = new ArrayList<>();
+        mediaType = Utils.IMAGE;
     }
 
     public void setMediaDetailsList(List<MediaDetails> mediaDetailsList, String type) {
@@ -53,13 +58,26 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(ViewHolder holder, int position) {
         MediaDetails mediaDetails = this.mediaDetailsList.get(position);
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
+            DrawableRequestBuilder<String> thumbnailRequest = Glide
+                    .with(((MainActivity) mContext))
+                    .load(mediaDetails.getFilePath()).fitCenter()
+                    .centerCrop().into(new ImageViewTarget<GlideDrawable>(holder.imageView) {
+                        @Override
+                        protected void setResource(GlideDrawable resource) {
+
+                        }
+                    });
 
             holder.imageView.setTransitionName(mediaDetails.getFilePath());
-//            String path=Utils.getPath(mContext.getContentResolver(),mediaDetails.getFilePath());
-//            Log.d("path",path);
-            Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).
-                    load(mediaDetails.getFilePath()).fitCenter()
-                    .centerCrop().placeholder(R.drawable.placeholder).into(holder.imageView);
+            Glide.with(((MainActivity) mContext))
+                    .load(mediaDetails.getFilePath())
+                    .fitCenter()
+                    .centerCrop().skipMemoryCache(true)
+                    .placeholder(R.drawable.placeholder)
+                    .diskCacheStrategy(DiskCacheStrategy.RESULT)
+                    .dontAnimate()
+                    .thumbnail(thumbnailRequest)
+                    .into(holder.imageView);
             holder.playButton.setVisibility(View.INVISIBLE);
         } else {
             Glide.with(((MainActivity) mContext)).load(mediaDetails.getFilePath()).fitCenter()
