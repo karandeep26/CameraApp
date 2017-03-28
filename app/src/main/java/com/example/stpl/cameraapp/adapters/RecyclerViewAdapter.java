@@ -10,8 +10,6 @@ import android.widget.ImageView;
 import com.bumptech.glide.DrawableRequestBuilder;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.drawable.GlideDrawable;
-import com.bumptech.glide.request.target.ImageViewTarget;
 import com.example.stpl.cameraapp.R;
 import com.example.stpl.cameraapp.Utils;
 import com.example.stpl.cameraapp.customViews.SquareImageView;
@@ -60,13 +58,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         if (mediaDetails.getMediaType().equals(Utils.IMAGE)) {
             DrawableRequestBuilder<String> thumbnailRequest = Glide
                     .with(((MainActivity) mContext))
-                    .load(mediaDetails.getFilePath()).fitCenter()
-                    .centerCrop().into(new ImageViewTarget<GlideDrawable>(holder.imageView) {
-                        @Override
-                        protected void setResource(GlideDrawable resource) {
-
-                        }
-                    });
+                    .load(mediaDetails.getFilePath());
 
             holder.imageView.setTransitionName(mediaDetails.getFilePath());
             Glide.with(((MainActivity) mContext))
@@ -76,7 +68,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     .placeholder(R.drawable.placeholder)
                     .diskCacheStrategy(DiskCacheStrategy.RESULT)
                     .dontAnimate()
-                    .thumbnail(thumbnailRequest)
                     .into(holder.imageView);
             holder.playButton.setVisibility(View.INVISIBLE);
         } else {

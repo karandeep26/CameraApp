@@ -131,6 +131,7 @@ public class MainActivity extends BaseActivity implements FileListener,
     Bundle bundle;
     ArrayList<Disposable> disposables;
     Disposable bus;
+    private long start;
 
 
     @Override
@@ -168,7 +169,7 @@ public class MainActivity extends BaseActivity implements FileListener,
         Set BottomSheetCallback
         Check for permissions
          */
-
+        start = System.currentTimeMillis();
         init();
 
 
@@ -373,7 +374,6 @@ public class MainActivity extends BaseActivity implements FileListener,
             bottomSheet.invalidate();
             recyclerGridView.requestLayout();
         });
-
         imageGestureDetector = new GestureDetectorCompat(this,
                 new MyGestureDetector(gridLayoutManager, bottomSheetBehavior));
         mainPresenter.checkForPermissions();
@@ -473,42 +473,7 @@ public class MainActivity extends BaseActivity implements FileListener,
     public void updateAdapter(List<MediaDetails> mediaDetails, String type) {
         recyclerGridView.scrollToPosition(0);
         recyclerViewAdapter.setMediaDetailsList(mediaDetails, type);
-//     Observable<MediaDetails> arrayListObservable=Observable.fromArray(mediaDetails
-//                .toArray(new MediaDetails[mediaDetails.size()]));
-//        arrayListObservable.subscribeOn(Schedulers.io()).flatMap(mediaDetails1 -> {
-//                Cursor ca = getContentResolver().query(MediaStore.Images.Media
-// .EXTERNAL_CONTENT_URI, new String[]
-//                        {MediaStore.MediaColumns._ID}, MediaStore.MediaColumns.DATA + "=?", new
-//                        String[]{mediaDetails1.getFilePath()}, null);
-//                int id = -1;
-//                if (ca != null && ca.moveToFirst()) {
-//                    id = ca.getInt(ca.getColumnIndex(MediaStore.MediaColumns._ID));
-//                    ca.close();
-//                    return Observable.just(id);
-//                }
-//                return null;
-//
-//        }).flatMap((id)->{
-//            Cursor cursor = MediaStore.Images.Thumbnails.queryMiniThumbnail(
-//                    getContentResolver(), id,
-//                    MediaStore.Images.Thumbnails.MINI_KIND,
-//                    null);
-//            if (cursor != null && cursor.getCount() > 0) {
-//                cursor.moveToFirst();//**EDIT**
-//                String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Thumbnails
-//                        .DATA));
-//                return Observable.just(path);
-//            }
-//            return null;
-//        }).map(s -> s).observeOn(AndroidSchedulers.mainThread()).subscribe(s -> {
-//                 mediaDetails.get(i).setFilePath(s);
-//
-//            File file=new File(s);
-//            Log.d("path",s);
-//
-//            recyclerViewAdapter.addItem(mediaDetails.get(i));
-//            i++;
-//        });
+        Log.d("MainActivity", System.currentTimeMillis() - start + "");
     }
 
     @Override

@@ -49,6 +49,7 @@ public class SdCardInteractorImpl implements SdCardInteractor, SdCardInteractor.
         }
         Arrays.sort(listFile, (o1, o2) -> o2.getName().compareTo(o1.getName()));
         Observable<File> fileObservable = Observable.fromArray(listFile);
+
         return fileObservable.flatMap(Observable::just).subscribeOn(Schedulers.io())
                 .map(this::getMediaDetails).toList();
     }

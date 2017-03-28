@@ -68,38 +68,13 @@ class MainPresenterImpl implements MainPresenter, SdCardInteractor.OnFinishedLis
     public void fetchFromSdCard(String mediaType) {
         float startTime = System.currentTimeMillis();
         Log.d("start time", startTime + "");
-
         Disposable subscription = sdCardInteractor.getFromSdCard(mediaType).
-                observeOn(AndroidSchedulers.mainThread()).subscribe((mediaDetails) -> {
-            if (mediaDetails != null) {
-                for (MediaDetails temp : mediaDetails) {
-                    if (temp.getMediaType().equals(Utils.IMAGE)) {
-                        mainView.itemAdd(temp);
-                    }
-                }
-            }
-        }, throwable -> {
-            Log.d("Debug", "error");
-        });
-//                .subscribe(mediaDetails -> {
-//                            if (mediaDetails != null) {
-//                                Collections.reverse(mediaDetails);
-//                                for (MediaDetails temp : mediaDetails) {
-//                                    if (temp.getMediaType().equals(Utils.IMAGE)) {
-//                                        mainView.itemAdd(temp);
-//                                    }
-//                                }
-//                            }
-//                        },
-//                        throwable -> Log.d("debug", throwable.getMessage()),
-//                        () -> {
-//                            subscription.unsubscribe();
-//                            float endTime = System.currentTimeMillis();
-//                            float totalTime = endTime - startTime;
-//                            Log.d("total time", endTime + "");
-//                        });
+                observeOn(AndroidSchedulers.mainThread())
+                .flatMapObservable(mediaDetails -> Observable.just(new ArrayList<>(mediaDetails)))
+                .flatMapIterable(mediaDetails -> mediaDetails)
+                .filter(mediaDetails -> mediaDetails.getMediaType().equals(Utils.IMAGE))
+                .subscribe(mediaDetails -> mainView.itemAdd(mediaDetails));
         compositeDisposable.add(subscription);
-
     }
 
 

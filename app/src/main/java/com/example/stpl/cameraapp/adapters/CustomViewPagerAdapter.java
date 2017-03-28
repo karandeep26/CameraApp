@@ -65,8 +65,8 @@ public class CustomViewPagerAdapter extends PagerAdapter {
         imageView.setTransitionName(mediaDetails.get(position).getFilePath() + "");
         Glide.with(((FullImageActivity) mContext)).load(mediaDetails.get(position).getFilePath())
                 .asBitmap()
-                .override(Utils.width, Utils.height).listener(new RequestListener<String, Bitmap>
-                () {
+                .override(Utils.width, Utils.height)
+                .listener(new RequestListener<String, Bitmap>() {
             @Override
             public boolean onException(Exception e, String model, Target<Bitmap> target, boolean
                     isFirstResource) {

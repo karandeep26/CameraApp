@@ -160,6 +160,7 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
                 camera.setPreviewDisplay(null);
                 camera.release();
                 camera = null;
+                orientationListener.disable();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -342,11 +343,6 @@ public class CustomCamera extends SurfaceView implements SurfaceHolder.Callback 
             camera = openFrontFacingCameraGingerbread();
             try {
                 camera.setPreviewDisplay(surfaceHolder);
-//                for (Camera.Size size : mSupportedPreviewSizes) {
-//                    Log.i(TAG, "Available resolution: " + size.width + " " + size.height);
-//                }
-
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
